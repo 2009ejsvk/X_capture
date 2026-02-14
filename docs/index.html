@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>트윗 카드 캡처</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">개인용 도구</p>
+      <h1>트윗 카드 캡처</h1>
+      <p class="sub">
+        트윗 링크를 붙여넣으면 카드로 재구성해서 PNG로 자동 캡처합니다.
+      </p>
+    </header>
+
+    <section class="panel controls">
+      <label class="field">
+        <span>트윗 URL</span>
+        <input id="tweet-url" type="text" placeholder="https://x.com/user/status/123..." autocomplete="off" />
+      </label>
+
+      <div class="row">
+        <label class="field inline">
+          <span>테마</span>
+          <select id="theme">
+            <option value="paper">밝은 테마</option>
+            <option value="slate">어두운 테마</option>
+          </select>
+        </label>
+
+        <label class="field inline">
+          <span>출력 가로(px)</span>
+          <input id="width" type="number" min="420" max="1080" step="10" value="1080" />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>비율</span>
+        <select id="ratio">
+          <option value="mobile">모바일 비율 (권장)</option>
+          <option value="desktop">일반 비율</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>본문 글자 크기 <strong id="body-font-size-value">105%</strong></span>
+        <input id="body-font-size" type="range" min="60" max="180" step="1" value="105" />
+      </label>
+
+      <label class="field">
+        <span>기타 글자 크기 <strong id="ui-font-size-value">95%</strong></span>
+        <input id="ui-font-size" type="range" min="60" max="180" step="1" value="95" />
+      </label>
+
+      <label class="field">
+        <span>영상 채우기</span>
+        <select id="video-fit">
+          <option value="cover">꽉 채우기 (레터박스 없음)</option>
+          <option value="contain">원본 비율 유지 (레터박스)</option>
+        </select>
+      </label>
+
+      <div class="option-grid">
+        <label class="toggle">
+          <input id="include-media" type="checkbox" checked />
+          <span>이미지 포함</span>
+        </label>
+        <label class="toggle">
+          <input id="include-retweet" type="checkbox" checked />
+          <span>리트윗/인용 트윗 포함</span>
+        </label>
+        <label class="toggle">
+          <input id="include-retweet-media" type="checkbox" checked />
+          <span>리트윗/인용 트윗 이미지 포함</span>
+        </label>
+        <label class="toggle">
+          <input id="separate-shared" type="checkbox" />
+          <span>리트윗/인용 트윗 별도 카드</span>
+        </label>
+        <label class="toggle">
+          <input id="stack-multi-photo" type="checkbox" />
+          <span>이미지 2장 이상 세로 배치</span>
+        </label>
+        <label class="toggle">
+          <input id="stack-photo-gap" type="checkbox" checked />
+          <span>세로 배치 이미지 간격</span>
+        </label>
+        <label class="toggle">
+          <input id="include-reply-thread" type="checkbox" />
+          <span>답글 스레드 전체 표시</span>
+        </label>
+      </div>
+
+      <div id="media-picker-wrap" class="field media-picker" hidden>
+        <span>개별 미디어 선택</span>
+        <div id="media-picker-list" class="media-picker-list"></div>
+      </div>
+
+      <p class="hint">모바일 비율 권장: 프리뷰는 즉시, 캡처는 잠깐 멈추면 자동 갱신됩니다.</p>
+      <p id="status" class="status"></p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>미리보기</h2>
+      </div>
+      <div class="preview-shell">
+        <iframe id="preview-frame" title="트윗 카드 미리보기"></iframe>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>캡처 이미지</h2>
+        <a id="download-link" class="download hidden" href="#" download>다운로드</a>
+      </div>
+      <div class="result-shell">
+        <img id="result-image" alt="캡처된 트윗 카드" />
+        <video id="result-video" controls muted loop playsinline></video>
+      </div>
+    </section>
+  </main>
+
+  <script src="./cardRenderer.js" defer></script>
+  <script src="./clientTweetService.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+  <script src="./app.js" defer></script>
+</body>
+</html>
