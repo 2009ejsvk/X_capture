@@ -88,12 +88,14 @@ body {
 }
 
 input,
+textarea,
 select,
 a {
   font: inherit;
 }
 
 input:not([type="range"]),
+textarea,
 select {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -102,7 +104,14 @@ select {
   padding: 11px 12px;
 }
 
+textarea {
+  resize: vertical;
+  min-height: 86px;
+  line-height: 1.45;
+}
+
 input:not([type="range"]):focus,
+textarea:focus,
 select:focus {
   outline: 2px solid rgba(15, 124, 156, 0.25);
   border-color: #8abed1;

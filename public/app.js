@@ -7,6 +7,7 @@ const bodyFontSizeValue = document.getElementById("body-font-size-value");
 const uiFontSizeInput = document.getElementById("ui-font-size");
 const uiFontSizeValue = document.getElementById("ui-font-size-value");
 const videoFitInput = document.getElementById("video-fit");
+const manualTextInput = document.getElementById("manual-text");
 const includeMediaInput = document.getElementById("include-media");
 const includeRetweetInput = document.getElementById("include-retweet");
 const includeRetweetMediaInput = document.getElementById("include-retweet-media");
@@ -95,6 +96,7 @@ function bindEvents() {
   stackPhotoGapInput.addEventListener("change", scheduleFast);
   includeReplyThreadInput.addEventListener("change", scheduleFast);
   videoFitInput.addEventListener("change", scheduleFast);
+  manualTextInput.addEventListener("input", scheduleNormal);
   includeRetweetInput.addEventListener("change", () => {
     syncRetweetMediaToggle();
     scheduleFast();
@@ -249,7 +251,8 @@ async function runServerCapture(settings) {
     includeReplyThread: settings.includeReplyThread,
     selectedMediaKeys: settings.selectedMediaKeys,
     mediaSelectionEnabled: settings.mediaSelectionEnabled,
-    mediaFit: settings.videoFit
+    mediaFit: settings.videoFit,
+    manualText: settings.manualText
   };
 
   const response = await fetch("/api/capture", {
@@ -454,7 +457,8 @@ function readSettings(showError) {
     includeReplyThread: includeReplyThreadInput.checked,
     selectedMediaKeys: includeMediaInput.checked ? getSelectedMediaKeys() : [],
     mediaSelectionEnabled: includeMediaInput.checked && mediaOptions.length > 0,
-    videoFit: videoFitInput.value === "contain" ? "contain" : "cover"
+    videoFit: videoFitInput.value === "contain" ? "contain" : "cover",
+    manualText: normalizeManualText(manualTextInput.value)
   };
 }
 
@@ -474,7 +478,8 @@ function buildCardUrl(settings) {
     stackPhotoGap: String(settings.stackPhotoGap),
     includeReplyThread: String(settings.includeReplyThread),
     selectedMediaKeys: settings.selectedMediaKeys.join(","),
-    mediaSelectionEnabled: String(settings.mediaSelectionEnabled)
+    mediaSelectionEnabled: String(settings.mediaSelectionEnabled),
+    manualText: settings.manualText
   });
   return `/api/card?${params.toString()}`;
 }
@@ -500,7 +505,8 @@ function buildClientCardDocument(tweet, settings) {
       stackPhotoGap: settings.stackPhotoGap,
       includeReplyThread: settings.includeReplyThread,
       selectedMediaKeys: settings.selectedMediaKeys,
-      mediaSelectionEnabled: settings.mediaSelectionEnabled
+      mediaSelectionEnabled: settings.mediaSelectionEnabled,
+      manualText: settings.manualText
     }
   });
 }
@@ -912,6 +918,17 @@ function clampFloat(value, min, max, fallback) {
     return fallback;
   }
   return Math.min(max, Math.max(min, value));
+}
+
+function normalizeManualText(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  const normalized = value.replace(/\r\n/g, "\n").trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.slice(0, 2000);
 }
 
 function delay(ms) {

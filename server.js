@@ -66,7 +66,8 @@ app.get("/api/card", async (req, res, next) => {
       stackPhotoGap: parseBoolean(req.query.stackPhotoGap, true),
       includeReplyThread: parseBoolean(req.query.includeReplyThread, false),
       selectedMediaKeys: parseMediaKeyList(req.query.selectedMediaKeys),
-      mediaSelectionEnabled: parseBoolean(req.query.mediaSelectionEnabled, false)
+      mediaSelectionEnabled: parseBoolean(req.query.mediaSelectionEnabled, false),
+      manualText: parseManualText(req.query.manualText)
     };
     const html = renderTweetDocument({
       tweet,
@@ -118,7 +119,8 @@ app.post("/api/capture", async (req, res, next) => {
       stackPhotoGap: parseBoolean(req.body?.stackPhotoGap, true),
       includeReplyThread: parseBoolean(req.body?.includeReplyThread, false),
       selectedMediaKeys: parseMediaKeyList(req.body?.selectedMediaKeys),
-      mediaSelectionEnabled: parseBoolean(req.body?.mediaSelectionEnabled, false)
+      mediaSelectionEnabled: parseBoolean(req.body?.mediaSelectionEnabled, false),
+      manualText: parseManualText(req.body?.manualText)
     };
     const tweet = await fetchTweetModelCached(inputUrl);
 
@@ -305,7 +307,7 @@ async function captureCardSnapshot({ html, width, scale, detectVideoBox }) {
 }
 
 function pickComposableVideo(tweet, renderOptions = {}) {
-  if (!tweet || !Array.isArray(tweet.videos)) {
+  if (!tweet || typeof tweet !== "object") {
     return null;
   }
   const shouldFilter = renderOptions.mediaSelectionEnabled === true;
@@ -313,16 +315,42 @@ function pickComposableVideo(tweet, renderOptions = {}) {
     ? new Set(Array.isArray(renderOptions.selectedMediaKeys) ? renderOptions.selectedMediaKeys : [])
     : null;
 
-  for (let index = 0; index < tweet.videos.length; index += 1) {
-    if (selectedKeySet && !selectedKeySet.has(`main-video-${index}`)) {
+  const candidates = [];
+  appendComposableVideos(candidates, tweet.videos, "main", selectedKeySet);
+
+  const includeSharedTweet = renderOptions.includeSharedTweet !== false;
+  const includeSharedMedia = renderOptions.includeSharedMedia !== false;
+  if (includeSharedTweet && includeSharedMedia) {
+    appendComposableVideos(candidates, tweet.sharedTweet?.videos, "shared", selectedKeySet);
+  }
+
+  if (renderOptions.includeReplyThread === true && Array.isArray(tweet.replyChain)) {
+    tweet.replyChain.forEach((replyTweet, replyIndex) => {
+      appendComposableVideos(
+        candidates,
+        replyTweet?.videos,
+        `reply-${replyIndex}`,
+        selectedKeySet
+      );
+    });
+  }
+
+  return candidates[0] || null;
+}
+
+function appendComposableVideos(target, videos, contextKey, selectedKeySet) {
+  if (!Array.isArray(videos) || videos.length === 0) {
+    return;
+  }
+  for (let index = 0; index < videos.length; index += 1) {
+    if (selectedKeySet && !selectedKeySet.has(`${contextKey}-video-${index}`)) {
       continue;
     }
-    const video = tweet.videos[index];
+    const video = videos[index];
     if (video && typeof video.url === "string" && video.url.trim() !== "") {
-      return video;
+      target.push(video);
     }
   }
-  return null;
 }
 
 async function composeTweetVideo({ cardHtml, mediaUrl, width, scale, mediaFit }) {
@@ -385,14 +413,28 @@ async function prepareMediaInput(mediaUrl, tempDir) {
 }
 
 function guessMediaExtension(urlValue, contentType) {
-  const source = `${urlValue} ${contentType || ""}`.toLowerCase();
-  if (source.includes(".gif") || source.includes("image/gif")) {
+  const normalizedType = String(contentType || "").toLowerCase();
+  if (normalizedType.includes("video/mp4")) {
+    return ".mp4";
+  }
+  if (normalizedType.includes("image/gif")) {
     return ".gif";
   }
-  if (source.includes(".webm") || source.includes("video/webm")) {
+  if (normalizedType.includes("video/webm")) {
     return ".webm";
   }
-  if (source.includes(".mov") || source.includes("video/quicktime")) {
+  if (normalizedType.includes("video/quicktime")) {
+    return ".mov";
+  }
+
+  const source = String(urlValue || "").toLowerCase();
+  if (source.includes(".gif")) {
+    return ".gif";
+  }
+  if (source.includes(".webm")) {
+    return ".webm";
+  }
+  if (source.includes(".mov")) {
     return ".mov";
   }
   return ".mp4";
@@ -411,7 +453,7 @@ async function runFfmpegCompose({
     fitMode === "contain"
       ? `scale=${box.width}:${box.height}:force_original_aspect_ratio=decrease,pad=${box.width}:${box.height}:(ow-iw)/2:(oh-ih)/2:black`
       : `scale=${box.width}:${box.height}:force_original_aspect_ratio=increase,crop=${box.width}:${box.height}`;
-  const filter = `[0:v]pad=ceil(iw/2)*2:ceil(ih/2)*2:0:0[card];[1:v]${videoTransform}[vid];[card][vid]overlay=${box.x}:${box.y}:format=auto[v]`;
+  const filter = `[0:v]pad=ceil(iw/2)*2:ceil(ih/2)*2:0:0[card];[1:v]${videoTransform}[vid];[card][vid]overlay=${box.x}:${box.y}:format=auto:shortest=1[v]`;
   const args = [
     "-y",
     "-loop",
@@ -584,6 +626,17 @@ function parseBoolean(value, fallback) {
     }
   }
   return fallback;
+}
+
+function parseManualText(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  const normalized = value.replace(/\r\n/g, "\n").trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.slice(0, 2000);
 }
 
 function parseMediaKeyList(value) {

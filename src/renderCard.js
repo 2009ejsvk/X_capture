@@ -26,6 +26,9 @@ function renderTweetDocument({
   const createdAt = formatDate(tweet.createdAt, locale);
   const authorHandle = tweet.author?.screenName ? `@${tweet.author.screenName}` : "";
   const sourceHtml = [createdAt, tweet.source].filter(Boolean).join(" · ");
+  const manualTextHtml = renderOptions.manualText
+    ? `<p class="manual-text">${formatPlainText(renderOptions.manualText)}</p>`
+    : "";
   const avatarUrl = tweet.author?.avatarUrl ? escapeHtml(tweet.author.avatarUrl) : "";
   const mediaHtml = renderMediaBlock(
     {
@@ -205,6 +208,24 @@ function renderTweetDocument({
     body.theme-slate .tweet-text a {
       color: var(--slate-link);
       border-bottom-color: rgba(138, 201, 255, 0.4);
+    }
+
+    .manual-text {
+      margin: 10px 0 0;
+      padding-left: 10px;
+      border-left: 3px solid var(--paper-line);
+      color: var(--paper-sub);
+      font-family: var(--font-copy);
+      font-size: calc(0.93rem * var(--font-body-scale));
+      font-weight: 500;
+      line-height: 1.58;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+
+    body.theme-slate .manual-text {
+      border-left-color: var(--slate-line);
+      color: var(--slate-sub);
     }
 
     .meta {
@@ -472,6 +493,7 @@ function renderTweetDocument({
           </div>
         </header>
         ${tweet.text ? `<p class="tweet-text">${formatTweetText(tweet.text)}</p>` : ""}
+        ${manualTextHtml}
         ${mediaHtml}
         ${sharedBlocks.inlineHtml}
         ${sourceHtml ? `<p class="meta">${escapeHtml(sourceHtml)}</p>` : ""}
@@ -494,7 +516,8 @@ function normalizeRenderOptions(options) {
     stackPhotoGap: options.stackPhotoGap !== false,
     includeReplyThread: options.includeReplyThread === true,
     selectedMediaKeys: normalizeSelectedMediaKeys(options.selectedMediaKeys),
-    mediaSelectionEnabled: options.mediaSelectionEnabled === true
+    mediaSelectionEnabled: options.mediaSelectionEnabled === true,
+    manualText: normalizeManualText(options.manualText)
   };
 }
 
@@ -759,6 +782,17 @@ function normalizeSelectedMediaKeys(value) {
   return output;
 }
 
+function normalizeManualText(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+  const normalized = value.replace(/\r\n/g, "\n").trim();
+  if (!normalized) {
+    return "";
+  }
+  return normalized.slice(0, 2000);
+}
+
 function createSelectedMediaKeySet(keys, isEnabled) {
   if (!isEnabled) {
     return null;
@@ -842,6 +876,10 @@ function formatTweetText(text) {
       return `<a href="${safeUrl}">${escapeHtml(compactUrl(url))}</a>`;
     })
     .replace(/\n/g, "<br />");
+}
+
+function formatPlainText(text) {
+  return escapeHtml(String(text || "")).replace(/\n/g, "<br />");
 }
 
 function compactUrl(urlValue) {
