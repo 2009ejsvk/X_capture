@@ -45,6 +45,7 @@ Open `http://localhost:3000`.
 
 - `url` (required)
 - `theme` = `paper | slate`
+- `fontPreset` = `system | grotesk | noto`
 - `width` = `420..1080`
 - `bodyFontSize` = `60..180`
 - `uiFontSize` = `60..180`
@@ -70,6 +71,7 @@ Open `http://localhost:3000`.
 {
   "url": "https://x.com/yona_pip/status/2022590641214222759",
   "theme": "paper",
+  "fontPreset": "system",
   "width": 540,
   "bodyFontSize": 105,
   "uiFontSize": 95,

@@ -2,6 +2,7 @@ const urlInput = document.getElementById("tweet-url");
 const themeInput = document.getElementById("theme");
 const widthInput = document.getElementById("width");
 const ratioInput = document.getElementById("ratio");
+const fontPresetInput = document.getElementById("font-preset");
 const bodyFontSizeInput = document.getElementById("body-font-size");
 const bodyFontSizeValue = document.getElementById("body-font-size-value");
 const uiFontSizeInput = document.getElementById("ui-font-size");
@@ -74,6 +75,9 @@ function bindEvents() {
 
   themeInput.addEventListener("change", scheduleFast);
   ratioInput.addEventListener("change", scheduleFast);
+  if (fontPresetInput) {
+    fontPresetInput.addEventListener("change", scheduleFast);
+  }
   widthInput.addEventListener("input", scheduleFast);
   bodyFontSizeInput.addEventListener("input", () => {
     updateFontSizeLabels();
@@ -214,10 +218,15 @@ async function runCaptureUpdate() {
   setStatus("고해상도 캡처 생성 중...", false);
 
   try {
-    if (runtimeMode === RUNTIME_SERVER) {
+    if (shouldUseServerCapture(settings)) {
+      await runServerCapture(settings);
+    } else if (canUseBrowserCapture()) {
+      await runClientCapture(settings);
+    } else if (runtimeMode === RUNTIME_SERVER) {
+      // Fallback path when browser capture library is unavailable.
       await runServerCapture(settings);
     } else {
-      await runClientCapture(settings);
+      throw new Error("브라우저 캡처를 사용할 수 없습니다.");
     }
     lastCaptureSignature = signature;
     setStatus("자동 반영 완료", false);
@@ -238,6 +247,7 @@ async function runServerCapture(settings) {
   const payload = {
     url: settings.url,
     theme: settings.theme,
+    fontPreset: settings.fontPreset,
     width: renderWidth,
     bodyFontSize: settings.bodyFontSize,
     uiFontSize: settings.uiFontSize,
@@ -274,6 +284,14 @@ async function runServerCapture(settings) {
   const fallbackName = `tweet-${tweetId}.${fallbackExt}`;
   const filename = parseFilenameFromDisposition(disposition) || fallbackName;
   applyCapturedAsset(blob, contentType, filename);
+}
+
+function shouldUseServerCapture(settings) {
+  if (runtimeMode !== RUNTIME_SERVER) {
+    return false;
+  }
+  // Prefer Playwright capture in server mode to avoid html2canvas text rendering artifacts.
+  return Boolean(settings);
 }
 
 async function runClientCapture(settings) {
@@ -394,9 +412,6 @@ async function waitForFrameMediaReady(frameDocument) {
     return;
   }
   const imageElements = Array.from(frameDocument.querySelectorAll("img"));
-  if (imageElements.length === 0) {
-    return;
-  }
   await Promise.all(
     imageElements.map((element) => {
       if (element.complete) {
@@ -417,6 +432,13 @@ async function waitForFrameMediaReady(frameDocument) {
       });
     })
   );
+  const fontSet = frameDocument.fonts;
+  if (fontSet && typeof fontSet.ready?.then === "function") {
+    await Promise.race([fontSet.ready, delay(2000)]);
+  }
+  await new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  });
 }
 
 async function canvasToBlob(canvas) {
@@ -441,6 +463,7 @@ function readSettings(showError) {
   return {
     url,
     theme: themeInput.value || "paper",
+    fontPreset: normalizeFontPreset(fontPresetInput?.value),
     ratio: ratioInput.value === "desktop" ? "desktop" : "mobile",
     width: clampNumber(Number(widthInput.value), 420, 1080, 1080),
     bodyFontSize: clampNumber(Number(bodyFontSizeInput.value), 60, 180, 105),
@@ -462,11 +485,19 @@ function readSettings(showError) {
   };
 }
 
+function normalizeFontPreset(value) {
+  if (value === "grotesk" || value === "noto") {
+    return value;
+  }
+  return "system";
+}
+
 function buildCardUrl(settings) {
   const renderWidth = resolveRenderWidth(settings);
   const params = new URLSearchParams({
     url: settings.url,
     theme: settings.theme,
+    fontPreset: settings.fontPreset,
     width: String(renderWidth),
     bodyFontSize: String(settings.bodyFontSize),
     uiFontSize: String(settings.uiFontSize),
@@ -493,6 +524,7 @@ function buildClientCardDocument(tweet, settings) {
     tweet,
     width: resolveRenderWidth(settings),
     theme: settings.theme,
+    fontPreset: settings.fontPreset,
     locale: "ko-KR",
     bodyFontSize: settings.bodyFontSize,
     uiFontSize: settings.uiFontSize,
@@ -615,7 +647,7 @@ async function bootstrap() {
 
   if (await isServerAvailable()) {
     runtimeMode = RUNTIME_SERVER;
-    setStatus("서버 모드 연결 완료", false);
+    setStatus("서버 모드 연결 완료 (캡처는 서버 기준)", false);
   } else if (isClientModeAvailable()) {
     runtimeMode = RUNTIME_CLIENT;
     setStatus("브라우저 모드: 이 기기 자원으로 처리합니다.", false);
@@ -657,6 +689,10 @@ function isClientModeAvailable() {
       typeof window.clientTweetService.fetchTweetModel === "function" &&
       typeof window.html2canvas === "function"
   );
+}
+
+function canUseBrowserCapture() {
+  return typeof window.html2canvas === "function";
 }
 
 function syncRetweetMediaToggle() {
@@ -788,6 +824,7 @@ function appendPhotoOptions(target, photos, contextKey, prefixLabel) {
   photos.forEach((_photo, index) => {
     target.push({
       key: `${contextKey}-photo-${index}`,
+      kind: "photo",
       label: `${prefixLabel} 이미지 ${index + 1}`
     });
   });
@@ -801,6 +838,7 @@ function appendVideoOptions(target, videos, contextKey, prefixLabel) {
     const isGif = Boolean(video && video.isGif);
     target.push({
       key: `${contextKey}-video-${index}`,
+      kind: "video",
       label: `${prefixLabel} ${isGif ? "GIF" : "영상"} ${index + 1}`
     });
   });

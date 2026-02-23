@@ -57,6 +57,7 @@ app.get("/api/card", async (req, res, next) => {
     );
     const locale = parseLocale(req.query.locale);
     const theme = parseTheme(req.query.theme);
+    const fontPreset = parseFontPreset(req.query.fontPreset);
     const renderOptions = {
       includeMedia: parseBoolean(req.query.includeMedia, true),
       includeSharedTweet: parseBoolean(req.query.includeRetweet, true),
@@ -75,6 +76,7 @@ app.get("/api/card", async (req, res, next) => {
       bodyFontSize,
       uiFontSize,
       theme,
+      fontPreset,
       locale,
       options: renderOptions
     });
@@ -108,6 +110,7 @@ app.post("/api/capture", async (req, res, next) => {
     const scale = parseNumber(req.body?.scale, 2, 1, 3);
     const locale = parseLocale(req.body?.locale);
     const theme = parseTheme(req.body?.theme);
+    const fontPreset = parseFontPreset(req.body?.fontPreset);
     const mediaFit = parseMediaFit(req.body?.mediaFit);
     const composeVideo = parseBoolean(req.body?.composeVideo, true);
     const renderOptions = {
@@ -130,6 +133,7 @@ app.post("/api/capture", async (req, res, next) => {
       bodyFontSize,
       uiFontSize,
       theme,
+      fontPreset,
       locale,
       options: renderOptions
     };
@@ -588,6 +592,13 @@ function parseTheme(theme) {
     return "slate";
   }
   return "paper";
+}
+
+function parseFontPreset(fontPreset) {
+  if (fontPreset === "grotesk" || fontPreset === "noto") {
+    return fontPreset;
+  }
+  return "system";
 }
 
 function parseMediaFit(mediaFit) {

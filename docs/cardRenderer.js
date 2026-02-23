@@ -1,7 +1,25 @@
+const FONT_PRESETS = Object.freeze({
+  system: {
+    main:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
+    copy:
+      '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif'
+  },
+  grotesk: {
+    main: '"Space Grotesk", "IBM Plex Sans KR", "Segoe UI", sans-serif',
+    copy: '"IBM Plex Sans KR", "Space Grotesk", "Segoe UI", sans-serif'
+  },
+  noto: {
+    main: '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif',
+    copy: '"Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif'
+  }
+});
+
 function renderTweetDocument({
   tweet,
   width = 1080,
   theme = "paper",
+  fontPreset = "system",
   locale = "ko-KR",
   bodyFontSize,
   uiFontSize,
@@ -18,6 +36,7 @@ function renderTweetDocument({
     105
   );
   const clampedUiScale = clampFontScale(uiFontSize ?? numericLegacyFontSize ?? 95, 95);
+  const fontTokens = resolveFontPreset(fontPreset);
   const uiRem = (baseRem) => formatCssRem(baseRem * clampedUiScale);
   const bodyRem = (baseRem) => formatCssRem(baseRem * clampedBodyScale);
   const renderOptions = normalizeRenderOptions(options);
@@ -73,8 +92,8 @@ function renderTweetDocument({
   <title>트윗 카드</title>
   <style>
     :root {
-      --font-main: "Space Grotesk", "IBM Plex Sans KR", "Segoe UI", sans-serif;
-      --font-copy: "IBM Plex Sans KR", "Space Grotesk", "Segoe UI", sans-serif;
+      --font-main: ${fontTokens.main};
+      --font-copy: ${fontTokens.copy};
       --paper-card: #ffffff;
       --paper-line: #dde5ef;
       --paper-text: #101820;
@@ -504,6 +523,13 @@ function renderTweetDocument({
   </main>
 </body>
 </html>`;
+}
+
+function resolveFontPreset(input) {
+  if (typeof input !== "string") {
+    return FONT_PRESETS.system;
+  }
+  return FONT_PRESETS[input] || FONT_PRESETS.system;
 }
 
 function normalizeRenderOptions(options) {
