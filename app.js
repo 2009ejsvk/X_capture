@@ -525,13 +525,20 @@
 
     try {
       elements.captureBtn.disabled = true;
-      setStatus("이미지 생성 중...");
+      setStatus("고해상도 이미지 생성 중...");
 
-      const scale = Math.min(window.devicePixelRatio || 1, 2);
+      const elementWidth = elements.captureArea.offsetWidth || 360;
+      const deviceScale = window.devicePixelRatio || 1;
+      const minExportWidth = 1440;
+      const widthScale = minExportWidth / elementWidth;
+      const scale = Math.min(Math.max(deviceScale, widthScale, 2), 5);
+
       const canvas = await html2canvas(elements.captureArea, {
         useCORS: true,
+        allowTaint: false,
         scale,
         backgroundColor: null,
+        imageTimeout: 15000,
       });
 
       const blob = await new Promise((resolve, reject) => {
