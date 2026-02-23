@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>X Capture Mobile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">MOBILE WEB TOOL</p>
+        <h1>X 콘텐츠 캡처</h1>
+        <p class="hero-text">트윗 URL을 붙여넣고 카드 형태로 저장하세요.</p>
+      </header>
+
+      <section class="panel">
+        <label for="tweetUrl">트윗 URL</label>
+        <div class="url-row">
+          <input
+            id="tweetUrl"
+            type="url"
+            inputmode="url"
+            placeholder="https://x.com/.../status/..."
+            autocomplete="off"
+          />
+          <button id="fetchBtn" class="btn btn-accent">불러오기</button>
+        </div>
+        <p id="statusText" class="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel editor-panel">
+        <h2>내용 편집</h2>
+        <div class="editor-grid">
+          <label for="authorName">작성자명</label>
+          <input id="authorName" type="text" maxlength="40" />
+
+          <label for="authorHandle">핸들</label>
+          <input id="authorHandle" type="text" maxlength="40" />
+
+          <label for="tweetDate">날짜</label>
+          <input id="tweetDate" type="text" maxlength="40" />
+
+          <label for="tweetText">본문</label>
+          <textarea id="tweetText" rows="5" maxlength="500"></textarea>
+
+          <label for="imageInput">이미지(선택)</label>
+          <div class="image-row">
+            <input id="imageInput" type="file" accept="image/*" multiple />
+            <button id="removeImageBtn" class="btn btn-ghost" type="button">삭제</button>
+          </div>
+
+          <label for="mediaLayout">이미지 배치(2장 이상)</label>
+          <select id="mediaLayout">
+            <option value="grid">나란히</option>
+            <option value="vertical">세로</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="panel preview-panel">
+        <h2>미리보기</h2>
+        <div id="captureArea" class="capture-area">
+          <article class="tweet-card">
+            <header class="tweet-head">
+              <div id="previewAvatar" class="avatar">
+                <img id="previewAvatarImage" class="avatar-image hidden" alt="작성자 프로필 사진" />
+                <span id="previewAvatarInitial">X</span>
+              </div>
+              <div class="author-meta">
+                <p id="previewName" class="name">X User</p>
+                <p id="previewHandle" class="handle">@x</p>
+              </div>
+              <span class="platform-mark">𝕏</span>
+            </header>
+
+            <p id="previewText" class="tweet-text">캡처할 트윗 본문이 여기에 표시됩니다.</p>
+            <div id="previewMedia" class="tweet-media hidden" aria-label="트윗 첨부 이미지 목록"></div>
+
+            <footer class="tweet-foot">
+              <span id="previewDate">날짜</span>
+              <span>·</span>
+              <span id="previewSource">x.com</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="sampleBtn" class="btn btn-ghost" type="button">샘플 채우기</button>
+        <button id="captureBtn" class="btn btn-accent" type="button">PNG 저장</button>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
