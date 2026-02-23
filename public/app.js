@@ -288,11 +288,101 @@ async function runServerCapture(settings) {
 }
 
 function shouldUseServerCapture(settings) {
-  if (runtimeMode !== RUNTIME_SERVER) {
+  if (runtimeMode !== RUNTIME_SERVER || !settings) {
     return false;
   }
-  // Prefer Playwright capture in server mode to avoid html2canvas text rendering artifacts.
-  return Boolean(settings);
+  // WYSIWYG: use browser capture for still images, server capture only when a video is selected.
+  return detectSelectedVideoState(settings);
+}
+
+function detectSelectedVideoState(settings) {
+  if (!settings || settings.includeMedia !== true) {
+    return false;
+  }
+
+  const tweetId = extractTweetId(settings.url);
+  const selectedKeySet = new Set(
+    Array.isArray(settings.selectedMediaKeys) ? settings.selectedMediaKeys : []
+  );
+  const mediaSelectionEnabled = settings.mediaSelectionEnabled === true;
+
+  if (
+    tweetId &&
+    tweetId === mediaTweetId &&
+    Array.isArray(mediaOptions) &&
+    mediaOptions.length > 0
+  ) {
+    const videoKeys = mediaOptions
+      .filter((option) => {
+        if (!option || typeof option.key !== "string") {
+          return false;
+        }
+        if (option.kind === "video") {
+          return true;
+        }
+        return option.key.includes("-video-");
+      })
+      .map((option) => option.key);
+    if (videoKeys.length === 0) {
+      return false;
+    }
+    if (!mediaSelectionEnabled) {
+      return true;
+    }
+    return videoKeys.some((key) => selectedKeySet.has(key));
+  }
+
+  if (!tweetId || !tweetModelCache.has(tweetId)) {
+    return false;
+  }
+  const tweet = tweetModelCache.get(tweetId);
+  if (!tweet || typeof tweet !== "object") {
+    return false;
+  }
+
+  if (hasSelectedVideosInContext(tweet.videos, "main", selectedKeySet, mediaSelectionEnabled)) {
+    return true;
+  }
+
+  if (
+    settings.includeRetweet !== false &&
+    settings.includeRetweetMedia !== false &&
+    hasSelectedVideosInContext(
+      tweet.sharedTweet?.videos,
+      "shared",
+      selectedKeySet,
+      mediaSelectionEnabled
+    )
+  ) {
+    return true;
+  }
+
+  if (settings.includeReplyThread === true && Array.isArray(tweet.replyChain)) {
+    for (let index = 0; index < tweet.replyChain.length; index += 1) {
+      if (
+        hasSelectedVideosInContext(
+          tweet.replyChain[index]?.videos,
+          `reply-${index}`,
+          selectedKeySet,
+          mediaSelectionEnabled
+        )
+      ) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function hasSelectedVideosInContext(videos, contextKey, selectedKeySet, mediaSelectionEnabled) {
+  if (!Array.isArray(videos) || videos.length === 0) {
+    return false;
+  }
+  if (!mediaSelectionEnabled) {
+    return true;
+  }
+  return videos.some((_video, index) => selectedKeySet.has(`${contextKey}-video-${index}`));
 }
 
 async function runClientCapture(settings) {
@@ -648,7 +738,7 @@ async function bootstrap() {
 
   if (await isServerAvailable()) {
     runtimeMode = RUNTIME_SERVER;
-    setStatus("서버 모드 연결 완료 (캡처는 서버 기준)", false);
+    setStatus("서버 모드 연결 완료 (이미지는 브라우저, 영상은 서버)", false);
   } else if (isClientModeAvailable()) {
     runtimeMode = RUNTIME_CLIENT;
     setStatus("브라우저 모드: 이 기기 자원으로 처리합니다.", false);
