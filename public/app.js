@@ -29,7 +29,6 @@ const PREVIEW_DELAY_MS = 80;
 const CAPTURE_DELAY_MS = 260;
 const MEDIA_PICKER_DELAY_MS = 160;
 const WYSIWYG_CAPTURE_SCALE = 1;
-const WYSIWYG_FONT_PRESET = "noto";
 const RUNTIME_SERVER = "server";
 const RUNTIME_CLIENT = "client";
 const TWEET_CACHE_LIMIT = 12;
@@ -288,101 +287,11 @@ async function runServerCapture(settings) {
 }
 
 function shouldUseServerCapture(settings) {
-  if (runtimeMode !== RUNTIME_SERVER || !settings) {
+  if (!settings) {
     return false;
   }
-  // WYSIWYG: use browser capture for still images, server capture only when a video is selected.
-  return detectSelectedVideoState(settings);
-}
-
-function detectSelectedVideoState(settings) {
-  if (!settings || settings.includeMedia !== true) {
-    return false;
-  }
-
-  const tweetId = extractTweetId(settings.url);
-  const selectedKeySet = new Set(
-    Array.isArray(settings.selectedMediaKeys) ? settings.selectedMediaKeys : []
-  );
-  const mediaSelectionEnabled = settings.mediaSelectionEnabled === true;
-
-  if (
-    tweetId &&
-    tweetId === mediaTweetId &&
-    Array.isArray(mediaOptions) &&
-    mediaOptions.length > 0
-  ) {
-    const videoKeys = mediaOptions
-      .filter((option) => {
-        if (!option || typeof option.key !== "string") {
-          return false;
-        }
-        if (option.kind === "video") {
-          return true;
-        }
-        return option.key.includes("-video-");
-      })
-      .map((option) => option.key);
-    if (videoKeys.length === 0) {
-      return false;
-    }
-    if (!mediaSelectionEnabled) {
-      return true;
-    }
-    return videoKeys.some((key) => selectedKeySet.has(key));
-  }
-
-  if (!tweetId || !tweetModelCache.has(tweetId)) {
-    return false;
-  }
-  const tweet = tweetModelCache.get(tweetId);
-  if (!tweet || typeof tweet !== "object") {
-    return false;
-  }
-
-  if (hasSelectedVideosInContext(tweet.videos, "main", selectedKeySet, mediaSelectionEnabled)) {
-    return true;
-  }
-
-  if (
-    settings.includeRetweet !== false &&
-    settings.includeRetweetMedia !== false &&
-    hasSelectedVideosInContext(
-      tweet.sharedTweet?.videos,
-      "shared",
-      selectedKeySet,
-      mediaSelectionEnabled
-    )
-  ) {
-    return true;
-  }
-
-  if (settings.includeReplyThread === true && Array.isArray(tweet.replyChain)) {
-    for (let index = 0; index < tweet.replyChain.length; index += 1) {
-      if (
-        hasSelectedVideosInContext(
-          tweet.replyChain[index]?.videos,
-          `reply-${index}`,
-          selectedKeySet,
-          mediaSelectionEnabled
-        )
-      ) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function hasSelectedVideosInContext(videos, contextKey, selectedKeySet, mediaSelectionEnabled) {
-  if (!Array.isArray(videos) || videos.length === 0) {
-    return false;
-  }
-  if (!mediaSelectionEnabled) {
-    return true;
-  }
-  return videos.some((_video, index) => selectedKeySet.has(`${contextKey}-video-${index}`));
+  // WYSIWYG priority: capture with the same browser renderer whenever possible.
+  return runtimeMode === RUNTIME_SERVER && !canUseBrowserCapture();
 }
 
 async function runClientCapture(settings) {
@@ -423,7 +332,8 @@ async function captureFrameToCanvas(targetResolver, scale) {
         useCORS: true,
         allowTaint: false,
         logging: false,
-        backgroundColor: null
+        backgroundColor: null,
+        foreignObjectRendering: true
       });
     } catch (error) {
       lastError = error;
@@ -554,7 +464,7 @@ function readSettings(showError) {
   return {
     url,
     theme: themeInput.value || "paper",
-    fontPreset: WYSIWYG_FONT_PRESET,
+    fontPreset: normalizeFontPreset(fontPresetInput?.value),
     ratio: ratioInput.value === "desktop" ? "desktop" : "mobile",
     width: clampNumber(Number(widthInput.value), 420, 1080, 1080),
     bodyFontSize: clampNumber(Number(bodyFontSizeInput.value), 60, 180, 105),
@@ -738,7 +648,7 @@ async function bootstrap() {
 
   if (await isServerAvailable()) {
     runtimeMode = RUNTIME_SERVER;
-    setStatus("서버 모드 연결 완료 (이미지는 브라우저, 영상은 서버)", false);
+    setStatus("서버 모드 연결 완료 (캡처는 브라우저 우선)", false);
   } else if (isClientModeAvailable()) {
     runtimeMode = RUNTIME_CLIENT;
     setStatus("브라우저 모드: 이 기기 자원으로 처리합니다.", false);
@@ -748,11 +658,6 @@ async function bootstrap() {
   }
 
   autoEnabled = true;
-  if (fontPresetInput) {
-    fontPresetInput.value = WYSIWYG_FONT_PRESET;
-    fontPresetInput.disabled = true;
-    fontPresetInput.title = "WYSIWYG 안정화를 위해 폰트가 고정되었습니다.";
-  }
   syncRetweetMediaToggle();
   syncMediaDependentToggles();
   updateFontSizeLabels();
