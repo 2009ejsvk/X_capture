@@ -221,7 +221,15 @@ async function runCaptureUpdate() {
     if (shouldUseServerCapture(settings)) {
       await runServerCapture(settings);
     } else if (canUseBrowserCapture()) {
-      await runClientCapture(settings);
+      try {
+        await runClientCapture(settings);
+      } catch (error) {
+        if (runtimeMode === RUNTIME_SERVER) {
+          await runServerCapture(settings);
+        } else {
+          throw error;
+        }
+      }
     } else if (runtimeMode === RUNTIME_SERVER) {
       // Fallback path when browser capture library is unavailable.
       await runServerCapture(settings);
