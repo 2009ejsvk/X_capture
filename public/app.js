@@ -29,6 +29,7 @@ const PREVIEW_DELAY_MS = 80;
 const CAPTURE_DELAY_MS = 260;
 const MEDIA_PICKER_DELAY_MS = 160;
 const AUTO_CAPTURE_SCALE_DESKTOP = 1.25;
+const AUTO_CAPTURE_SCALE_MOBILE_MAX = 1.25;
 const RUNTIME_SERVER = "server";
 const RUNTIME_CLIENT = "client";
 const TWEET_CACHE_LIMIT = 12;
@@ -946,7 +947,7 @@ function resolveRenderWidth(settings) {
 function resolveCaptureScale(settings, renderWidth) {
   if (settings.ratio === "mobile") {
     const scale = settings.width / renderWidth;
-    return clampFloat(scale, 1, 3, 2);
+    return clampFloat(scale, 1, AUTO_CAPTURE_SCALE_MOBILE_MAX, AUTO_CAPTURE_SCALE_MOBILE_MAX);
   }
   return AUTO_CAPTURE_SCALE_DESKTOP;
 }

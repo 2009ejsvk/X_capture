@@ -194,12 +194,14 @@ function renderTweetDocument({
       font-size: ${uiRem(1.05)};
       font-weight: 700;
       line-height: 1.2;
+      word-spacing: 0.02em;
       word-break: break-word;
     }
 
     .author-handle {
       margin-top: 2px;
       font-size: ${uiRem(0.9)};
+      word-spacing: 0.02em;
       color: var(--paper-sub);
     }
 
@@ -216,6 +218,7 @@ function renderTweetDocument({
       font-weight: 500;
       line-height: 1.62;
       letter-spacing: 0;
+      word-spacing: 0.02em;
     }
 
     .tweet-text a {
@@ -240,6 +243,7 @@ function renderTweetDocument({
       line-height: 1.58;
       white-space: normal;
       overflow-wrap: anywhere;
+      word-spacing: 0.02em;
     }
 
     body.theme-slate .manual-text {
@@ -254,6 +258,7 @@ function renderTweetDocument({
       font-size: ${uiRem(0.82)};
       font-weight: 500;
       line-height: 1.4;
+      word-spacing: 0.02em;
     }
 
     body.theme-slate .meta {
