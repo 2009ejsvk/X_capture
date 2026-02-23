@@ -28,8 +28,8 @@ const STORAGE_KEY = "tweet-recomposer:last-url";
 const PREVIEW_DELAY_MS = 80;
 const CAPTURE_DELAY_MS = 260;
 const MEDIA_PICKER_DELAY_MS = 160;
-const AUTO_CAPTURE_SCALE_DESKTOP = 1.25;
-const AUTO_CAPTURE_SCALE_MOBILE_MAX = 1.25;
+const WYSIWYG_CAPTURE_SCALE = 1;
+const WYSIWYG_FONT_PRESET = "noto";
 const RUNTIME_SERVER = "server";
 const RUNTIME_CLIENT = "client";
 const TWEET_CACHE_LIMIT = 12;
@@ -216,7 +216,7 @@ async function runCaptureUpdate() {
 
   captureInFlight = true;
   captureQueued = false;
-  setStatus("고해상도 캡처 생성 중...", false);
+  setStatus("캡처 생성 중...", false);
 
   try {
     if (shouldUseServerCapture(settings)) {
@@ -464,7 +464,7 @@ function readSettings(showError) {
   return {
     url,
     theme: themeInput.value || "paper",
-    fontPreset: normalizeFontPreset(fontPresetInput?.value),
+    fontPreset: WYSIWYG_FONT_PRESET,
     ratio: ratioInput.value === "desktop" ? "desktop" : "mobile",
     width: clampNumber(Number(widthInput.value), 420, 1080, 1080),
     bodyFontSize: clampNumber(Number(bodyFontSizeInput.value), 60, 180, 105),
@@ -658,6 +658,11 @@ async function bootstrap() {
   }
 
   autoEnabled = true;
+  if (fontPresetInput) {
+    fontPresetInput.value = WYSIWYG_FONT_PRESET;
+    fontPresetInput.disabled = true;
+    fontPresetInput.title = "WYSIWYG 안정화를 위해 폰트가 고정되었습니다.";
+  }
   syncRetweetMediaToggle();
   syncMediaDependentToggles();
   updateFontSizeLabels();
@@ -945,11 +950,10 @@ function resolveRenderWidth(settings) {
 }
 
 function resolveCaptureScale(settings, renderWidth) {
-  if (settings.ratio === "mobile") {
-    const scale = settings.width / renderWidth;
-    return clampFloat(scale, 1, AUTO_CAPTURE_SCALE_MOBILE_MAX, AUTO_CAPTURE_SCALE_MOBILE_MAX);
+  if (!settings || !renderWidth) {
+    return WYSIWYG_CAPTURE_SCALE;
   }
-  return AUTO_CAPTURE_SCALE_DESKTOP;
+  return WYSIWYG_CAPTURE_SCALE;
 }
 
 function clampFloat(value, min, max, fallback) {
