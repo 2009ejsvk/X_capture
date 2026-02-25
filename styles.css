@@ -144,6 +144,26 @@ textarea:focus-visible {
   align-items: center;
 }
 
+.option-row {
+  display: grid;
+  gap: 8px;
+}
+
+.check-option {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.check-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
 .capture-area {
   border-radius: var(--radius-lg);
   padding: 16px;
@@ -158,6 +178,24 @@ textarea:focus-visible {
   border-radius: var(--radius-lg);
   padding: 14px;
   box-shadow: 0 10px 24px rgba(10, 19, 30, 0.05);
+}
+
+.retweet-line {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #697081;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.retweet-avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid #dce3ed;
+  object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .tweet-head {
@@ -274,6 +312,128 @@ textarea:focus-visible {
 .tweet-media[data-layout="vertical"] .tweet-image {
   aspect-ratio: auto;
   object-fit: contain;
+}
+
+.quote-card {
+  margin: 4px 0 10px;
+  border: 1px solid #dfe5ee;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fbfcff;
+}
+
+.reply-parent-card {
+  margin: 0 0 10px;
+}
+
+.reply-parent-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #697081;
+}
+
+.quote-head {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.quote-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1px solid #dce3ed;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.quote-meta {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.quote-name,
+.quote-handle {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quote-name {
+  font-weight: 700;
+}
+
+.quote-handle {
+  color: #697081;
+}
+
+.quote-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.quote-media {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr;
+  margin-top: 8px;
+}
+
+.quote-image {
+  width: 100%;
+  display: block;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid #e8ecf4;
+  object-fit: contain;
+  aspect-ratio: auto;
+  background: #f6f8fb;
+}
+
+.quote-media[data-count="2"],
+.quote-media[data-count="3"],
+.quote-media[data-count="4"] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.tweet-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid #edf1f6;
+}
+
+.tweet-action-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #71788a;
+  font-size: 12px;
+}
+
+.tweet-action-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+.tweet-action-item span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tweet-foot {
