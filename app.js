@@ -10,7 +10,7 @@
     imageInput: document.getElementById("imageInput"),
     mediaLayout: document.getElementById("mediaLayout"),
     removeImageBtn: document.getElementById("removeImageBtn"),
-    sampleBtn: document.getElementById("sampleBtn"),
+    resetBtn: document.getElementById("resetBtn"),
     captureBtn: document.getElementById("captureBtn"),
     captureArea: document.getElementById("captureArea"),
     previewAvatar: document.getElementById("previewAvatar"),
@@ -24,16 +24,33 @@
     previewSource: document.getElementById("previewSource"),
   };
 
-  const state = {
-    sourceUrl: "",
-    authorName: "X User",
-    authorHandle: "@x",
-    tweetDate: new Date().toLocaleDateString("ko-KR"),
-    tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
-    profileImageSrc: "",
-    mediaLayout: "grid",
-    imageDataUrls: [],
-  };
+  function formatNumericDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
+
+  function currentDateTimeLabel() {
+    return formatNumericDateTime(new Date());
+  }
+
+  function createInitialState() {
+    return {
+      sourceUrl: "",
+      authorName: "X User",
+      authorHandle: "@x",
+      tweetDate: currentDateTimeLabel(),
+      tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
+      profileImageSrc: "",
+      mediaLayout: "grid",
+      imageDataUrls: [],
+    };
+  }
+
+  const state = createInitialState();
 
   function setStatus(message, type) {
     elements.statusText.textContent = message || "";
@@ -223,19 +240,40 @@
 
   function formatDateLabel(rawDate) {
     if (!rawDate) {
-      return new Date().toLocaleDateString("ko-KR");
+      return currentDateTimeLabel();
     }
 
-    const parsed = new Date(rawDate);
+    const normalizedRawDate = String(rawDate).trim();
+    if (!normalizedRawDate) {
+      return currentDateTimeLabel();
+    }
+
+    const parsed = new Date(normalizedRawDate);
     if (Number.isNaN(parsed.getTime())) {
-      return String(rawDate);
+      const candidates = [normalizedRawDate];
+      const dotParts = normalizedRawDate
+        .split("·")
+        .map((part) => part.trim())
+        .filter(Boolean);
+
+      if (dotParts.length >= 2) {
+        const left = dotParts[0];
+        const right = dotParts.slice(1).join(" ");
+        candidates.push(`${right} ${left}`);
+        candidates.push(right);
+      }
+
+      for (const candidate of candidates) {
+        const reparsed = new Date(candidate);
+        if (!Number.isNaN(reparsed.getTime())) {
+          return formatNumericDateTime(reparsed);
+        }
+      }
+
+      return normalizedRawDate;
     }
 
-    return parsed.toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return formatNumericDateTime(parsed);
   }
 
   function isImageLikeUrl(url) {
@@ -344,7 +382,7 @@
 
     elements.previewName.textContent = trimmedName;
     elements.previewHandle.textContent = handleWithPrefix;
-    elements.previewDate.textContent = state.tweetDate.trim() || new Date().toLocaleDateString("ko-KR");
+    elements.previewDate.textContent = state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
     elements.previewText.textContent = /\S/.test(rawText) ? rawText : "(본문 없음)";
     const initial = trimmedName.charAt(0).toUpperCase();
@@ -424,7 +462,7 @@
         state.sourceUrl = payload.url || result.usedUrl || normalized.canonicalUrl;
         state.authorName = (payload.author_name || "").trim() || "X User";
         state.authorHandle = parseHandle(payload.author_url || "", payload.author_name || "x");
-        state.tweetDate = parsed.dateLabel || new Date().toLocaleDateString("ko-KR");
+        state.tweetDate = formatDateLabel(payload.date || parsed.dateLabel);
         state.tweetText = parsed.text || "본문을 가져오지 못했습니다. 직접 입력해 주세요.";
         imageUrls = payload.thumbnail_url ? [payload.thumbnail_url] : [];
 
@@ -439,6 +477,9 @@
           }
           if (Array.isArray(vxMeta.imageUrls) && vxMeta.imageUrls.length) {
             imageUrls = vxMeta.imageUrls;
+          }
+          if (vxMeta.tweetDate) {
+            state.tweetDate = vxMeta.tweetDate;
           }
         } catch (error) {
           // oEmbed 본문은 이미 가져왔으므로 이미지 보강 실패는 무시한다.
@@ -561,19 +602,13 @@
     }
   }
 
-  function fillSample() {
-    state.sourceUrl = "https://x.com/sample/status/1";
-    state.authorName = "X Capture";
-    state.authorHandle = "@xcapture";
-    state.tweetDate = "2026년 2월 23일";
-    state.tweetText =
-      "모바일 웹에서 트윗 내용을 빠르게 카드로 만들어 PNG로 저장하는 샘플입니다.";
-    state.profileImageSrc = "";
-    state.mediaLayout = "grid";
-    state.imageDataUrls = [];
+  function resetEditors() {
+    Object.assign(state, createInitialState());
+    elements.tweetUrl.value = "";
+    elements.imageInput.value = "";
     applyStateToInputs();
     renderPreview();
-    setStatus("샘플 데이터를 채웠습니다.");
+    setStatus("입력값을 초기화했습니다.");
   }
 
   function wireEvents() {
@@ -597,9 +632,10 @@
     elements.imageInput.addEventListener("change", onImageSelected);
     elements.removeImageBtn.addEventListener("click", onRemoveImage);
     elements.captureBtn.addEventListener("click", onCapture);
-    elements.sampleBtn.addEventListener("click", fillSample);
+    elements.resetBtn.addEventListener("click", resetEditors);
   }
 
   wireEvents();
-  fillSample();
+  applyStateToInputs();
+  renderPreview();
 })();
