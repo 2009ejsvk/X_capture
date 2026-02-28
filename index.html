@@ -30,6 +30,7 @@
             placeholder="https://x.com/.../status/..."
             autocomplete="off"
           />
+          <button id="clearUrlBtn" class="btn btn-ghost" type="button">삭제</button>
           <button id="fetchBtn" class="btn btn-accent">불러오기</button>
         </div>
         <p id="statusText" class="status" aria-live="polite"></p>
@@ -48,7 +49,10 @@
           <input id="tweetDate" type="text" maxlength="40" />
 
           <label for="tweetText">본문</label>
-          <textarea id="tweetText" rows="5" maxlength="500"></textarea>
+          <textarea id="tweetText" rows="5"></textarea>
+
+          <label for="translationText">번역</label>
+          <textarea id="translationText" rows="4" placeholder="번역 내용을 입력하세요."></textarea>
 
           <label for="replyCount">댓글 수</label>
           <input id="replyCount" type="text" inputmode="numeric" maxlength="20" />
@@ -70,9 +74,23 @@
 
           <label for="mediaLayout">이미지 배치(2장 이상)</label>
           <select id="mediaLayout">
+            <option value="vertical" selected>세로</option>
             <option value="grid">나란히</option>
-            <option value="vertical">세로</option>
           </select>
+
+          <span>답글 옵션</span>
+          <div class="option-row">
+            <label class="check-option" for="showReplyToggle">
+              <input id="showReplyToggle" type="checkbox" checked />
+              답글 표시
+            </label>
+            <label class="check-option" for="showReplyMediaToggle">
+              <input id="showReplyMediaToggle" type="checkbox" checked />
+              답글 이미지 표시
+            </label>
+          </div>
+
+          <div id="replyEditorList" class="reply-editor-list hidden" aria-label="답글 편집 목록"></div>
 
           <span>리트윗 원문 옵션</span>
           <div class="option-row">
@@ -91,6 +109,7 @@
       <section class="panel preview-panel">
         <h2>미리보기</h2>
         <div id="captureArea" class="capture-area">
+          <section id="previewReplyList" class="capture-reply-list hidden" aria-label="답글 목록"></section>
           <article class="tweet-card">
             <p id="previewRetweet" class="retweet-line hidden" aria-live="polite">
               <img id="previewRetweetAvatar" class="retweet-avatar hidden" alt="리트윗 계정 프로필 사진" />
@@ -107,21 +126,11 @@
               </div>
               <span class="platform-mark">𝕏</span>
             </header>
-
-            <article id="previewReplyParent" class="reply-parent-card quote-card hidden" aria-label="답글 원본 트윗">
-              <p class="reply-parent-label">답글 대상</p>
-              <header class="quote-head">
-                <img id="previewReplyParentAvatar" class="quote-avatar hidden" alt="원본 작성자 프로필 사진" />
-                <div class="quote-meta">
-                  <span id="previewReplyParentName" class="quote-name"></span>
-                  <span id="previewReplyParentHandle" class="quote-handle"></span>
-                </div>
-              </header>
-              <p id="previewReplyParentText" class="quote-text"></p>
-              <div id="previewReplyParentMedia" class="quote-media hidden" aria-label="원본 트윗 첨부 이미지"></div>
-            </article>
-
             <p id="previewText" class="tweet-text">캡처할 트윗 본문이 여기에 표시됩니다.</p>
+            <section id="previewTranslation" class="tweet-translation hidden" aria-label="본문 번역">
+              <p class="tweet-translation-label">번역</p>
+              <p id="previewTranslationText" class="tweet-translation-text"></p>
+            </section>
             <div id="previewMedia" class="tweet-media hidden" aria-label="트윗 첨부 이미지 목록"></div>
             <article id="previewQuote" class="quote-card hidden" aria-label="인용 트윗 원문">
               <header class="quote-head">
@@ -163,9 +172,18 @@
             </div>
 
             <footer class="tweet-foot">
-              <span id="previewDate">날짜</span>
-              <span>·</span>
-              <span id="previewSource">x.com</span>
+              <div class="tweet-foot-meta">
+                <span id="previewDate">날짜</span>
+                <span>·</span>
+                <span id="previewSource">x.com</span>
+              </div>
+              <a
+                id="previewOriginalUrl"
+                class="tweet-original-url hidden"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+              ></a>
             </footer>
           </article>
         </div>

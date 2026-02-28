@@ -1,18 +1,23 @@
 (function () {
   const elements = {
     tweetUrl: document.getElementById("tweetUrl"),
+    clearUrlBtn: document.getElementById("clearUrlBtn"),
     fetchBtn: document.getElementById("fetchBtn"),
     statusText: document.getElementById("statusText"),
     authorName: document.getElementById("authorName"),
     authorHandle: document.getElementById("authorHandle"),
     tweetDate: document.getElementById("tweetDate"),
     tweetText: document.getElementById("tweetText"),
+    translationText: document.getElementById("translationText"),
     replyCount: document.getElementById("replyCount"),
     retweetCount: document.getElementById("retweetCount"),
     likeCount: document.getElementById("likeCount"),
     bookmarkCount: document.getElementById("bookmarkCount"),
     imageInput: document.getElementById("imageInput"),
     mediaLayout: document.getElementById("mediaLayout"),
+    showReplyToggle: document.getElementById("showReplyToggle"),
+    showReplyMediaToggle: document.getElementById("showReplyMediaToggle"),
+    replyEditorList: document.getElementById("replyEditorList"),
     showQuoteToggle: document.getElementById("showQuoteToggle"),
     showQuoteMediaToggle: document.getElementById("showQuoteMediaToggle"),
     removeImageBtn: document.getElementById("removeImageBtn"),
@@ -27,12 +32,7 @@
     previewRetweet: document.getElementById("previewRetweet"),
     previewRetweetAvatar: document.getElementById("previewRetweetAvatar"),
     previewRetweetText: document.getElementById("previewRetweetText"),
-    previewReplyParent: document.getElementById("previewReplyParent"),
-    previewReplyParentAvatar: document.getElementById("previewReplyParentAvatar"),
-    previewReplyParentName: document.getElementById("previewReplyParentName"),
-    previewReplyParentHandle: document.getElementById("previewReplyParentHandle"),
-    previewReplyParentText: document.getElementById("previewReplyParentText"),
-    previewReplyParentMedia: document.getElementById("previewReplyParentMedia"),
+    previewReplyList: document.getElementById("previewReplyList"),
     previewQuote: document.getElementById("previewQuote"),
     previewQuoteAvatar: document.getElementById("previewQuoteAvatar"),
     previewQuoteName: document.getElementById("previewQuoteName"),
@@ -41,12 +41,15 @@
     previewQuoteMedia: document.getElementById("previewQuoteMedia"),
     previewDate: document.getElementById("previewDate"),
     previewText: document.getElementById("previewText"),
+    previewTranslation: document.getElementById("previewTranslation"),
+    previewTranslationText: document.getElementById("previewTranslationText"),
     previewMedia: document.getElementById("previewMedia"),
     previewReplyCount: document.getElementById("previewReplyCount"),
     previewRetweetCount: document.getElementById("previewRetweetCount"),
     previewLikeCount: document.getElementById("previewLikeCount"),
     previewBookmarkCount: document.getElementById("previewBookmarkCount"),
     previewSource: document.getElementById("previewSource"),
+    previewOriginalUrl: document.getElementById("previewOriginalUrl"),
   };
 
   function formatNumericDateTime(date) {
@@ -105,11 +108,7 @@
       retweetByName: "",
       retweetByHandle: "",
       retweetByProfileImageSrc: "",
-      replyParentAuthorName: "",
-      replyParentAuthorHandle: "",
-      replyParentAuthorProfileImageSrc: "",
-      replyParentText: "",
-      replyParentDataUrls: [],
+      replyParents: [],
       quoteAuthorName: "",
       quoteAuthorHandle: "",
       quoteAuthorProfileImageSrc: "",
@@ -119,12 +118,15 @@
       retweetCount: "0",
       likeCount: "0",
       bookmarkCount: "0",
+      showReply: true,
+      showReplyMedia: true,
       showQuote: true,
       showQuoteMedia: true,
       tweetDate: currentDateTimeLabel(),
       tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
+      translationText: "",
       profileImageSrc: "",
-      mediaLayout: "grid",
+      mediaLayout: "vertical",
       imageDataUrls: [],
     };
   }
@@ -264,13 +266,41 @@
     return imageUrl ? imageUrl.replace("_normal", "_400x400") : "";
   }
 
-  function pickVxText(payload) {
+  function pickVxArticleTitle(payload) {
     return pickFirstNonEmpty([
+      payload && payload.article && payload.article.title,
+      payload && payload.article_title,
+      payload && payload.card && payload.card.title,
+      payload && payload.twitter_card && typeof payload.twitter_card === "object" && payload.twitter_card.title,
+    ]);
+  }
+
+  function pickVxText(payload) {
+    const text = pickFirstNonEmpty([
       payload && payload.full_text,
       payload && payload.text,
       payload && payload.tweet_text,
       payload && payload.content && payload.content.text,
+      payload && payload.raw_text && payload.raw_text.text,
+      payload && payload.rawText && payload.rawText.text,
+      payload && payload.note_tweet && payload.note_tweet.text,
+      payload && payload.noteTweet && payload.noteTweet.text,
     ]).replace(/\r\n/g, "\n");
+
+    const articleTitle = pickVxArticleTitle(payload);
+    if (!text) {
+      return articleTitle ? articleTitle.replace(/\r\n/g, "\n") : "";
+    }
+
+    const trimmed = text.trim();
+    const isSingleUrl = /^https?:\/\/\S+$/i.test(trimmed);
+    const isArticleOrShortUrl = /^https?:\/\/(?:www\.)?x\.com\/i\/article\/\d+/i.test(trimmed) ||
+      /^https?:\/\/t\.co\/[A-Za-z0-9]+$/i.test(trimmed);
+    if (articleTitle && isSingleUrl && isArticleOrShortUrl) {
+      return `${articleTitle}\n${trimmed}`;
+    }
+
+    return text;
   }
 
   function pickVxTweetUrl(payload) {
@@ -340,6 +370,104 @@
     return null;
   }
 
+  function extractTweetId(value) {
+    const matched = String(value || "").match(/\d{5,}/);
+    return matched ? matched[0] : "";
+  }
+
+  function pickPayloadTweetId(payload) {
+    return pickFirstNonEmpty([
+      payload && payload.tweetID,
+      payload && payload.tweetId,
+      payload && payload.id,
+      payload && payload.status_id,
+      payload && payload.statusId,
+      payload && payload.conversationID,
+      extractTweetId(pickVxTweetUrl(payload)),
+    ]);
+  }
+
+  function scoreTweetPayloadRichness(payload) {
+    if (!payload || typeof payload !== "object") {
+      return -1;
+    }
+
+    let score = 0;
+    const imageCount = pickVxImages(payload).length;
+    score += imageCount * 100;
+
+    if (payload.media && Array.isArray(payload.media.all) && payload.media.all.length) {
+      score += 60;
+    }
+
+    if (Array.isArray(payload.media_extended) && payload.media_extended.length) {
+      score += 45;
+    }
+
+    if (Array.isArray(payload.mediaURLs) && payload.mediaURLs.length) {
+      score += 35;
+    }
+
+    if (Array.isArray(payload.imageURLs) && payload.imageURLs.length) {
+      score += 30;
+    }
+
+    if (pickVxQuotePayload(payload)) {
+      score += 20;
+    }
+
+    if (pickVxRetweetedPayload(payload)) {
+      score += 20;
+    }
+
+    if (pickReplyParentReference(payload)) {
+      score += 15;
+    }
+
+    if (pickVxText(payload)) {
+      score += 5;
+    }
+
+    if (pickVxProfileImage(payload)) {
+      score += 5;
+    }
+
+    return score;
+  }
+
+  function pickReplyContextHandle(payload) {
+    if (!payload || typeof payload !== "object") {
+      return "";
+    }
+
+    const replyingTo = payload.replying_to || payload.replyingTo;
+    const replyTarget = payload.reply && typeof payload.reply === "object" ? payload.reply : null;
+    const repliedUser = replyTarget && replyTarget.user && typeof replyTarget.user === "object"
+      ? replyTarget.user
+      : null;
+    const fromReplyingToArray = Array.isArray(replyingTo) ? replyingTo[0] : replyingTo;
+
+    const rawHandle = pickFirstNonEmpty([
+      payload.replying_to_screen_name,
+      payload.replyingToScreenName,
+      payload.in_reply_to_screen_name,
+      payload.inReplyToScreenName,
+      payload.replying_to_username,
+      payload.replyingToUsername,
+      payload.in_reply_to_username,
+      payload.inReplyToUsername,
+      fromReplyingToArray && fromReplyingToArray.screen_name,
+      fromReplyingToArray && fromReplyingToArray.username,
+      typeof fromReplyingToArray === "string" ? fromReplyingToArray : "",
+      replyTarget && replyTarget.screen_name,
+      replyTarget && replyTarget.username,
+      repliedUser && repliedUser.screen_name,
+      repliedUser && repliedUser.username,
+    ]);
+
+    return normalizeHandle(rawHandle, "");
+  }
+
   async function fetchRawTweetPayload(tweetId) {
     const idText = String(tweetId || "").trim();
     const matched = idText.match(/\d{5,}/);
@@ -352,7 +480,7 @@
       `https://api.vxtwitter.com/status/${matched[0]}`,
     ];
 
-    let payload = null;
+    const candidates = [];
     let lastError = null;
 
     for (const endpoint of endpoints) {
@@ -369,38 +497,118 @@
         const body = await response.json();
         const candidate = body && typeof body === "object" && body.tweet ? body.tweet : body;
         if (candidate && typeof candidate === "object" && (candidate.tweetID || candidate.id)) {
-          payload = candidate;
-          break;
+          candidates.push(candidate);
         }
       } catch (error) {
         lastError = error;
       }
     }
 
-    if (!payload) {
+    if (!candidates.length) {
       throw lastError || new Error("보조 API에서 트윗을 찾지 못했습니다.");
     }
 
-    return payload;
+    if (candidates.length === 1) {
+      return candidates[0];
+    }
+
+    return [...candidates].sort((left, right) =>
+      scoreTweetPayloadRichness(right) - scoreTweetPayloadRichness(left))[0];
   }
 
-  async function resolveReplyParentPayload(contentPayload, fallbackPayload) {
+  async function resolveReplyParentPayloads(contentPayload, fallbackPayload, maxDepth) {
+    const references = [pickReplyParentReference(contentPayload), pickReplyParentReference(fallbackPayload)]
+      .filter(Boolean);
+    if (!references.length) {
+      return [];
+    }
+
+    const depthLimit = Number.isFinite(maxDepth) ? Math.max(1, Number(maxDepth)) : 5;
+    const triedFetchIds = new Set();
+
+    for (const startReference of references) {
+      const payloads = [];
+      const seenPayloadIds = new Set();
+      let currentReference = startReference;
+      let depth = 0;
+
+      while (currentReference && depth < depthLimit) {
+        let currentPayload = null;
+        if (currentReference.payload && typeof currentReference.payload === "object") {
+          currentPayload = currentReference.payload;
+        } else if (currentReference.id) {
+          const id = extractTweetId(currentReference.id);
+          if (!id || triedFetchIds.has(id)) {
+            break;
+          }
+
+          triedFetchIds.add(id);
+          try {
+            currentPayload = await fetchRawTweetPayload(id);
+          } catch (error) {
+            break;
+          }
+        }
+
+        if (!currentPayload) {
+          break;
+        }
+
+        const payloadId = extractTweetId(pickPayloadTweetId(currentPayload));
+        if (payloadId && seenPayloadIds.has(payloadId)) {
+          break;
+        }
+        if (payloadId) {
+          seenPayloadIds.add(payloadId);
+        }
+
+        payloads.push(currentPayload);
+        currentReference = pickReplyParentReference(currentPayload);
+        depth += 1;
+      }
+
+      if (payloads.length) {
+        return payloads;
+      }
+    }
+
+    return [];
+  }
+
+  function resolveReplyContextMeta(contentPayload, fallbackPayload) {
+    const directHandle = pickReplyContextHandle(contentPayload) || pickReplyContextHandle(fallbackPayload);
+    if (directHandle) {
+      return {
+        text: "",
+        translationText: "",
+        authorName: "",
+        authorHandle: directHandle,
+        authorProfileImageUrl: "",
+        sourceUrl: "",
+        imageUrls: [],
+      };
+    }
+
     const references = [pickReplyParentReference(contentPayload), pickReplyParentReference(fallbackPayload)]
       .filter(Boolean);
 
-    const triedIds = new Set();
     for (const reference of references) {
-      if (reference.payload) {
-        return reference.payload;
+      if (!reference.payload) {
+        continue;
       }
 
-      if (reference.id && !triedIds.has(reference.id)) {
-        triedIds.add(reference.id);
-        try {
-          return await fetchRawTweetPayload(reference.id);
-        } catch (error) {
-          // 부모 트윗 조회 실패는 본문 렌더링을 막지 않는다.
-        }
+      const authorHandle = pickReplyContextHandle(reference.payload) || pickVxHandle(reference.payload, "");
+      const authorName = pickVxName(reference.payload, "");
+      if (authorHandle || authorName) {
+        return {
+          text: "",
+          translationText: "",
+          authorName,
+          authorHandle: normalizeHandle(authorHandle, ""),
+          authorProfileImageUrl: "",
+          sourceUrl: "",
+          imageUrls: [],
+        };
       }
     }
 
@@ -434,7 +642,33 @@
   }
 
   function normalizeReplyParentMeta(payload) {
-    return normalizeQuoteMeta(payload);
+    if (!payload || typeof payload !== "object") {
+      return null;
+    }
+
+    const normalized = normalizeQuoteMeta(payload);
+    if (normalized) {
+      return {
+        ...normalized,
+        translationText: "",
+      };
+    }
+
+    const authorName = pickVxName(payload, "");
+    const authorHandle = pickReplyContextHandle(payload) || pickVxHandle(payload, "");
+    if (!authorName && !authorHandle) {
+      return null;
+    }
+
+    return {
+      text: "",
+      translationText: "",
+      authorName,
+      authorHandle: normalizeHandle(authorHandle, ""),
+      authorProfileImageUrl: "",
+      sourceUrl: "",
+      imageUrls: [],
+    };
   }
 
   function parseOembedHtml(html) {
@@ -715,7 +949,8 @@
     const retweetedPayload = pickVxRetweetedPayload(payload);
     const contentPayload = retweetedPayload || payload;
     const quotePayload = pickVxQuotePayload(contentPayload) || pickVxQuotePayload(payload);
-    const replyParentPayload = await resolveReplyParentPayload(contentPayload, payload);
+    const replyParentPayloads = await resolveReplyParentPayloads(contentPayload, payload, 5);
+    const replyContextMeta = resolveReplyContextMeta(contentPayload, payload);
 
     const retweeterName = pickVxName(payload, "X User");
     const retweeterHandle = pickVxHandle(payload, "@x");
@@ -756,6 +991,29 @@
       pickVxTweetUrl(payload),
     ]) || `https://x.com/i/status/${tweetId}`;
 
+    const replyParents = [];
+    const seenReplyKeys = new Set();
+    replyParentPayloads
+      .map(normalizeReplyParentMeta)
+      .filter(Boolean)
+      .forEach((meta) => {
+        const key = [
+          normalizeHandle(meta.authorHandle, ""),
+          String(meta.authorName || "").trim(),
+          String(meta.text || "").trim(),
+          String(meta.sourceUrl || "").trim(),
+        ].join("|");
+        if (seenReplyKeys.has(key)) {
+          return;
+        }
+        seenReplyKeys.add(key);
+        replyParents.push(meta);
+      });
+
+    if (!replyParents.length && replyContextMeta) {
+      replyParents.push(replyContextMeta);
+    }
+
     return {
       sourceUrl,
       authorName: pickVxName(contentPayload, retweeterName),
@@ -772,7 +1030,7 @@
       likeCount: formatCountLabel(likeCountRaw),
       bookmarkCount: formatCountLabel(bookmarkCountRaw),
       quote: normalizeQuoteMeta(quotePayload),
-      replyParent: normalizeReplyParentMeta(replyParentPayload),
+      replyParents,
     };
   }
 
@@ -791,18 +1049,117 @@
     return "oEmbed 네트워크 오류";
   }
 
+  function getReplyParentsInDisplayOrder() {
+    if (!Array.isArray(state.replyParents) || !state.replyParents.length) {
+      return [];
+    }
+
+    const ordered = [];
+    for (let index = state.replyParents.length - 1; index >= 0; index -= 1) {
+      ordered.push({
+        item: state.replyParents[index],
+        stateIndex: index,
+      });
+    }
+    return ordered;
+  }
+
+  function renderReplyEditors() {
+    if (!elements.replyEditorList) {
+      return;
+    }
+
+    const orderedReplies = getReplyParentsInDisplayOrder();
+    elements.replyEditorList.innerHTML = "";
+
+    if (!orderedReplies.length) {
+      elements.replyEditorList.classList.add("hidden");
+      return;
+    }
+
+    orderedReplies.forEach(({ item, stateIndex }, orderIndex) => {
+      const authorName = String(item && item.authorName || "").trim();
+      const authorHandle = normalizeHandle(item && item.authorHandle, "");
+      const titleText = [authorName, authorHandle].filter(Boolean).join(" ") || `답글 ${orderIndex + 1}`;
+
+      const editorItem = document.createElement("section");
+      editorItem.className = "reply-editor-item";
+
+      const title = document.createElement("p");
+      title.className = "reply-editor-title";
+      title.textContent = titleText;
+      editorItem.appendChild(title);
+
+      const bodyField = document.createElement("div");
+      bodyField.className = "reply-editor-fields";
+      const bodyInputId = `replyBodyInput-${stateIndex}`;
+      const bodyLabel = document.createElement("label");
+      bodyLabel.className = "reply-editor-label";
+      bodyLabel.htmlFor = bodyInputId;
+      bodyLabel.textContent = "본문";
+      const bodyTextarea = document.createElement("textarea");
+      bodyTextarea.className = "reply-editor-textarea";
+      bodyTextarea.id = bodyInputId;
+      bodyTextarea.rows = 3;
+      bodyTextarea.value = String(item && item.text || "");
+      bodyTextarea.placeholder = "답글 본문을 입력하세요.";
+      bodyTextarea.addEventListener("input", (event) => {
+        if (!Array.isArray(state.replyParents) || !state.replyParents[stateIndex]) {
+          return;
+        }
+        state.replyParents[stateIndex].text = event.target.value;
+        renderPreview();
+      });
+      bodyField.appendChild(bodyLabel);
+      bodyField.appendChild(bodyTextarea);
+      editorItem.appendChild(bodyField);
+
+      const translationField = document.createElement("div");
+      translationField.className = "reply-editor-fields";
+      const translationInputId = `replyTranslationInput-${stateIndex}`;
+      const translationLabel = document.createElement("label");
+      translationLabel.className = "reply-editor-label";
+      translationLabel.htmlFor = translationInputId;
+      translationLabel.textContent = "번역";
+      const translationTextarea = document.createElement("textarea");
+      translationTextarea.className = "reply-editor-textarea";
+      translationTextarea.id = translationInputId;
+      translationTextarea.rows = 3;
+      translationTextarea.value = String(item && item.translationText || "");
+      translationTextarea.placeholder = "답글 번역을 입력하세요.";
+      translationTextarea.addEventListener("input", (event) => {
+        if (!Array.isArray(state.replyParents) || !state.replyParents[stateIndex]) {
+          return;
+        }
+        state.replyParents[stateIndex].translationText = event.target.value;
+        renderPreview();
+      });
+      translationField.appendChild(translationLabel);
+      translationField.appendChild(translationTextarea);
+      editorItem.appendChild(translationField);
+
+      elements.replyEditorList.appendChild(editorItem);
+    });
+
+    elements.replyEditorList.classList.remove("hidden");
+  }
+
   function applyStateToInputs() {
     elements.authorName.value = state.authorName;
     elements.authorHandle.value = state.authorHandle;
     elements.tweetDate.value = state.tweetDate;
     elements.tweetText.value = state.tweetText;
+    elements.translationText.value = state.translationText;
     elements.replyCount.value = state.replyCount;
     elements.retweetCount.value = state.retweetCount;
     elements.likeCount.value = state.likeCount;
     elements.bookmarkCount.value = state.bookmarkCount;
     elements.mediaLayout.value = state.mediaLayout;
+    elements.showReplyToggle.checked = Boolean(state.showReply);
+    elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
+    renderReplyEditors();
   }
 
   function renderPreview() {
@@ -836,6 +1193,16 @@
     elements.previewDate.textContent = state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
     elements.previewText.textContent = /\S/.test(rawText) ? rawText : "(본문 없음)";
+    if (elements.previewTranslation && elements.previewTranslationText) {
+      const rawTranslation = String(state.translationText || "").replace(/\r\n/g, "\n");
+      if (/\S/.test(rawTranslation)) {
+        elements.previewTranslationText.textContent = rawTranslation;
+        elements.previewTranslation.classList.remove("hidden");
+      } else {
+        elements.previewTranslationText.textContent = "";
+        elements.previewTranslation.classList.add("hidden");
+      }
+    }
     elements.previewReplyCount.textContent = state.replyCount.trim() || "0";
     elements.previewRetweetCount.textContent = state.retweetCount.trim() || "0";
     elements.previewLikeCount.textContent = state.likeCount.trim() || "0";
@@ -854,62 +1221,113 @@
       elements.previewAvatarInitial.classList.remove("hidden");
     }
 
-    if (
-      elements.previewReplyParent &&
-      elements.previewReplyParentAvatar &&
-      elements.previewReplyParentName &&
-      elements.previewReplyParentHandle &&
-      elements.previewReplyParentText &&
-      elements.previewReplyParentMedia
-    ) {
-      const parentName = state.replyParentAuthorName.trim();
-      const parentHandle = normalizeHandle(state.replyParentAuthorHandle, "");
-      const parentAvatarSrc = String(state.replyParentAuthorProfileImageSrc || "").trim();
-      const parentText = String(state.replyParentText || "").replace(/\r\n/g, "\n").trim();
-      const parentMedia = Array.isArray(state.replyParentDataUrls) ? state.replyParentDataUrls.filter(Boolean).slice(0, 4) : [];
-      const parentVisible = Boolean(parentName || parentHandle || parentAvatarSrc || parentText || parentMedia.length);
+    if (elements.previewReplyList) {
+      const showReply = Boolean(state.showReply);
+      const showReplyMedia = Boolean(state.showReplyMedia);
+      const replyItems = getReplyParentsInDisplayOrder();
 
-      elements.previewReplyParentMedia.innerHTML = "";
-      if (parentMedia.length) {
-        elements.previewReplyParentMedia.dataset.count = String(parentMedia.length);
-        elements.previewReplyParentMedia.classList.remove("hidden");
-        parentMedia.forEach((src, index) => {
-          const image = document.createElement("img");
-          image.className = "quote-image";
-          image.alt = `원본 트윗 이미지 ${index + 1}`;
-          image.loading = "lazy";
-          image.referrerPolicy = "no-referrer";
-          image.crossOrigin = "anonymous";
-          image.src = src;
-          elements.previewReplyParentMedia.appendChild(image);
+      elements.previewReplyList.innerHTML = "";
+      if (showReply && replyItems.length) {
+        replyItems.forEach(({ item }) => {
+          const authorName = String(item && item.authorName || "").trim();
+          const authorHandle = normalizeHandle(item && item.authorHandle, "");
+          const text = String(item && item.text || "").replace(/\r\n/g, "\n").trim();
+          const translation = String(item && item.translationText || "").replace(/\r\n/g, "\n").trim();
+          const avatarSrc = String(item && item.authorProfileImageSrc || "").trim();
+          const media = Array.isArray(item && item.dataUrls) ? item.dataUrls.filter(Boolean).slice(0, 4) : [];
+          const hasMedia = showReplyMedia && media.length > 0;
+          if (!authorName && !authorHandle && !text && !translation && !hasMedia) {
+            return;
+          }
+
+          const replyItem = document.createElement("article");
+          replyItem.className = "reply-item";
+
+          if (authorName || authorHandle || avatarSrc) {
+            const head = document.createElement("div");
+            head.className = "reply-item-head";
+
+            if (avatarSrc) {
+              const avatar = document.createElement("img");
+              avatar.className = "reply-item-avatar";
+              avatar.alt = `${authorName || authorHandle || "답글 사용자"} 프로필 사진`;
+              avatar.loading = "lazy";
+              avatar.referrerPolicy = "no-referrer";
+              avatar.crossOrigin = "anonymous";
+              avatar.src = avatarSrc;
+              head.appendChild(avatar);
+            }
+
+            const meta = document.createElement("div");
+            meta.className = "reply-item-meta";
+            if (authorName) {
+              const nameNode = document.createElement("p");
+              nameNode.className = "reply-item-name";
+              nameNode.textContent = authorName;
+              meta.appendChild(nameNode);
+            }
+            if (authorHandle) {
+              const handleNode = document.createElement("p");
+              handleNode.className = "reply-item-handle";
+              handleNode.textContent = authorHandle;
+              meta.appendChild(handleNode);
+            }
+            if (!meta.childElementCount) {
+              const fallback = document.createElement("p");
+              fallback.className = "reply-item-name";
+              fallback.textContent = "답글";
+              meta.appendChild(fallback);
+            }
+            head.appendChild(meta);
+            replyItem.appendChild(head);
+          }
+
+          if (text) {
+            const textNode = document.createElement("p");
+            textNode.className = "reply-item-text";
+            textNode.textContent = text;
+            replyItem.appendChild(textNode);
+          }
+
+          if (translation) {
+            const translationBox = document.createElement("section");
+            translationBox.className = "reply-item-translation";
+            const translationLabel = document.createElement("p");
+            translationLabel.className = "reply-item-translation-label";
+            translationLabel.textContent = "번역";
+            const translationText = document.createElement("p");
+            translationText.className = "reply-item-translation-text";
+            translationText.textContent = translation;
+            translationBox.appendChild(translationLabel);
+            translationBox.appendChild(translationText);
+            replyItem.appendChild(translationBox);
+          }
+
+          if (hasMedia) {
+            const mediaBox = document.createElement("div");
+            mediaBox.className = "quote-media";
+            mediaBox.dataset.count = String(media.length);
+            media.forEach((src, index) => {
+              const image = document.createElement("img");
+              image.className = "quote-image";
+              image.alt = `답글 이미지 ${index + 1}`;
+              image.loading = "lazy";
+              image.referrerPolicy = "no-referrer";
+              image.crossOrigin = "anonymous";
+              image.src = src;
+              mediaBox.appendChild(image);
+            });
+            replyItem.appendChild(mediaBox);
+          }
+
+          elements.previewReplyList.appendChild(replyItem);
         });
-      } else {
-        elements.previewReplyParentMedia.classList.add("hidden");
-        elements.previewReplyParentMedia.removeAttribute("data-count");
       }
 
-      if (parentVisible) {
-        if (parentAvatarSrc) {
-          elements.previewReplyParentAvatar.crossOrigin = "anonymous";
-          elements.previewReplyParentAvatar.referrerPolicy = "no-referrer";
-          elements.previewReplyParentAvatar.src = parentAvatarSrc;
-          elements.previewReplyParentAvatar.classList.remove("hidden");
-        } else {
-          elements.previewReplyParentAvatar.removeAttribute("src");
-          elements.previewReplyParentAvatar.classList.add("hidden");
-        }
-
-        elements.previewReplyParentName.textContent = parentName || "원본";
-        elements.previewReplyParentHandle.textContent = parentHandle || "";
-        elements.previewReplyParentText.textContent = parentText || "(본문 없음)";
-        elements.previewReplyParent.classList.remove("hidden");
+      if (elements.previewReplyList.childElementCount) {
+        elements.previewReplyList.classList.remove("hidden");
       } else {
-        elements.previewReplyParentAvatar.removeAttribute("src");
-        elements.previewReplyParentAvatar.classList.add("hidden");
-        elements.previewReplyParentName.textContent = "";
-        elements.previewReplyParentHandle.textContent = "";
-        elements.previewReplyParentText.textContent = "";
-        elements.previewReplyParent.classList.add("hidden");
+        elements.previewReplyList.classList.add("hidden");
       }
     }
 
@@ -998,15 +1416,31 @@
       }
     }
 
-    if (state.sourceUrl) {
+    const sourceUrl = String(state.sourceUrl || "").trim();
+    let sourceHost = "x.com";
+    let sourceHref = "";
+
+    if (sourceUrl) {
       try {
-        const host = new URL(state.sourceUrl).host;
-        elements.previewSource.textContent = host.replace(/^www\./i, "");
+        const parsedUrl = new URL(sourceUrl);
+        sourceHost = parsedUrl.host.replace(/^www\./i, "") || "x.com";
+        sourceHref = parsedUrl.href;
       } catch (error) {
-        elements.previewSource.textContent = "x.com";
+        sourceHost = "x.com";
       }
-    } else {
-      elements.previewSource.textContent = "x.com";
+    }
+
+    elements.previewSource.textContent = sourceHost;
+    if (elements.previewOriginalUrl) {
+      if (sourceHref) {
+        elements.previewOriginalUrl.textContent = sourceHref;
+        elements.previewOriginalUrl.href = sourceHref;
+        elements.previewOriginalUrl.classList.remove("hidden");
+      } else {
+        elements.previewOriginalUrl.textContent = "";
+        elements.previewOriginalUrl.removeAttribute("href");
+        elements.previewOriginalUrl.classList.add("hidden");
+      }
     }
   }
 
@@ -1015,11 +1449,14 @@
     state.authorHandle = elements.authorHandle.value;
     state.tweetDate = elements.tweetDate.value;
     state.tweetText = elements.tweetText.value;
+    state.translationText = elements.translationText.value;
     state.replyCount = elements.replyCount.value;
     state.retweetCount = elements.retweetCount.value;
     state.likeCount = elements.likeCount.value;
     state.bookmarkCount = elements.bookmarkCount.value;
     state.mediaLayout = elements.mediaLayout.value === "vertical" ? "vertical" : "grid";
+    state.showReply = Boolean(elements.showReplyToggle.checked);
+    state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
     renderPreview();
@@ -1035,8 +1472,9 @@
       let profileImageUrl = "";
       let retweetProfileImageUrl = "";
       let quoteMeta = null;
-      let replyParentMeta = null;
+      let replyParentMetas = [];
       let usedFallback = false;
+      state.translationText = "";
 
       try {
         const result = await fetchTweetFromOembed(normalized);
@@ -1050,11 +1488,7 @@
         state.retweetByName = "";
         state.retweetByHandle = "";
         state.retweetByProfileImageSrc = "";
-        state.replyParentAuthorName = "";
-        state.replyParentAuthorHandle = "";
-        state.replyParentAuthorProfileImageSrc = "";
-        state.replyParentText = "";
-        state.replyParentDataUrls = [];
+        state.replyParents = [];
         state.quoteAuthorName = "";
         state.quoteAuthorHandle = "";
         state.quoteAuthorProfileImageSrc = "";
@@ -1065,7 +1499,7 @@
         state.likeCount = "0";
         state.bookmarkCount = "0";
         state.tweetDate = formatDateLabel(payload.date || parsed.dateLabel);
-        state.tweetText = parsed.text || "본문을 가져오지 못했습니다. 직접 입력해 주세요.";
+        state.tweetText = parsed.text || normalized.preferredUrl;
         imageUrls = payload.thumbnail_url ? [payload.thumbnail_url] : [];
 
         try {
@@ -1100,7 +1534,7 @@
             state.sourceUrl = vxMeta.sourceUrl;
           }
           quoteMeta = vxMeta.quote || null;
-          replyParentMeta = vxMeta.replyParent || null;
+          replyParentMetas = Array.isArray(vxMeta.replyParents) ? vxMeta.replyParents : [];
         } catch (error) {
           // oEmbed 본문은 이미 가져왔으므로 이미지 보강 실패는 무시한다.
         }
@@ -1115,7 +1549,7 @@
         state.retweetByHandle = fallback.retweetByHandle || "";
         retweetProfileImageUrl = fallback.retweetByProfileImageUrl || "";
         state.tweetDate = fallback.tweetDate;
-        state.tweetText = fallback.tweetText;
+        state.tweetText = fallback.tweetText || fallback.sourceUrl || normalized.preferredUrl;
         state.replyCount = fallback.replyCount || "0";
         state.retweetCount = fallback.retweetCount || "0";
         state.likeCount = fallback.likeCount || "0";
@@ -1123,7 +1557,7 @@
         profileImageUrl = fallback.profileImageUrl || "";
         imageUrls = Array.isArray(fallback.imageUrls) ? fallback.imageUrls : [];
         quoteMeta = fallback.quote || null;
-        replyParentMeta = fallback.replyParent || null;
+        replyParentMetas = Array.isArray(fallback.replyParents) ? fallback.replyParents : [];
         setStatus(`${formatOembedError(oembedError)} 보조 경로로 불러왔습니다.`);
       }
 
@@ -1131,19 +1565,35 @@
         profileImageSrc,
         retweetByProfileImageSrc,
         quoteAuthorProfileImageSrc,
-        replyParentAuthorProfileImageSrc,
         mainImages,
         quoteImages,
-        replyParentImages,
       ] = await Promise.all([
         toDisplayImageSrc(profileImageUrl),
         toDisplayImageSrc(retweetProfileImageUrl),
         toDisplayImageSrc(quoteMeta ? quoteMeta.authorProfileImageUrl : ""),
-        toDisplayImageSrc(replyParentMeta ? replyParentMeta.authorProfileImageUrl : ""),
         toDisplayImageSrcs(imageUrls),
         toDisplayImageSrcs(quoteMeta && Array.isArray(quoteMeta.imageUrls) ? quoteMeta.imageUrls : []),
-        toDisplayImageSrcs(replyParentMeta && Array.isArray(replyParentMeta.imageUrls) ? replyParentMeta.imageUrls : []),
       ]);
+
+      const replyParents = await Promise.all(
+        (Array.isArray(replyParentMetas) ? replyParentMetas : []).slice(0, 6).map(async (meta) => {
+          const normalizedMeta = meta && typeof meta === "object" ? meta : {};
+          const [authorProfileImageSrc, dataUrls] = await Promise.all([
+            toDisplayImageSrc(normalizedMeta.authorProfileImageUrl || ""),
+            toDisplayImageSrcs(Array.isArray(normalizedMeta.imageUrls) ? normalizedMeta.imageUrls : []),
+          ]);
+
+          return {
+            authorName: String(normalizedMeta.authorName || "").trim(),
+            authorHandle: normalizeHandle(normalizedMeta.authorHandle, ""),
+            text: String(normalizedMeta.text || "").replace(/\r\n/g, "\n").trim(),
+            translationText: String(normalizedMeta.translationText || "").replace(/\r\n/g, "\n").trim(),
+            sourceUrl: String(normalizedMeta.sourceUrl || "").trim(),
+            authorProfileImageSrc,
+            dataUrls,
+          };
+        })
+      );
 
       state.profileImageSrc = profileImageSrc;
       state.retweetByProfileImageSrc = retweetByProfileImageSrc;
@@ -1153,11 +1603,18 @@
       state.quoteAuthorProfileImageSrc = quoteMeta ? quoteAuthorProfileImageSrc : "";
       state.quoteText = quoteMeta ? (quoteMeta.text || "") : "";
       state.quoteDataUrls = quoteImages;
-      state.replyParentAuthorName = replyParentMeta ? (replyParentMeta.authorName || "") : "";
-      state.replyParentAuthorHandle = replyParentMeta ? (replyParentMeta.authorHandle || "") : "";
-      state.replyParentAuthorProfileImageSrc = replyParentMeta ? replyParentAuthorProfileImageSrc : "";
-      state.replyParentText = replyParentMeta ? (replyParentMeta.text || "") : "";
-      state.replyParentDataUrls = replyParentImages;
+      state.replyParents = replyParents.filter((item) => {
+        return Boolean(
+          String(item.authorHandle || "").trim() ||
+          String(item.authorName || "").trim() ||
+          String(item.text || "").trim() ||
+          String(item.translationText || "").trim() ||
+          (Array.isArray(item.dataUrls) && item.dataUrls.length)
+        );
+      });
+      if (!String(state.tweetText || "").trim()) {
+        state.tweetText = state.sourceUrl || normalized.preferredUrl;
+      }
 
       applyStateToInputs();
       renderPreview();
@@ -1269,8 +1726,15 @@
     setStatus("입력값을 초기화했습니다.");
   }
 
+  function onClearTweetUrl() {
+    elements.tweetUrl.value = "";
+    elements.tweetUrl.focus();
+    setStatus("트윗 URL 입력값을 지웠습니다.");
+  }
+
   function wireEvents() {
     elements.fetchBtn.addEventListener("click", onFetchClick);
+    elements.clearUrlBtn.addEventListener("click", onClearTweetUrl);
     elements.tweetUrl.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -1282,11 +1746,14 @@
     elements.authorHandle.addEventListener("input", syncFromEditors);
     elements.tweetDate.addEventListener("input", syncFromEditors);
     elements.tweetText.addEventListener("input", syncFromEditors);
+    elements.translationText.addEventListener("input", syncFromEditors);
     elements.replyCount.addEventListener("input", syncFromEditors);
     elements.retweetCount.addEventListener("input", syncFromEditors);
     elements.likeCount.addEventListener("input", syncFromEditors);
     elements.bookmarkCount.addEventListener("input", syncFromEditors);
     elements.mediaLayout.addEventListener("change", syncFromEditors);
+    elements.showReplyToggle.addEventListener("change", syncFromEditors);
+    elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
@@ -1299,10 +1766,6 @@
     });
     elements.previewQuoteAvatar.addEventListener("error", () => {
       state.quoteAuthorProfileImageSrc = "";
-      renderPreview();
-    });
-    elements.previewReplyParentAvatar.addEventListener("error", () => {
-      state.replyParentAuthorProfileImageSrc = "";
       renderPreview();
     });
     elements.imageInput.addEventListener("change", onImageSelected);
