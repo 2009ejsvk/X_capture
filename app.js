@@ -100,6 +100,34 @@
     return text;
   }
 
+  function flagEmojiToCode(flagEmoji) {
+    const codePoints = Array.from(String(flagEmoji || ""), (char) => char.codePointAt(0));
+    if (codePoints.length !== 2) {
+      return "";
+    }
+
+    const base = 0x1F1E6;
+    const letters = codePoints.map((point) => {
+      if (!Number.isFinite(point) || point < base || point > 0x1F1FF) {
+        return "";
+      }
+      return String.fromCharCode(65 + (point - base));
+    });
+
+    if (letters.some((letter) => !letter)) {
+      return "";
+    }
+
+    return letters.join("");
+  }
+
+  function toDisplayText(value) {
+    return String(value || "").replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, (match) => {
+      const code = flagEmojiToCode(match);
+      return code ? `[${code}]` : match;
+    });
+  }
+
   function createInitialState() {
     return {
       sourceUrl: "",
@@ -863,6 +891,52 @@
     return formatNumericDateTime(parsed);
   }
 
+  function isTweetStatusUrl(rawUrl) {
+    const value = String(rawUrl || "").trim();
+    if (!value) {
+      return false;
+    }
+
+    try {
+      const parsed = new URL(value);
+      const host = parsed.hostname.replace(/^www\./i, "").toLowerCase();
+      const isXHost = host === "x.com" || host === "twitter.com" || host === "mobile.twitter.com";
+      if (!isXHost) {
+        return false;
+      }
+      return /\/status\/\d+/i.test(parsed.pathname);
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function stripTcoLinks(rawText) {
+    return String(rawText || "")
+      .replace(/https?:\/\/t\.co\/[^\s]+/gi, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]{2,}/g, " ")
+      .trim();
+  }
+
+  function sanitizeFetchedTweetText(rawText) {
+    const normalized = String(rawText || "").replace(/\r\n/g, "\n").trim();
+    if (!normalized) {
+      return "";
+    }
+
+    const withoutTcoLinks = stripTcoLinks(normalized);
+    if (!withoutTcoLinks) {
+      return "";
+    }
+
+    if (/^https?:\/\/\S+$/i.test(withoutTcoLinks) && isTweetStatusUrl(withoutTcoLinks)) {
+      return "";
+    }
+
+    return withoutTcoLinks;
+  }
+
   function isImageLikeUrl(url) {
     const value = String(url || "");
     return (
@@ -1087,7 +1161,7 @@
 
       const title = document.createElement("p");
       title.className = "reply-editor-title";
-      title.textContent = titleText;
+      title.textContent = toDisplayText(titleText);
       editorItem.appendChild(title);
 
       const bodyField = document.createElement("div");
@@ -1145,11 +1219,11 @@
   }
 
   function applyStateToInputs() {
-    elements.authorName.value = state.authorName;
-    elements.authorHandle.value = state.authorHandle;
+    elements.authorName.value = toDisplayText(state.authorName);
+    elements.authorHandle.value = toDisplayText(state.authorHandle);
     elements.tweetDate.value = state.tweetDate;
-    elements.tweetText.value = state.tweetText;
-    elements.translationText.value = state.translationText;
+    elements.tweetText.value = toDisplayText(state.tweetText);
+    elements.translationText.value = toDisplayText(state.translationText);
     elements.replyCount.value = state.replyCount;
     elements.retweetCount.value = state.retweetCount;
     elements.likeCount.value = state.likeCount;
@@ -1162,6 +1236,23 @@
     renderReplyEditors();
   }
 
+  function applyImageSource(imageElement, source) {
+    const nextSource = String(source || "").trim();
+    if (!nextSource) {
+      imageElement.removeAttribute("src");
+      return false;
+    }
+
+    const currentSource = String(imageElement.getAttribute("src") || "").trim();
+    if (currentSource !== nextSource) {
+      // Clear previous bitmap first to avoid stale frame capture while switching.
+      imageElement.removeAttribute("src");
+      imageElement.src = nextSource;
+    }
+
+    return true;
+  }
+
   function renderPreview() {
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
@@ -1169,15 +1260,15 @@
     const retweetByName = state.retweetByName.trim();
     const retweetByHandle = normalizeHandle(state.retweetByHandle, "");
 
-    elements.previewName.textContent = trimmedName;
-    elements.previewHandle.textContent = handleWithPrefix;
+    elements.previewName.textContent = toDisplayText(trimmedName);
+    elements.previewHandle.textContent = toDisplayText(handleWithPrefix);
     if (retweetByName || retweetByHandle) {
       const label = retweetByName || retweetByHandle;
-      elements.previewRetweetText.textContent = `${label} 리트윗`;
+      elements.previewRetweetText.textContent = toDisplayText(`${label} 리트윗`);
       if (state.retweetByProfileImageSrc) {
         elements.previewRetweetAvatar.crossOrigin = "anonymous";
         elements.previewRetweetAvatar.referrerPolicy = "no-referrer";
-        elements.previewRetweetAvatar.src = state.retweetByProfileImageSrc;
+        applyImageSource(elements.previewRetweetAvatar, state.retweetByProfileImageSrc);
         elements.previewRetweetAvatar.classList.remove("hidden");
       } else {
         elements.previewRetweetAvatar.removeAttribute("src");
@@ -1192,11 +1283,11 @@
     }
     elements.previewDate.textContent = state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
-    elements.previewText.textContent = /\S/.test(rawText) ? rawText : "(본문 없음)";
+    elements.previewText.textContent = /\S/.test(rawText) ? toDisplayText(rawText) : "";
     if (elements.previewTranslation && elements.previewTranslationText) {
       const rawTranslation = String(state.translationText || "").replace(/\r\n/g, "\n");
       if (/\S/.test(rawTranslation)) {
-        elements.previewTranslationText.textContent = rawTranslation;
+        elements.previewTranslationText.textContent = toDisplayText(rawTranslation);
         elements.previewTranslation.classList.remove("hidden");
       } else {
         elements.previewTranslationText.textContent = "";
@@ -1212,7 +1303,7 @@
     if (state.profileImageSrc) {
       elements.previewAvatarImage.crossOrigin = "anonymous";
       elements.previewAvatarImage.referrerPolicy = "no-referrer";
-      elements.previewAvatarImage.src = state.profileImageSrc;
+      applyImageSource(elements.previewAvatarImage, state.profileImageSrc);
       elements.previewAvatarImage.classList.remove("hidden");
       elements.previewAvatarInitial.classList.add("hidden");
     } else {
@@ -1250,7 +1341,7 @@
             if (avatarSrc) {
               const avatar = document.createElement("img");
               avatar.className = "reply-item-avatar";
-              avatar.alt = `${authorName || authorHandle || "답글 사용자"} 프로필 사진`;
+              avatar.alt = `${toDisplayText(authorName || authorHandle || "답글 사용자")} 프로필 사진`;
               avatar.loading = "lazy";
               avatar.referrerPolicy = "no-referrer";
               avatar.crossOrigin = "anonymous";
@@ -1263,13 +1354,13 @@
             if (authorName) {
               const nameNode = document.createElement("p");
               nameNode.className = "reply-item-name";
-              nameNode.textContent = authorName;
+              nameNode.textContent = toDisplayText(authorName);
               meta.appendChild(nameNode);
             }
             if (authorHandle) {
               const handleNode = document.createElement("p");
               handleNode.className = "reply-item-handle";
-              handleNode.textContent = authorHandle;
+              handleNode.textContent = toDisplayText(authorHandle);
               meta.appendChild(handleNode);
             }
             if (!meta.childElementCount) {
@@ -1285,20 +1376,16 @@
           if (text) {
             const textNode = document.createElement("p");
             textNode.className = "reply-item-text";
-            textNode.textContent = text;
+            textNode.textContent = toDisplayText(text);
             replyItem.appendChild(textNode);
           }
 
           if (translation) {
             const translationBox = document.createElement("section");
             translationBox.className = "reply-item-translation";
-            const translationLabel = document.createElement("p");
-            translationLabel.className = "reply-item-translation-label";
-            translationLabel.textContent = "번역";
             const translationText = document.createElement("p");
             translationText.className = "reply-item-translation-text";
-            translationText.textContent = translation;
-            translationBox.appendChild(translationLabel);
+            translationText.textContent = toDisplayText(translation);
             translationBox.appendChild(translationText);
             replyItem.appendChild(translationBox);
           }
@@ -1396,15 +1483,15 @@
         if (quoteAuthorProfileImageSrc) {
           elements.previewQuoteAvatar.crossOrigin = "anonymous";
           elements.previewQuoteAvatar.referrerPolicy = "no-referrer";
-          elements.previewQuoteAvatar.src = quoteAuthorProfileImageSrc;
+          applyImageSource(elements.previewQuoteAvatar, quoteAuthorProfileImageSrc);
           elements.previewQuoteAvatar.classList.remove("hidden");
         } else {
           elements.previewQuoteAvatar.removeAttribute("src");
           elements.previewQuoteAvatar.classList.add("hidden");
         }
-        elements.previewQuoteName.textContent = quoteName || "원문";
-        elements.previewQuoteHandle.textContent = quoteHandle || "";
-        elements.previewQuoteText.textContent = quoteText || "(본문 없음)";
+        elements.previewQuoteName.textContent = toDisplayText(quoteName || "원문");
+        elements.previewQuoteHandle.textContent = toDisplayText(quoteHandle || "");
+        elements.previewQuoteText.textContent = toDisplayText(quoteText || "");
         elements.previewQuote.classList.remove("hidden");
       } else {
         elements.previewQuoteAvatar.removeAttribute("src");
@@ -1499,12 +1586,12 @@
         state.likeCount = "0";
         state.bookmarkCount = "0";
         state.tweetDate = formatDateLabel(payload.date || parsed.dateLabel);
-        state.tweetText = parsed.text || normalized.preferredUrl;
+        state.tweetText = sanitizeFetchedTweetText(parsed.text);
         imageUrls = payload.thumbnail_url ? [payload.thumbnail_url] : [];
 
         try {
           const vxMeta = await fetchTweetFromVx(normalized.tweetId);
-          vxText = vxMeta.tweetText || "";
+          vxText = sanitizeFetchedTweetText(vxMeta.tweetText || "");
           if (vxText) {
             state.tweetText = vxText;
           }
@@ -1549,7 +1636,7 @@
         state.retweetByHandle = fallback.retweetByHandle || "";
         retweetProfileImageUrl = fallback.retweetByProfileImageUrl || "";
         state.tweetDate = fallback.tweetDate;
-        state.tweetText = fallback.tweetText || fallback.sourceUrl || normalized.preferredUrl;
+        state.tweetText = sanitizeFetchedTweetText(fallback.tweetText || "");
         state.replyCount = fallback.replyCount || "0";
         state.retweetCount = fallback.retweetCount || "0";
         state.likeCount = fallback.likeCount || "0";
@@ -1612,10 +1699,6 @@
           (Array.isArray(item.dataUrls) && item.dataUrls.length)
         );
       });
-      if (!String(state.tweetText || "").trim()) {
-        state.tweetText = state.sourceUrl || normalized.preferredUrl;
-      }
-
       applyStateToInputs();
       renderPreview();
       if (usedFallback) {
@@ -1623,6 +1706,7 @@
       } else {
         setStatus("불러오기 완료. 필요하면 내용을 수정하고 저장하세요.", "success");
       }
+      await onCapture();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.", "error");
     } finally {
@@ -1673,6 +1757,80 @@
     URL.revokeObjectURL(href);
   }
 
+  function waitForNextFrame() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+  }
+
+  function waitForImageReady(image, timeoutMs) {
+    if (!image || !(image instanceof HTMLImageElement)) {
+      return Promise.resolve();
+    }
+
+    const source = String(image.getAttribute("src") || "").trim();
+    if (!source || image.classList.contains("hidden")) {
+      return Promise.resolve();
+    }
+
+    if (image.complete && image.naturalWidth > 0) {
+      if (typeof image.decode === "function") {
+        return image.decode().catch(() => {});
+      }
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+      let settled = false;
+      let timerId = 0;
+      const cleanup = () => {
+        image.removeEventListener("load", onSettled);
+        image.removeEventListener("error", onSettled);
+        if (timerId) {
+          clearTimeout(timerId);
+          timerId = 0;
+        }
+      };
+      const onSettled = () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      image.addEventListener("load", onSettled, { once: true });
+      image.addEventListener("error", onSettled, { once: true });
+      timerId = window.setTimeout(onSettled, timeoutMs);
+    });
+  }
+
+  async function waitForCaptureImages() {
+    if (!elements.captureArea) {
+      return;
+    }
+
+    // Let DOM updates settle before checking image states.
+    await waitForNextFrame();
+    await waitForNextFrame();
+
+    const images = Array.from(elements.captureArea.querySelectorAll("img"))
+      .filter((image) => {
+        if (!(image instanceof HTMLImageElement)) {
+          return false;
+        }
+        return Boolean(String(image.getAttribute("src") || "").trim()) && !image.classList.contains("hidden");
+      });
+
+    if (!images.length) {
+      return;
+    }
+
+    await Promise.all(images.map((image) => waitForImageReady(image, 6000)));
+    await waitForNextFrame();
+  }
+
   async function onCapture() {
     if (typeof html2canvas !== "function") {
       setStatus("캡처 라이브러리를 불러오지 못했습니다.", "error");
@@ -1682,6 +1840,7 @@
     try {
       elements.captureBtn.disabled = true;
       setStatus("고해상도 이미지 생성 중...");
+      await waitForCaptureImages();
 
       const elementWidth = elements.captureArea.offsetWidth || 360;
       const deviceScale = window.devicePixelRatio || 1;

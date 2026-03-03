@@ -310,9 +310,9 @@ textarea:focus-visible {
 .tweet-translation {
   margin: 0 0 10px;
   padding: 8px 10px;
-  border: 1px solid #d8e5f0;
+  border: 1px solid #dce3ea;
   border-radius: 10px;
-  background: #f4f9fd;
+  background: #fff;
 }
 
 .tweet-translation-label {
@@ -455,9 +455,9 @@ textarea:focus-visible {
 .reply-item-translation {
   margin: 6px 0 0;
   padding: 7px 9px;
-  border: 1px solid #d8e5f0;
+  border: 1px solid #dce3ea;
   border-radius: 10px;
-  background: #f4f9fd;
+  background: #fff;
 }
 
 .reply-item-translation-label {
