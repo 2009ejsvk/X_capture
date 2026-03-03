@@ -50,6 +50,7 @@
     previewBookmarkCount: document.getElementById("previewBookmarkCount"),
     previewSource: document.getElementById("previewSource"),
     previewOriginalUrl: document.getElementById("previewOriginalUrl"),
+    showOriginalUrlToggle: document.getElementById("showOriginalUrlToggle"),
   };
 
   function formatNumericDateTime(date) {
@@ -150,6 +151,7 @@
       showReplyMedia: true,
       showQuote: true,
       showQuoteMedia: true,
+      showOriginalUrl: true,
       tweetDate: currentDateTimeLabel(),
       tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
       translationText: "",
@@ -206,7 +208,7 @@
 
   function pickFirstNonEmpty(values) {
     for (const value of values) {
-      if (value == null) {
+      if (value == null || typeof value === "boolean") {
         continue;
       }
       const text = String(value).trim();
@@ -1233,6 +1235,7 @@
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
+    elements.showOriginalUrlToggle.checked = Boolean(state.showOriginalUrl);
     renderReplyEditors();
   }
 
@@ -1519,7 +1522,7 @@
 
     elements.previewSource.textContent = sourceHost;
     if (elements.previewOriginalUrl) {
-      if (sourceHref) {
+      if (sourceHref && state.showOriginalUrl) {
         elements.previewOriginalUrl.textContent = sourceHref;
         elements.previewOriginalUrl.href = sourceHref;
         elements.previewOriginalUrl.classList.remove("hidden");
@@ -1546,6 +1549,7 @@
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
+    state.showOriginalUrl = Boolean(elements.showOriginalUrlToggle.checked);
     renderPreview();
   }
 
@@ -1775,7 +1779,7 @@
 
     if (image.complete && image.naturalWidth > 0) {
       if (typeof image.decode === "function") {
-        return image.decode().catch(() => {});
+        return image.decode().catch(() => { });
       }
       return Promise.resolve();
     }
@@ -1915,6 +1919,7 @@
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
+    elements.showOriginalUrlToggle.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
       renderPreview();
