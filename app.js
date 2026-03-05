@@ -123,7 +123,10 @@
   }
 
   function toDisplayText(value) {
-    return String(value || "").replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, (match) => {
+    if (value === null || value === undefined || value === false) {
+      return "";
+    }
+    return String(value).replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, (match) => {
       const code = flagEmojiToCode(match);
       return code ? `[${code}]` : match;
     });
@@ -893,7 +896,7 @@
     return formatNumericDateTime(parsed);
   }
 
-  function isTweetStatusUrl(rawUrl) {
+  function isXInternalUrl(rawUrl) {
     const value = String(rawUrl || "").trim();
     if (!value) {
       return false;
@@ -906,7 +909,13 @@
       if (!isXHost) {
         return false;
       }
-      return /\/status\/\d+/i.test(parsed.pathname);
+      const path = parsed.pathname;
+      return (
+        /\/status\/\d+/i.test(path) ||
+        /\/i\/article\/\d+/i.test(path) ||
+        /\/photo\/\d+$/i.test(path) ||
+        /\/video\/\d+$/i.test(path)
+      );
     } catch (error) {
       return false;
     }
@@ -932,7 +941,8 @@
       return "";
     }
 
-    if (/^https?:\/\/\S+$/i.test(withoutTcoLinks) && isTweetStatusUrl(withoutTcoLinks)) {
+    // If only a single URL remains, consider it empty
+    if (/^https?:\/\/\S+$/i.test(withoutTcoLinks)) {
       return "";
     }
 
@@ -1942,3 +1952,5 @@
   applyStateToInputs();
   renderPreview();
 })();
+
+
