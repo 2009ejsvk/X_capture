@@ -921,9 +921,10 @@
     }
   }
 
-  function stripTcoLinks(rawText) {
+  function stripAllLinks(rawText) {
     return String(rawText || "")
-      .replace(/https?:\/\/t\.co\/[^\s]+/gi, "")
+      .replace(/https?:\/\/[^\s]+/gi, "")
+      .replace(/\bpic\.twitter\.com\/[^\s]+/gi, "")
       .replace(/[ \t]+\n/g, "\n")
       .replace(/\n{3,}/g, "\n\n")
       .replace(/[ \t]{2,}/g, " ")
@@ -936,17 +937,17 @@
       return "";
     }
 
-    const withoutTcoLinks = stripTcoLinks(normalized);
-    if (!withoutTcoLinks) {
+    const withoutLinks = stripAllLinks(normalized);
+    if (!withoutLinks) {
       return "";
     }
 
     // If only a single URL remains, consider it empty
-    if (/^https?:\/\/\S+$/i.test(withoutTcoLinks)) {
+    if (/^https?:\/\/\S+$/i.test(withoutLinks)) {
       return "";
     }
 
-    return withoutTcoLinks;
+    return withoutLinks;
   }
 
   function isImageLikeUrl(url) {
