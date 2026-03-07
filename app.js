@@ -29,9 +29,6 @@
     previewAvatarInitial: document.getElementById("previewAvatarInitial"),
     previewName: document.getElementById("previewName"),
     previewHandle: document.getElementById("previewHandle"),
-    previewRetweet: document.getElementById("previewRetweet"),
-    previewRetweetAvatar: document.getElementById("previewRetweetAvatar"),
-    previewRetweetText: document.getElementById("previewRetweetText"),
     previewReplyList: document.getElementById("previewReplyList"),
     previewQuote: document.getElementById("previewQuote"),
     previewQuoteAvatar: document.getElementById("previewQuoteAvatar"),
@@ -158,9 +155,6 @@
       sourceUrl: "",
       authorName: "X User",
       authorHandle: "@x",
-      retweetByName: "",
-      retweetByHandle: "",
-      retweetByProfileImageSrc: "",
       replyParents: [],
       quoteAuthorName: "",
       quoteAuthorHandle: "",
@@ -1085,22 +1079,9 @@
     const retweeterHandle = pickVxHandle(payload, "@x");
     const retweeterProfileImageUrl = pickVxProfileImage(payload);
 
-    let isRetweet =
-      Boolean(retweetedPayload) ||
-      Boolean(
-        payload.retweetURL ||
-        payload.retweetUrl ||
-        payload.retweetID ||
-        payload.retweetId ||
-        payload.retweetUser ||
-        payload.retweet_user ||
-        payload.retweeted_tweet_id
-      );
-
     let tweetText = pickVxText(contentPayload) || pickVxText(payload);
     const retweetTextMatch = tweetText.match(/^RT\s+@([A-Za-z0-9_]{1,15}):\s*([\s\S]*)$/);
     if (retweetTextMatch) {
-      isRetweet = true;
       tweetText = retweetTextMatch[2] || tweetText;
     }
 
@@ -1147,9 +1128,6 @@
       sourceUrl,
       authorName: pickVxName(contentPayload, retweeterName),
       authorHandle: pickVxHandle(contentPayload, retweeterHandle),
-      retweetByName: isRetweet ? retweeterName : "",
-      retweetByHandle: isRetweet ? retweeterHandle : "",
-      retweetByProfileImageUrl: isRetweet ? retweeterProfileImageUrl : "",
       tweetDate: formatDateLabel(payload.created_at || payload.createdAt || payload.date),
       tweetText,
       profileImageUrl: pickVxProfileImage(contentPayload) || retweeterProfileImageUrl,
@@ -1530,30 +1508,9 @@
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
     const handleWithPrefix = trimmedHandle.startsWith("@") ? trimmedHandle : `@${trimmedHandle}`;
-    const retweetByName = state.retweetByName.trim();
-    const retweetByHandle = normalizeHandle(state.retweetByHandle, "");
 
     elements.previewName.textContent = toDisplayText(trimmedName);
     elements.previewHandle.textContent = toDisplayText(handleWithPrefix);
-    if (retweetByName || retweetByHandle) {
-      const label = retweetByName || retweetByHandle;
-      elements.previewRetweetText.textContent = toDisplayText(`${label} 리트윗`);
-      if (state.retweetByProfileImageSrc) {
-        elements.previewRetweetAvatar.crossOrigin = "anonymous";
-        elements.previewRetweetAvatar.referrerPolicy = "no-referrer";
-        applyImageSource(elements.previewRetweetAvatar, state.retweetByProfileImageSrc);
-        elements.previewRetweetAvatar.classList.remove("hidden");
-      } else {
-        elements.previewRetweetAvatar.removeAttribute("src");
-        elements.previewRetweetAvatar.classList.add("hidden");
-      }
-      elements.previewRetweet.classList.remove("hidden");
-    } else {
-      elements.previewRetweetText.textContent = "";
-      elements.previewRetweetAvatar.removeAttribute("src");
-      elements.previewRetweetAvatar.classList.add("hidden");
-      elements.previewRetweet.classList.add("hidden");
-    }
     elements.previewDate.textContent = state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
     elements.previewText.textContent = /\S/.test(rawText) ? toDisplayText(rawText) : "";
@@ -1746,7 +1703,6 @@
       const normalized = normalizeUrl(elements.tweetUrl.value);
       let imageUrls = [];
       let profileImageUrl = "";
-      let retweetProfileImageUrl = "";
       let quoteMeta = null;
       let replyParentMetas = [];
       let usedFallback = false;
@@ -1761,9 +1717,6 @@
         state.sourceUrl = payload.url || result.usedUrl || normalized.canonicalUrl;
         state.authorName = (payload.author_name || "").trim() || "X User";
         state.authorHandle = parseHandle(payload.author_url || "", payload.author_name || "x");
-        state.retweetByName = "";
-        state.retweetByHandle = "";
-        state.retweetByProfileImageSrc = "";
         state.replyParents = [];
         state.quoteAuthorName = "";
         state.quoteAuthorHandle = "";
@@ -1796,9 +1749,6 @@
           if (vxMeta.authorHandle) {
             state.authorHandle = vxMeta.authorHandle;
           }
-          state.retweetByName = vxMeta.retweetByName || "";
-          state.retweetByHandle = vxMeta.retweetByHandle || "";
-          retweetProfileImageUrl = vxMeta.retweetByProfileImageUrl || "";
           state.replyCount = vxMeta.replyCount || "0";
           state.retweetCount = vxMeta.retweetCount || "0";
           state.likeCount = vxMeta.likeCount || "0";
@@ -1821,9 +1771,6 @@
         state.sourceUrl = fallback.sourceUrl || normalized.canonicalUrl;
         state.authorName = fallback.authorName;
         state.authorHandle = fallback.authorHandle;
-        state.retweetByName = fallback.retweetByName || "";
-        state.retweetByHandle = fallback.retweetByHandle || "";
-        retweetProfileImageUrl = fallback.retweetByProfileImageUrl || "";
         state.tweetDate = fallback.tweetDate;
         state.tweetText = sanitizeFetchedTweetText(fallback.tweetText || "");
         state.replyCount = fallback.replyCount || "0";
@@ -1839,13 +1786,11 @@
 
       const [
         profileImageSrc,
-        retweetByProfileImageSrc,
         quoteAuthorProfileImageSrc,
         mainImages,
         quoteImages,
       ] = await Promise.all([
         toDisplayImageSrc(profileImageUrl),
-        toDisplayImageSrc(retweetProfileImageUrl),
         toDisplayImageSrc(quoteMeta ? quoteMeta.authorProfileImageUrl : ""),
         toDisplayImageSrcs(imageUrls),
         toDisplayImageSrcs(quoteMeta && Array.isArray(quoteMeta.imageUrls) ? quoteMeta.imageUrls : []),
@@ -1877,7 +1822,6 @@
       );
 
       state.profileImageSrc = profileImageSrc;
-      state.retweetByProfileImageSrc = retweetByProfileImageSrc;
       state.imageDataUrls = mainImages;
       state.quoteAuthorName = quoteMeta ? (quoteMeta.authorName || "") : "";
       state.quoteAuthorHandle = quoteMeta ? (quoteMeta.authorHandle || "") : "";
@@ -2112,10 +2056,6 @@
     elements.showOriginalUrlToggle.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
-      renderPreview();
-    });
-    elements.previewRetweetAvatar.addEventListener("error", () => {
-      state.retweetByProfileImageSrc = "";
       renderPreview();
     });
     elements.previewQuoteAvatar.addEventListener("error", () => {

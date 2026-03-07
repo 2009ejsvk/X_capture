@@ -223,24 +223,6 @@ textarea:focus-visible {
   box-shadow: none;
 }
 
-.retweet-line {
-  margin: 0 0 8px;
-  font-size: 12px;
-  color: #697081;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.retweet-avatar {
-  width: var(--profile-avatar-size);
-  height: var(--profile-avatar-size);
-  border-radius: 999px;
-  border: 1px solid #dce3ed;
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-
 .tweet-head {
   display: flex;
   align-items: center;
