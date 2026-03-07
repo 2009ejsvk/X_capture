@@ -574,7 +574,7 @@ textarea:focus-visible {
 }
 
 .tweet-original-url {
-  color: #1d9bf0;
+  color: var(--ink);
   text-decoration: none;
   word-break: break-all;
   line-height: 1.35;
