@@ -71,6 +71,17 @@
     maximumFractionDigits: 1,
   });
 
+  const tweetActionIconPaths = {
+    reply:
+      "M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z",
+    retweet:
+      "M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z",
+    like:
+      "M16.697 5.5c-1.222-.06-2.679.51-3.89 2.16l-.805 1.09-.806-1.09C9.984 6.01 8.526 5.44 7.304 5.5c-1.243.07-2.349.78-2.91 1.91-.552 1.12-.633 2.78.479 4.82 1.074 1.97 3.257 4.27 7.129 6.61 3.87-2.34 6.052-4.64 7.126-6.61 1.111-2.04 1.03-3.7.477-4.82-.561-1.13-1.666-1.84-2.908-1.91zm4.187 7.69c-1.351 2.48-4.001 5.12-8.379 7.67l-.503.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.36-2.5-1.41-4.86-.514-6.67.887-1.79 2.647-2.91 4.601-3.01 1.651-.09 3.368.56 4.798 2.01 1.429-1.45 3.146-2.1 4.796-2.01 1.954.1 3.714 1.22 4.601 3.01.896 1.81.846 4.17-.514 6.67z",
+    bookmark:
+      "M4 4.5C4 3.12 5.119 2 6.5 2h11C18.881 2 20 3.12 20 4.5v18.44l-8-5.71-8 5.71V4.5zM6.5 4c-.276 0-.5.22-.5.5v14.56l6-4.29 6 4.29V4.5c0-.28-.224-.5-.5-.5h-11z",
+  };
+
   function formatCountLabel(rawValue) {
     if (rawValue == null) {
       return "0";
@@ -99,6 +110,16 @@
     }
 
     return text;
+  }
+
+  function extractTweetMetrics(payload) {
+    return {
+      tweetDate: formatDateLabel(payload && (payload.created_at || payload.createdAt || payload.date)),
+      replyCount: formatCountLabel(pickVxCount(payload, ["replies", "reply_count", "replyCount"])),
+      retweetCount: formatCountLabel(pickVxCount(payload, ["retweets", "retweet_count", "retweetCount"])),
+      likeCount: formatCountLabel(pickVxCount(payload, ["likes", "favorite_count", "favoriteCount", "favourites"])),
+      bookmarkCount: formatCountLabel(pickVxCount(payload, ["bookmarks", "bookmark_count", "bookmarkCount"])),
+    };
   }
 
   function flagEmojiToCode(flagEmoji) {
@@ -619,6 +640,11 @@
         authorProfileImageUrl: "",
         sourceUrl: "",
         imageUrls: [],
+        tweetDate: "",
+        replyCount: "0",
+        retweetCount: "0",
+        likeCount: "0",
+        bookmarkCount: "0",
       };
     }
 
@@ -641,6 +667,11 @@
           authorProfileImageUrl: "",
           sourceUrl: "",
           imageUrls: [],
+          tweetDate: "",
+          replyCount: "0",
+          retweetCount: "0",
+          likeCount: "0",
+          bookmarkCount: "0",
         };
       }
     }
@@ -659,6 +690,7 @@
     const authorProfileImageUrl = pickVxProfileImage(payload);
     const sourceUrl = pickVxTweetUrl(payload);
     const imageUrls = pickVxImages(payload);
+    const metrics = extractTweetMetrics(payload);
 
     if (!text && !authorName && !authorHandle && !authorProfileImageUrl && !sourceUrl && !imageUrls.length) {
       return null;
@@ -671,6 +703,11 @@
       authorProfileImageUrl,
       sourceUrl,
       imageUrls,
+      tweetDate: metrics.tweetDate,
+      replyCount: metrics.replyCount,
+      retweetCount: metrics.retweetCount,
+      likeCount: metrics.likeCount,
+      bookmarkCount: metrics.bookmarkCount,
     };
   }
 
@@ -701,6 +738,11 @@
       authorProfileImageUrl: "",
       sourceUrl: "",
       imageUrls: [],
+      tweetDate: "",
+      replyCount: "0",
+      retweetCount: "0",
+      likeCount: "0",
+      bookmarkCount: "0",
     };
   }
 
@@ -1267,6 +1309,223 @@
     return true;
   }
 
+  function resolveSourceMeta(sourceUrl) {
+    const normalizedSourceUrl = String(sourceUrl || "").trim();
+    let sourceHost = "x.com";
+    let sourceHref = "";
+
+    if (normalizedSourceUrl) {
+      try {
+        const parsedUrl = new URL(normalizedSourceUrl);
+        sourceHost = parsedUrl.host.replace(/^www\./i, "") || "x.com";
+        sourceHref = parsedUrl.href;
+      } catch (error) {
+        sourceHost = "x.com";
+      }
+    }
+
+    return { sourceHost, sourceHref };
+  }
+
+  function createTweetActionItem(iconPath, value) {
+    const actionItem = document.createElement("div");
+    actionItem.className = "tweet-action-item";
+
+    const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    icon.setAttribute("viewBox", "0 0 24 24");
+    icon.setAttribute("aria-hidden", "true");
+    icon.setAttribute("class", "tweet-action-icon");
+
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", iconPath);
+    group.appendChild(path);
+    icon.appendChild(group);
+
+    const text = document.createElement("span");
+    text.textContent = String(value || "0").trim() || "0";
+
+    actionItem.appendChild(icon);
+    actionItem.appendChild(text);
+    return actionItem;
+  }
+
+  function populateTweetMedia(container, mediaItems, altPrefix, layout) {
+    container.innerHTML = "";
+    const normalizedMedia = Array.isArray(mediaItems) ? mediaItems.filter(Boolean).slice(0, 4) : [];
+
+    if (!normalizedMedia.length) {
+      container.classList.add("hidden");
+      container.removeAttribute("data-count");
+      container.removeAttribute("data-layout");
+      return false;
+    }
+
+    container.dataset.count = String(normalizedMedia.length);
+    container.dataset.layout = normalizedMedia.length >= 2 ? layout : "single";
+    container.classList.remove("hidden");
+
+    normalizedMedia.forEach((src, index) => {
+      const image = document.createElement("img");
+      image.className = "tweet-image";
+      image.alt = `${altPrefix} ${index + 1}`;
+      image.loading = index === 0 ? "eager" : "lazy";
+      image.referrerPolicy = "no-referrer";
+      image.crossOrigin = "anonymous";
+      image.src = src;
+      container.appendChild(image);
+    });
+
+    return true;
+  }
+
+  function createReplyTweetCard(item, options) {
+    const authorName = String(item && item.authorName || "").trim();
+    const authorHandle = normalizeHandle(item && item.authorHandle, "");
+    const text = String(item && item.text || "").replace(/\r\n/g, "\n").trim();
+    const translation = String(item && item.translationText || "").replace(/\r\n/g, "\n").trim();
+    const avatarSrc = String(item && item.authorProfileImageSrc || "").trim();
+    const media = Array.isArray(item && item.dataUrls) ? item.dataUrls.filter(Boolean).slice(0, 4) : [];
+    const tweetDate = String(item && item.tweetDate || "").trim() || "날짜";
+    const replyCount = String(item && item.replyCount || "").trim() || "0";
+    const retweetCount = String(item && item.retweetCount || "").trim() || "0";
+    const likeCount = String(item && item.likeCount || "").trim() || "0";
+    const bookmarkCount = String(item && item.bookmarkCount || "").trim() || "0";
+    const { sourceHost, sourceHref } = resolveSourceMeta(item && item.sourceUrl);
+    const cardLabel = authorName || authorHandle || "답글";
+    const displayName = authorName || "답글";
+    const initialSeed = authorName || authorHandle.replace(/^@/, "") || "X";
+
+    const article = document.createElement("article");
+    article.className = "tweet-card";
+
+    const head = document.createElement("header");
+    head.className = "tweet-head";
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+
+    const avatarImage = document.createElement("img");
+    avatarImage.className = "avatar-image hidden";
+    avatarImage.alt = `${toDisplayText(cardLabel)} 프로필 사진`;
+    avatarImage.loading = "lazy";
+    avatarImage.referrerPolicy = "no-referrer";
+    avatarImage.crossOrigin = "anonymous";
+
+    const avatarInitial = document.createElement("span");
+    avatarInitial.textContent = initialSeed.charAt(0).toUpperCase() || "X";
+    if (avatarSrc) {
+      avatarInitial.classList.add("hidden");
+    }
+
+    avatarImage.addEventListener("error", () => {
+      avatarImage.removeAttribute("src");
+      avatarImage.classList.add("hidden");
+      avatarInitial.classList.remove("hidden");
+    });
+    if (avatarSrc) {
+      avatarImage.src = avatarSrc;
+      avatarImage.classList.remove("hidden");
+    }
+
+    avatar.appendChild(avatarImage);
+    avatar.appendChild(avatarInitial);
+
+    const meta = document.createElement("div");
+    meta.className = "author-meta";
+
+    const nameNode = document.createElement("p");
+    nameNode.className = "name";
+    nameNode.textContent = toDisplayText(displayName);
+
+    const handleNode = document.createElement("p");
+    handleNode.className = "handle";
+    handleNode.textContent = toDisplayText(authorHandle || "");
+    if (!authorHandle) {
+      handleNode.classList.add("hidden");
+    }
+
+    meta.appendChild(nameNode);
+    meta.appendChild(handleNode);
+
+    const platformMark = document.createElement("span");
+    platformMark.className = "platform-mark";
+    platformMark.textContent = "𝕏";
+
+    head.appendChild(avatar);
+    head.appendChild(meta);
+    head.appendChild(platformMark);
+    article.appendChild(head);
+
+    const textNode = document.createElement("p");
+    textNode.className = "tweet-text";
+    textNode.textContent = /\S/.test(text) ? toDisplayText(text) : "";
+    if (!/\S/.test(text)) {
+      textNode.classList.add("hidden");
+    }
+    article.appendChild(textNode);
+
+    const translationBox = document.createElement("section");
+    translationBox.className = "tweet-translation";
+    translationBox.setAttribute("aria-label", "답글 번역");
+    const translationTextNode = document.createElement("p");
+    translationTextNode.className = "tweet-translation-text";
+    if (translation) {
+      translationTextNode.textContent = toDisplayText(translation);
+    } else {
+      translationBox.classList.add("hidden");
+    }
+    translationBox.appendChild(translationTextNode);
+    article.appendChild(translationBox);
+
+    const mediaBox = document.createElement("div");
+    mediaBox.className = "tweet-media hidden";
+    mediaBox.setAttribute("aria-label", "답글 첨부 이미지 목록");
+    if (options.showReplyMedia) {
+      populateTweetMedia(mediaBox, media, "답글 이미지", options.mediaLayout);
+    }
+    article.appendChild(mediaBox);
+
+    const actions = document.createElement("div");
+    actions.className = "tweet-actions";
+    actions.setAttribute("aria-label", "답글 반응 수치");
+    actions.appendChild(createTweetActionItem(tweetActionIconPaths.reply, replyCount));
+    actions.appendChild(createTweetActionItem(tweetActionIconPaths.retweet, retweetCount));
+    actions.appendChild(createTweetActionItem(tweetActionIconPaths.like, likeCount));
+    actions.appendChild(createTweetActionItem(tweetActionIconPaths.bookmark, bookmarkCount));
+    article.appendChild(actions);
+
+    const footer = document.createElement("footer");
+    footer.className = "tweet-foot";
+
+    const footMeta = document.createElement("div");
+    footMeta.className = "tweet-foot-meta";
+    const dateNode = document.createElement("span");
+    dateNode.textContent = tweetDate;
+    const dotNode = document.createElement("span");
+    dotNode.textContent = "·";
+    const sourceNode = document.createElement("span");
+    sourceNode.textContent = sourceHost;
+    footMeta.appendChild(dateNode);
+    footMeta.appendChild(dotNode);
+    footMeta.appendChild(sourceNode);
+    footer.appendChild(footMeta);
+
+    const originalUrl = document.createElement("a");
+    originalUrl.className = "tweet-original-url hidden";
+    originalUrl.target = "_blank";
+    originalUrl.rel = "noopener noreferrer";
+    if (options.showOriginalUrl && sourceHref) {
+      originalUrl.textContent = sourceHref;
+      originalUrl.href = sourceHref;
+      originalUrl.classList.remove("hidden");
+    }
+    footer.appendChild(originalUrl);
+
+    article.appendChild(footer);
+    return article;
+  }
+
   function renderPreview() {
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
@@ -1338,90 +1597,17 @@
           const authorHandle = normalizeHandle(item && item.authorHandle, "");
           const text = String(item && item.text || "").replace(/\r\n/g, "\n").trim();
           const translation = String(item && item.translationText || "").replace(/\r\n/g, "\n").trim();
-          const avatarSrc = String(item && item.authorProfileImageSrc || "").trim();
           const media = Array.isArray(item && item.dataUrls) ? item.dataUrls.filter(Boolean).slice(0, 4) : [];
           const hasMedia = showReplyMedia && media.length > 0;
           if (!authorName && !authorHandle && !text && !translation && !hasMedia) {
             return;
           }
 
-          const replyItem = document.createElement("article");
-          replyItem.className = "reply-item";
-
-          if (authorName || authorHandle || avatarSrc) {
-            const head = document.createElement("div");
-            head.className = "reply-item-head";
-
-            if (avatarSrc) {
-              const avatar = document.createElement("img");
-              avatar.className = "reply-item-avatar";
-              avatar.alt = `${toDisplayText(authorName || authorHandle || "답글 사용자")} 프로필 사진`;
-              avatar.loading = "lazy";
-              avatar.referrerPolicy = "no-referrer";
-              avatar.crossOrigin = "anonymous";
-              avatar.src = avatarSrc;
-              head.appendChild(avatar);
-            }
-
-            const meta = document.createElement("div");
-            meta.className = "reply-item-meta";
-            if (authorName) {
-              const nameNode = document.createElement("p");
-              nameNode.className = "reply-item-name";
-              nameNode.textContent = toDisplayText(authorName);
-              meta.appendChild(nameNode);
-            }
-            if (authorHandle) {
-              const handleNode = document.createElement("p");
-              handleNode.className = "reply-item-handle";
-              handleNode.textContent = toDisplayText(authorHandle);
-              meta.appendChild(handleNode);
-            }
-            if (!meta.childElementCount) {
-              const fallback = document.createElement("p");
-              fallback.className = "reply-item-name";
-              fallback.textContent = "답글";
-              meta.appendChild(fallback);
-            }
-            head.appendChild(meta);
-            replyItem.appendChild(head);
-          }
-
-          if (text) {
-            const textNode = document.createElement("p");
-            textNode.className = "reply-item-text";
-            textNode.textContent = toDisplayText(text);
-            replyItem.appendChild(textNode);
-          }
-
-          if (translation) {
-            const translationBox = document.createElement("section");
-            translationBox.className = "reply-item-translation";
-            const translationText = document.createElement("p");
-            translationText.className = "reply-item-translation-text";
-            translationText.textContent = toDisplayText(translation);
-            translationBox.appendChild(translationText);
-            replyItem.appendChild(translationBox);
-          }
-
-          if (hasMedia) {
-            const mediaBox = document.createElement("div");
-            mediaBox.className = "quote-media";
-            mediaBox.dataset.count = String(media.length);
-            media.forEach((src, index) => {
-              const image = document.createElement("img");
-              image.className = "quote-image";
-              image.alt = `답글 이미지 ${index + 1}`;
-              image.loading = "lazy";
-              image.referrerPolicy = "no-referrer";
-              image.crossOrigin = "anonymous";
-              image.src = src;
-              mediaBox.appendChild(image);
-            });
-            replyItem.appendChild(mediaBox);
-          }
-
-          elements.previewReplyList.appendChild(replyItem);
+          elements.previewReplyList.appendChild(createReplyTweetCard(item, {
+            showReplyMedia,
+            showOriginalUrl: Boolean(state.showOriginalUrl),
+            mediaLayout: state.mediaLayout,
+          }));
         });
       }
 
@@ -1517,19 +1703,7 @@
       }
     }
 
-    const sourceUrl = String(state.sourceUrl || "").trim();
-    let sourceHost = "x.com";
-    let sourceHref = "";
-
-    if (sourceUrl) {
-      try {
-        const parsedUrl = new URL(sourceUrl);
-        sourceHost = parsedUrl.host.replace(/^www\./i, "") || "x.com";
-        sourceHref = parsedUrl.href;
-      } catch (error) {
-        sourceHost = "x.com";
-      }
-    }
+    const { sourceHost, sourceHref } = resolveSourceMeta(state.sourceUrl);
 
     elements.previewSource.textContent = sourceHost;
     if (elements.previewOriginalUrl) {
@@ -1691,6 +1865,11 @@
             text: String(normalizedMeta.text || "").replace(/\r\n/g, "\n").trim(),
             translationText: String(normalizedMeta.translationText || "").replace(/\r\n/g, "\n").trim(),
             sourceUrl: String(normalizedMeta.sourceUrl || "").trim(),
+            tweetDate: String(normalizedMeta.tweetDate || "").trim(),
+            replyCount: String(normalizedMeta.replyCount || "").trim() || "0",
+            retweetCount: String(normalizedMeta.retweetCount || "").trim() || "0",
+            likeCount: String(normalizedMeta.likeCount || "").trim() || "0",
+            bookmarkCount: String(normalizedMeta.bookmarkCount || "").trim() || "0",
             authorProfileImageSrc,
             dataUrls,
           };
