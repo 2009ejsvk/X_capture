@@ -573,13 +573,6 @@ textarea:focus-visible {
   gap: 6px;
 }
 
-.tweet-original-url {
-  color: var(--ink);
-  text-decoration: none;
-  word-break: break-all;
-  line-height: 1.35;
-}
-
 .actions {
   position: sticky;
   bottom: 8px;
