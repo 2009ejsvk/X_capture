@@ -46,8 +46,6 @@
     previewLikeCount: document.getElementById("previewLikeCount"),
     previewBookmarkCount: document.getElementById("previewBookmarkCount"),
     previewSource: document.getElementById("previewSource"),
-    previewOriginalUrl: document.getElementById("previewOriginalUrl"),
-    showOriginalUrlToggle: document.getElementById("showOriginalUrlToggle"),
   };
 
   function formatNumericDateTime(date) {
@@ -169,7 +167,6 @@
       showReplyMedia: true,
       showQuote: true,
       showQuoteMedia: true,
-      showOriginalUrl: true,
       tweetDate: currentDateTimeLabel(),
       tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
       translationText: "",
@@ -1266,7 +1263,6 @@
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
-    elements.showOriginalUrlToggle.checked = Boolean(state.showOriginalUrl);
     renderReplyEditors();
   }
 
@@ -1290,19 +1286,17 @@
   function resolveSourceMeta(sourceUrl) {
     const normalizedSourceUrl = String(sourceUrl || "").trim();
     let sourceHost = "x.com";
-    let sourceHref = "";
 
     if (normalizedSourceUrl) {
       try {
         const parsedUrl = new URL(normalizedSourceUrl);
         sourceHost = parsedUrl.host.replace(/^www\./i, "") || "x.com";
-        sourceHref = parsedUrl.href;
       } catch (error) {
         sourceHost = "x.com";
       }
     }
 
-    return { sourceHost, sourceHref };
+    return { sourceHost };
   }
 
   function createTweetActionItem(iconPath, value) {
@@ -1369,7 +1363,7 @@
     const retweetCount = String(item && item.retweetCount || "").trim() || "0";
     const likeCount = String(item && item.likeCount || "").trim() || "0";
     const bookmarkCount = String(item && item.bookmarkCount || "").trim() || "0";
-    const { sourceHost, sourceHref } = resolveSourceMeta(item && item.sourceUrl);
+    const { sourceHost } = resolveSourceMeta(item && item.sourceUrl);
     const cardLabel = authorName || authorHandle || "답글";
     const displayName = authorName || "답글";
     const initialSeed = authorName || authorHandle.replace(/^@/, "") || "X";
@@ -1489,16 +1483,6 @@
     footMeta.appendChild(sourceNode);
     footer.appendChild(footMeta);
 
-    const originalUrl = document.createElement("a");
-    originalUrl.className = "tweet-original-url hidden";
-    originalUrl.target = "_blank";
-    originalUrl.rel = "noopener noreferrer";
-    if (options.showOriginalUrl && sourceHref) {
-      originalUrl.textContent = sourceHref;
-      originalUrl.href = sourceHref;
-      originalUrl.classList.remove("hidden");
-    }
-    footer.appendChild(originalUrl);
 
     article.appendChild(footer);
     return article;
@@ -1562,7 +1546,6 @@
 
           elements.previewReplyList.appendChild(createReplyTweetCard(item, {
             showReplyMedia,
-            showOriginalUrl: Boolean(state.showOriginalUrl),
             mediaLayout: state.mediaLayout,
           }));
         });
@@ -1660,20 +1643,9 @@
       }
     }
 
-    const { sourceHost, sourceHref } = resolveSourceMeta(state.sourceUrl);
+    const { sourceHost } = resolveSourceMeta(state.sourceUrl);
 
     elements.previewSource.textContent = sourceHost;
-    if (elements.previewOriginalUrl) {
-      if (sourceHref && state.showOriginalUrl) {
-        elements.previewOriginalUrl.textContent = sourceHref;
-        elements.previewOriginalUrl.href = sourceHref;
-        elements.previewOriginalUrl.classList.remove("hidden");
-      } else {
-        elements.previewOriginalUrl.textContent = "";
-        elements.previewOriginalUrl.removeAttribute("href");
-        elements.previewOriginalUrl.classList.add("hidden");
-      }
-    }
   }
 
   function syncFromEditors() {
@@ -1691,7 +1663,6 @@
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
-    state.showOriginalUrl = Boolean(elements.showOriginalUrlToggle.checked);
     renderPreview();
   }
 
@@ -2053,7 +2024,6 @@
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
-    elements.showOriginalUrlToggle.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
       renderPreview();
