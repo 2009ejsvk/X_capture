@@ -46,6 +46,7 @@
     previewLikeCount: document.getElementById("previewLikeCount"),
     previewBookmarkCount: document.getElementById("previewBookmarkCount"),
     previewSource: document.getElementById("previewSource"),
+    previewOriginalUrl: document.getElementById("previewOriginalUrl"),
   };
 
   function formatNumericDateTime(date) {
@@ -1646,6 +1647,15 @@
     const { sourceHost } = resolveSourceMeta(state.sourceUrl);
 
     elements.previewSource.textContent = sourceHost;
+
+    const trimmedSourceUrl = String(state.sourceUrl || "").trim();
+    if (trimmedSourceUrl) {
+      elements.previewOriginalUrl.textContent = trimmedSourceUrl;
+      elements.previewOriginalUrl.classList.remove("hidden");
+    } else {
+      elements.previewOriginalUrl.textContent = "";
+      elements.previewOriginalUrl.classList.add("hidden");
+    }
   }
 
   function syncFromEditors() {
