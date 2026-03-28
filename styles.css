@@ -183,6 +183,50 @@ textarea:focus-visible {
   gap: 4px;
 }
 
+.media-selector-list {
+  display: grid;
+  gap: 8px;
+}
+
+.media-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 8px;
+}
+
+.media-selector-item {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.media-selector-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e8ecf4;
+  background: #f6f8fb;
+}
+
+.media-selector-check {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.media-selector-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
 .reply-editor-label {
   margin: 0;
   font-size: 12px;

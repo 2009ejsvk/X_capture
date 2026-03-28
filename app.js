@@ -14,12 +14,19 @@
     likeCount: document.getElementById("likeCount"),
     bookmarkCount: document.getElementById("bookmarkCount"),
     imageInput: document.getElementById("imageInput"),
+    mainImageSelector: document.getElementById("mainImageSelector"),
     mediaLayout: document.getElementById("mediaLayout"),
     showReplyToggle: document.getElementById("showReplyToggle"),
     showReplyMediaToggle: document.getElementById("showReplyMediaToggle"),
     replyEditorList: document.getElementById("replyEditorList"),
+    replyImageSelectorList: document.getElementById("replyImageSelectorList"),
     showQuoteToggle: document.getElementById("showQuoteToggle"),
     showQuoteMediaToggle: document.getElementById("showQuoteMediaToggle"),
+    quoteEditor: document.getElementById("quoteEditor"),
+    quoteAuthorName: document.getElementById("quoteAuthorName"),
+    quoteAuthorHandle: document.getElementById("quoteAuthorHandle"),
+    quoteText: document.getElementById("quoteText"),
+    quoteImageSelector: document.getElementById("quoteImageSelector"),
     removeImageBtn: document.getElementById("removeImageBtn"),
     resetBtn: document.getElementById("resetBtn"),
     captureBtn: document.getElementById("captureBtn"),
@@ -671,6 +678,46 @@
     return null;
   }
 
+  function normalizeMediaItems(items) {
+    const seen = new Set();
+
+    return (Array.isArray(items) ? items : [])
+      .map((item) => {
+        if (typeof item === "string") {
+          const src = item.trim();
+          return src ? { src, visible: true } : null;
+        }
+
+        if (!item || typeof item !== "object") {
+          return null;
+        }
+
+        const src = String(item.src || item.url || "").trim();
+        if (!src) {
+          return null;
+        }
+
+        return {
+          src,
+          visible: item.visible !== false,
+        };
+      })
+      .filter((item) => {
+        if (!item || seen.has(item.src)) {
+          return false;
+        }
+        seen.add(item.src);
+        return true;
+      })
+      .slice(0, 4);
+  }
+
+  function getVisibleMediaSrcs(items) {
+    return normalizeMediaItems(items)
+      .filter((item) => item.visible)
+      .map((item) => item.src);
+  }
+
   function normalizeQuoteMeta(payload) {
     if (!payload || typeof payload !== "object") {
       return null;
@@ -694,7 +741,7 @@
       authorHandle,
       authorProfileImageUrl,
       sourceUrl,
-      imageUrls,
+      imageUrls: normalizeMediaItems(imageUrls),
       tweetDate: metrics.tweetDate,
       replyCount: metrics.replyCount,
       retweetCount: metrics.retweetCount,
@@ -852,16 +899,16 @@
   }
 
   async function toDisplayImageSrcs(imageUrls) {
-    const uniqueUrls = [...new Set((Array.isArray(imageUrls) ? imageUrls : [])
-      .map((url) => String(url || "").trim())
-      .filter(Boolean))].slice(0, 4);
+    const uniqueUrls = normalizeMediaItems(imageUrls)
+      .map((item) => item.src)
+      .slice(0, 4);
 
     if (!uniqueUrls.length) {
       return [];
     }
 
     const converted = await Promise.all(uniqueUrls.map(toDisplayImageSrc));
-    return converted.filter(Boolean);
+    return normalizeMediaItems(converted.filter(Boolean));
   }
 
   async function fetchOembed(url) {
@@ -1169,6 +1216,59 @@
     return ordered;
   }
 
+  function createMediaSelector(titleText, mediaItems, onToggle) {
+    const normalizedMedia = normalizeMediaItems(mediaItems);
+    if (!normalizedMedia.length) {
+      return null;
+    }
+
+    const wrapper = document.createElement("section");
+    wrapper.className = "reply-editor-item";
+
+    const title = document.createElement("p");
+    title.className = "reply-editor-title";
+    title.textContent = titleText;
+    wrapper.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "media-selector-grid";
+
+    normalizedMedia.forEach((item, index) => {
+      const entry = document.createElement("div");
+      entry.className = "media-selector-item";
+
+      const thumb = document.createElement("img");
+      thumb.className = "media-selector-thumb";
+      thumb.alt = `${titleText} ${index + 1}`;
+      thumb.loading = "lazy";
+      thumb.referrerPolicy = "no-referrer";
+      thumb.crossOrigin = "anonymous";
+      thumb.src = item.src;
+
+      const label = document.createElement("label");
+      label.className = "media-selector-check";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = item.visible !== false;
+      checkbox.addEventListener("change", (event) => {
+        onToggle(index, Boolean(event.target.checked));
+      });
+
+      const text = document.createElement("span");
+      text.textContent = `이미지 ${index + 1}`;
+
+      label.appendChild(checkbox);
+      label.appendChild(text);
+      entry.appendChild(thumb);
+      entry.appendChild(label);
+      grid.appendChild(entry);
+    });
+
+    wrapper.appendChild(grid);
+    return wrapper;
+  }
+
   function renderReplyEditors() {
     if (!elements.replyEditorList) {
       return;
@@ -1249,6 +1349,76 @@
     elements.replyEditorList.classList.remove("hidden");
   }
 
+  function renderMediaSelectors() {
+    if (elements.mainImageSelector) {
+      elements.mainImageSelector.innerHTML = "";
+      const selector = createMediaSelector("메인 이미지 선택", state.imageDataUrls, (index, visible) => {
+        const items = normalizeMediaItems(state.imageDataUrls);
+        if (!items[index]) {
+          return;
+        }
+        items[index].visible = visible;
+        state.imageDataUrls = items;
+        renderPreview();
+        renderMediaSelectors();
+      });
+      if (selector) {
+        elements.mainImageSelector.appendChild(selector);
+        elements.mainImageSelector.classList.remove("hidden");
+      } else {
+        elements.mainImageSelector.classList.add("hidden");
+      }
+    }
+
+    if (elements.quoteImageSelector) {
+      elements.quoteImageSelector.innerHTML = "";
+      const selector = createMediaSelector("리트윗 원문 이미지 선택", state.quoteDataUrls, (index, visible) => {
+        const items = normalizeMediaItems(state.quoteDataUrls);
+        if (!items[index]) {
+          return;
+        }
+        items[index].visible = visible;
+        state.quoteDataUrls = items;
+        renderPreview();
+        renderMediaSelectors();
+      });
+      if (selector) {
+        elements.quoteImageSelector.appendChild(selector);
+        elements.quoteImageSelector.classList.remove("hidden");
+      } else {
+        elements.quoteImageSelector.classList.add("hidden");
+      }
+    }
+
+    if (elements.replyImageSelectorList) {
+      elements.replyImageSelectorList.innerHTML = "";
+      const orderedReplies = getReplyParentsInDisplayOrder();
+      orderedReplies.forEach(({ item, stateIndex }, orderIndex) => {
+        const authorName = String(item && item.authorName || "").trim();
+        const authorHandle = normalizeHandle(item && item.authorHandle, "");
+        const titleText = [authorName, authorHandle].filter(Boolean).join(" ") || `답글 ${orderIndex + 1}`;
+        const selector = createMediaSelector(`${titleText} 이미지 선택`, item && item.dataUrls, (index, visible) => {
+          if (!Array.isArray(state.replyParents) || !state.replyParents[stateIndex]) {
+            return;
+          }
+          const items = normalizeMediaItems(state.replyParents[stateIndex].dataUrls);
+          if (!items[index]) {
+            return;
+          }
+          items[index].visible = visible;
+          state.replyParents[stateIndex].dataUrls = items;
+          renderPreview();
+          renderMediaSelectors();
+        });
+        if (selector) {
+          elements.replyImageSelectorList.appendChild(selector);
+        }
+      });
+
+      elements.replyImageSelectorList.classList.toggle("hidden", !elements.replyImageSelectorList.childElementCount);
+    }
+  }
+
   function applyStateToInputs() {
     elements.authorName.value = toDisplayText(state.authorName);
     elements.authorHandle.value = toDisplayText(state.authorHandle);
@@ -1264,7 +1434,19 @@
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
+    elements.quoteAuthorName.value = toDisplayText(state.quoteAuthorName);
+    elements.quoteAuthorHandle.value = toDisplayText(state.quoteAuthorHandle);
+    elements.quoteText.value = toDisplayText(state.quoteText);
+    const hasQuoteEditorContent = Boolean(
+      String(state.quoteAuthorName || "").trim() ||
+      String(state.quoteAuthorHandle || "").trim() ||
+      String(state.quoteText || "").trim() ||
+      String(state.quoteAuthorProfileImageSrc || "").trim() ||
+      normalizeMediaItems(state.quoteDataUrls).length
+    );
+    elements.quoteEditor.classList.toggle("hidden", !hasQuoteEditorContent);
     renderReplyEditors();
+    renderMediaSelectors();
   }
 
   function applyImageSource(imageElement, source) {
@@ -1325,7 +1507,7 @@
 
   function populateTweetMedia(container, mediaItems, altPrefix, layout) {
     container.innerHTML = "";
-    const normalizedMedia = Array.isArray(mediaItems) ? mediaItems.filter(Boolean).slice(0, 4) : [];
+    const normalizedMedia = getVisibleMediaSrcs(mediaItems);
 
     if (!normalizedMedia.length) {
       container.classList.add("hidden");
@@ -1358,7 +1540,7 @@
     const text = String(item && item.text || "").replace(/\r\n/g, "\n").trim();
     const translation = String(item && item.translationText || "").replace(/\r\n/g, "\n").trim();
     const avatarSrc = String(item && item.authorProfileImageSrc || "").trim();
-    const media = Array.isArray(item && item.dataUrls) ? item.dataUrls.filter(Boolean).slice(0, 4) : [];
+    const media = getVisibleMediaSrcs(item && item.dataUrls);
     const tweetDate = String(item && item.tweetDate || "").trim() || "날짜";
     const replyCount = String(item && item.replyCount || "").trim() || "0";
     const retweetCount = String(item && item.retweetCount || "").trim() || "0";
@@ -1539,7 +1721,7 @@
           const authorHandle = normalizeHandle(item && item.authorHandle, "");
           const text = String(item && item.text || "").replace(/\r\n/g, "\n").trim();
           const translation = String(item && item.translationText || "").replace(/\r\n/g, "\n").trim();
-          const media = Array.isArray(item && item.dataUrls) ? item.dataUrls.filter(Boolean).slice(0, 4) : [];
+          const media = getVisibleMediaSrcs(item && item.dataUrls);
           const hasMedia = showReplyMedia && media.length > 0;
           if (!authorName && !authorHandle && !text && !translation && !hasMedia) {
             return;
@@ -1559,28 +1741,7 @@
       }
     }
 
-    elements.previewMedia.innerHTML = "";
-    const mediaItems = Array.isArray(state.imageDataUrls) ? state.imageDataUrls.filter(Boolean).slice(0, 4) : [];
-    if (mediaItems.length) {
-      elements.previewMedia.dataset.count = String(mediaItems.length);
-      elements.previewMedia.dataset.layout = mediaItems.length >= 2 ? state.mediaLayout : "single";
-      elements.previewMedia.classList.remove("hidden");
-
-      mediaItems.forEach((src, index) => {
-        const image = document.createElement("img");
-        image.className = "tweet-image";
-        image.alt = `트윗 첨부 이미지 ${index + 1}`;
-        image.loading = index === 0 ? "eager" : "lazy";
-        image.referrerPolicy = "no-referrer";
-        image.crossOrigin = "anonymous";
-        image.src = src;
-        elements.previewMedia.appendChild(image);
-      });
-    } else {
-      elements.previewMedia.classList.add("hidden");
-      elements.previewMedia.removeAttribute("data-count");
-      elements.previewMedia.removeAttribute("data-layout");
-    }
+    populateTweetMedia(elements.previewMedia, state.imageDataUrls, "트윗 첨부 이미지", state.mediaLayout);
 
     if (
       elements.previewQuote &&
@@ -1594,7 +1755,7 @@
       const quoteHandle = normalizeHandle(state.quoteAuthorHandle, "");
       const quoteAuthorProfileImageSrc = String(state.quoteAuthorProfileImageSrc || "").trim();
       const quoteText = String(state.quoteText || "").replace(/\r\n/g, "\n").trim();
-      const quoteMedia = Array.isArray(state.quoteDataUrls) ? state.quoteDataUrls.filter(Boolean).slice(0, 4) : [];
+      const quoteMedia = getVisibleMediaSrcs(state.quoteDataUrls);
       const showQuote = Boolean(state.showQuote);
       const showQuoteMedia = Boolean(state.showQuoteMedia);
       const hasQuoteText = Boolean(quoteName || quoteHandle || quoteText);
@@ -1603,17 +1764,9 @@
 
       elements.previewQuoteMedia.innerHTML = "";
       if (showQuoteMedia && quoteMedia.length) {
-        elements.previewQuoteMedia.dataset.count = String(quoteMedia.length);
-        elements.previewQuoteMedia.classList.remove("hidden");
-        quoteMedia.forEach((src, index) => {
-          const image = document.createElement("img");
+        populateTweetMedia(elements.previewQuoteMedia, quoteMedia, "인용 트윗 이미지", "grid");
+        Array.from(elements.previewQuoteMedia.querySelectorAll("img")).forEach((image) => {
           image.className = "quote-image";
-          image.alt = `인용 트윗 이미지 ${index + 1}`;
-          image.loading = "lazy";
-          image.referrerPolicy = "no-referrer";
-          image.crossOrigin = "anonymous";
-          image.src = src;
-          elements.previewQuoteMedia.appendChild(image);
         });
       } else {
         elements.previewQuoteMedia.classList.add("hidden");
@@ -1673,6 +1826,9 @@
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
+    state.quoteAuthorName = elements.quoteAuthorName.value;
+    state.quoteAuthorHandle = elements.quoteAuthorHandle.value;
+    state.quoteText = elements.quoteText.value;
     renderPreview();
   }
 
@@ -1797,25 +1953,25 @@
             likeCount: String(normalizedMeta.likeCount || "").trim() || "0",
             bookmarkCount: String(normalizedMeta.bookmarkCount || "").trim() || "0",
             authorProfileImageSrc,
-            dataUrls,
+            dataUrls: normalizeMediaItems(dataUrls),
           };
         })
       );
 
       state.profileImageSrc = profileImageSrc;
-      state.imageDataUrls = mainImages;
+      state.imageDataUrls = normalizeMediaItems(mainImages);
       state.quoteAuthorName = quoteMeta ? (quoteMeta.authorName || "") : "";
       state.quoteAuthorHandle = quoteMeta ? (quoteMeta.authorHandle || "") : "";
       state.quoteAuthorProfileImageSrc = quoteMeta ? quoteAuthorProfileImageSrc : "";
       state.quoteText = quoteMeta ? (quoteMeta.text || "") : "";
-      state.quoteDataUrls = quoteImages;
+      state.quoteDataUrls = normalizeMediaItems(quoteImages);
       state.replyParents = replyParents.filter((item) => {
         return Boolean(
           String(item.authorHandle || "").trim() ||
           String(item.authorName || "").trim() ||
           String(item.text || "").trim() ||
           String(item.translationText || "").trim() ||
-          (Array.isArray(item.dataUrls) && item.dataUrls.length)
+          normalizeMediaItems(item.dataUrls).length
         );
       });
       applyStateToInputs();
@@ -1850,7 +2006,8 @@
 
     try {
       const loaded = await Promise.all(files.map(readFileAsDataUrl));
-      state.imageDataUrls = loaded.filter(Boolean);
+      state.imageDataUrls = normalizeMediaItems(loaded.filter(Boolean));
+      applyStateToInputs();
       renderPreview();
       setStatus(`${state.imageDataUrls.length}장 이미지 반영 완료.`, "success");
     } catch (error) {
@@ -1861,6 +2018,7 @@
   function onRemoveImage() {
     state.imageDataUrls = [];
     elements.imageInput.value = "";
+    applyStateToInputs();
     renderPreview();
     setStatus("이미지를 제거했습니다.");
   }
@@ -2034,6 +2192,9 @@
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
+    elements.quoteAuthorName.addEventListener("input", syncFromEditors);
+    elements.quoteAuthorHandle.addEventListener("input", syncFromEditors);
+    elements.quoteText.addEventListener("input", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
       renderPreview();
@@ -2052,5 +2213,3 @@
   applyStateToInputs();
   renderPreview();
 })();
-
-

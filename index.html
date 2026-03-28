@@ -71,6 +71,7 @@
             <input id="imageInput" type="file" accept="image/*" multiple />
             <button id="removeImageBtn" class="btn btn-ghost" type="button">삭제</button>
           </div>
+          <div id="mainImageSelector" class="media-selector-list hidden" aria-label="메인 이미지 선택"></div>
 
           <label for="mediaLayout">이미지 배치(2장 이상)</label>
           <select id="mediaLayout">
@@ -91,6 +92,7 @@
           </div>
 
           <div id="replyEditorList" class="reply-editor-list hidden" aria-label="답글 편집 목록"></div>
+          <div id="replyImageSelectorList" class="reply-editor-list hidden" aria-label="답글 이미지 선택 목록"></div>
 
           <span>리트윗 원문 옵션</span>
           <div class="option-row">
@@ -103,6 +105,31 @@
               리트윗 원문 이미지 표시
             </label>
           </div>
+          <section id="quoteEditor" class="reply-editor-item hidden" aria-label="리트윗 원문 편집">
+            <p class="reply-editor-title">리트윗 원문 편집</p>
+
+            <div class="reply-editor-fields">
+              <label class="reply-editor-label" for="quoteAuthorName">작성자명</label>
+              <input id="quoteAuthorName" type="text" maxlength="40" placeholder="리트윗 원문 작성자명" />
+            </div>
+
+            <div class="reply-editor-fields">
+              <label class="reply-editor-label" for="quoteAuthorHandle">핸들</label>
+              <input id="quoteAuthorHandle" type="text" maxlength="40" placeholder="@handle" />
+            </div>
+
+            <div class="reply-editor-fields">
+              <label class="reply-editor-label" for="quoteText">본문</label>
+              <textarea
+                id="quoteText"
+                class="reply-editor-textarea"
+                rows="3"
+                placeholder="리트윗 원문 본문을 입력하세요."
+              ></textarea>
+            </div>
+
+            <div id="quoteImageSelector" class="media-selector-list hidden" aria-label="리트윗 원문 이미지 선택"></div>
+          </section>
         </div>
       </section>
 
