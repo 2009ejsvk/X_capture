@@ -23,6 +23,7 @@
     showQuoteToggle: document.getElementById("showQuoteToggle"),
     showQuoteMediaToggle: document.getElementById("showQuoteMediaToggle"),
     quoteEditor: document.getElementById("quoteEditor"),
+    quoteMediaLayout: document.getElementById("quoteMediaLayout"),
     quoteAuthorName: document.getElementById("quoteAuthorName"),
     quoteAuthorHandle: document.getElementById("quoteAuthorHandle"),
     quoteText: document.getElementById("quoteText"),
@@ -175,6 +176,7 @@
       showReplyMedia: true,
       showQuote: true,
       showQuoteMedia: true,
+      quoteMediaLayout: "vertical",
       tweetDate: currentDateTimeLabel(),
       tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
       translationText: "",
@@ -1434,6 +1436,7 @@
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
+    elements.quoteMediaLayout.value = state.quoteMediaLayout;
     elements.quoteAuthorName.value = toDisplayText(state.quoteAuthorName);
     elements.quoteAuthorHandle.value = toDisplayText(state.quoteAuthorHandle);
     elements.quoteText.value = toDisplayText(state.quoteText);
@@ -1764,7 +1767,7 @@
 
       elements.previewQuoteMedia.innerHTML = "";
       if (showQuoteMedia && quoteMedia.length) {
-        populateTweetMedia(elements.previewQuoteMedia, quoteMedia, "인용 트윗 이미지", "grid");
+        populateTweetMedia(elements.previewQuoteMedia, quoteMedia, "인용 트윗 이미지", state.quoteMediaLayout);
         Array.from(elements.previewQuoteMedia.querySelectorAll("img")).forEach((image) => {
           image.className = "quote-image";
         });
@@ -1826,6 +1829,7 @@
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
+    state.quoteMediaLayout = elements.quoteMediaLayout.value === "vertical" ? "vertical" : "grid";
     state.quoteAuthorName = elements.quoteAuthorName.value;
     state.quoteAuthorHandle = elements.quoteAuthorHandle.value;
     state.quoteText = elements.quoteText.value;
@@ -2192,6 +2196,7 @@
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
+    elements.quoteMediaLayout.addEventListener("change", syncFromEditors);
     elements.quoteAuthorName.addEventListener("input", syncFromEditors);
     elements.quoteAuthorHandle.addEventListener("input", syncFromEditors);
     elements.quoteText.addEventListener("input", syncFromEditors);
