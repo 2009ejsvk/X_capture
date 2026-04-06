@@ -552,7 +552,6 @@ textarea:focus-visible {
 .quote-media {
   display: grid;
   gap: 6px;
-  grid-template-columns: 1fr;
   margin-top: 8px;
 }
 
@@ -567,10 +566,30 @@ textarea:focus-visible {
   background: #f6f8fb;
 }
 
+.quote-media[data-count="1"] {
+  grid-template-columns: 1fr;
+}
+
 .quote-media[data-count="2"],
 .quote-media[data-count="3"],
 .quote-media[data-count="4"] {
   grid-template-columns: 1fr 1fr;
+}
+
+.quote-media[data-count="2"] .quote-image,
+.quote-media[data-count="3"] .quote-image,
+.quote-media[data-count="4"] .quote-image {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.quote-media[data-layout="vertical"] {
+  grid-template-columns: 1fr;
+}
+
+.quote-media[data-layout="vertical"] .quote-image {
+  aspect-ratio: auto;
+  object-fit: contain;
 }
 
 .tweet-actions {
