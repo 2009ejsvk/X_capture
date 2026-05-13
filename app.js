@@ -1,6 +1,13 @@
-import { captureElementAsPng } from "./src/capture.js";
+import { captureElementAsImage } from "./src/capture.js";
+import {
+  applyDraftToState,
+  clearDraft,
+  loadDraft,
+  saveDraft,
+} from "./src/app/autosave.js";
 import { getElements } from "./src/app/elements.js";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js";
 import { normalizeMediaItems } from "./src/media.js";
 import { createRenderer } from "./src/render.js";
@@ -9,9 +16,17 @@ import { createRenderer } from "./src/render.js";
   const elements = getElements();
 
   const state = createInitialState();
-  const { applyStateToInputs, renderPreview } = createRenderer(elements, state);
+  const { applyStateToInputs, renderPreview } = createRenderer(
+    elements,
+    state,
+    {
+      onStateChange: scheduleAutosave,
+    },
+  );
   let activeFetchController = null;
   let fetchRequestId = 0;
+  let autosaveTimerId = 0;
+  let previewExpanded = false;
 
   function setStatus(message, type) {
     elements.statusText.textContent = message || "";
@@ -27,6 +42,12 @@ import { createRenderer } from "./src/render.js";
   }
 
   function syncFromEditors() {
+    const captureSettings = normalizeCaptureSettings({
+      stylePreset: elements.stylePreset.value,
+      exportFormat: elements.exportFormat.value,
+      exportScale: elements.exportScale.value,
+    });
+
     state.authorName = elements.authorName.value;
     state.authorHandle = elements.authorHandle.value;
     state.tweetDate = elements.tweetDate.value;
@@ -47,7 +68,55 @@ import { createRenderer } from "./src/render.js";
     state.quoteAuthorName = elements.quoteAuthorName.value;
     state.quoteAuthorHandle = elements.quoteAuthorHandle.value;
     state.quoteText = elements.quoteText.value;
+    Object.assign(state, captureSettings);
     renderPreview();
+    scheduleAutosave();
+  }
+
+  function persistDraft() {
+    if (!hasDraftContent()) {
+      clearDraft();
+      return;
+    }
+
+    saveDraft({
+      state,
+      tweetUrl: elements.tweetUrl.value,
+    });
+  }
+
+  function hasDraftContent() {
+    const defaultState = createInitialState();
+    return Boolean(
+      elements.tweetUrl.value.trim() ||
+      state.sourceUrl ||
+      state.authorName !== defaultState.authorName ||
+      state.authorHandle !== defaultState.authorHandle ||
+      state.tweetText !== defaultState.tweetText ||
+      state.translationText ||
+      state.profileImageSrc ||
+      normalizeMediaItems(state.imageDataUrls).length ||
+      (Array.isArray(state.replyParents) && state.replyParents.length) ||
+      state.quoteText ||
+      state.quoteAuthorName ||
+      state.quoteAuthorHandle ||
+      normalizeMediaItems(state.quoteDataUrls).length ||
+      state.replyCount !== defaultState.replyCount ||
+      state.retweetCount !== defaultState.retweetCount ||
+      state.likeCount !== defaultState.likeCount ||
+      state.bookmarkCount !== defaultState.bookmarkCount,
+    );
+  }
+
+  function scheduleAutosave() {
+    if (autosaveTimerId) {
+      clearTimeout(autosaveTimerId);
+    }
+
+    autosaveTimerId = window.setTimeout(() => {
+      autosaveTimerId = 0;
+      persistDraft();
+    }, 250);
   }
 
   async function onFetchClick() {
@@ -78,6 +147,7 @@ import { createRenderer } from "./src/render.js";
       Object.assign(state, result.patch);
       applyStateToInputs();
       renderPreview();
+      scheduleAutosave();
       if (result.usedFallback) {
         setStatus(
           "불러오기 완료(보조 경로). 필요하면 내용을 수정하고 저장하세요.",
@@ -133,6 +203,7 @@ import { createRenderer } from "./src/render.js";
       state.imageDataUrls = normalizeMediaItems(loaded.filter(Boolean));
       applyStateToInputs();
       renderPreview();
+      scheduleAutosave();
       setStatus(`${state.imageDataUrls.length}장 이미지 반영 완료.`, "success");
     } catch (error) {
       setStatus("이미지를 반영하지 못했습니다.", "error");
@@ -144,37 +215,89 @@ import { createRenderer } from "./src/render.js";
     elements.imageInput.value = "";
     applyStateToInputs();
     renderPreview();
+    scheduleAutosave();
     setStatus("이미지를 제거했습니다.");
   }
 
   async function onCapture() {
-    await captureElementAsPng({
+    await captureElementAsImage({
       captureArea: elements.captureArea,
       captureButton: elements.captureBtn,
       downloadFallbackLink: elements.downloadFallbackLink,
+      exportFormat: state.exportFormat,
+      exportScale: state.exportScale,
+      filenameOptions: {
+        authorHandle: state.authorHandle,
+        authorName: state.authorName,
+        tweetDate: state.tweetDate,
+        sourceUrl: state.sourceUrl,
+      },
       setStatus,
       html2canvasImpl: window.html2canvas,
     });
   }
 
   function resetEditors() {
+    if (autosaveTimerId) {
+      clearTimeout(autosaveTimerId);
+      autosaveTimerId = 0;
+    }
+
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
     applyStateToInputs();
     renderPreview();
+    clearDraft();
     setStatus("입력값을 초기화했습니다.");
   }
 
   function onClearTweetUrl() {
     elements.tweetUrl.value = "";
     elements.tweetUrl.focus();
+    scheduleAutosave();
     setStatus("트윗 URL 입력값을 지웠습니다.");
+  }
+
+  function setPreviewExpanded(nextExpanded) {
+    previewExpanded = nextExpanded;
+    document.body.classList.toggle("is-preview-expanded", previewExpanded);
+    elements.previewFocusBtn.textContent = previewExpanded
+      ? "편집으로 돌아가기"
+      : "미리보기 확대";
+    elements.previewFocusBtn.setAttribute(
+      "aria-pressed",
+      String(previewExpanded),
+    );
+
+    if (previewExpanded) {
+      elements.previewFocusBtn.focus();
+      elements.previewFocusBtn.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
+    }
+  }
+
+  function restoreDraftIfAvailable() {
+    const draft = loadDraft();
+    if (!draft) {
+      return false;
+    }
+
+    const restored = applyDraftToState(state, draft);
+    if (restored) {
+      elements.tweetUrl.value = String(draft.tweetUrl || "");
+      return true;
+    }
+
+    return false;
   }
 
   function wireEvents() {
     elements.fetchBtn.addEventListener("click", onFetchClick);
     elements.clearUrlBtn.addEventListener("click", onClearTweetUrl);
+    elements.tweetUrl.addEventListener("input", scheduleAutosave);
     elements.tweetUrl.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -200,21 +323,39 @@ import { createRenderer } from "./src/render.js";
     elements.quoteAuthorName.addEventListener("input", syncFromEditors);
     elements.quoteAuthorHandle.addEventListener("input", syncFromEditors);
     elements.quoteText.addEventListener("input", syncFromEditors);
+    elements.stylePreset.addEventListener("change", syncFromEditors);
+    elements.exportFormat.addEventListener("change", syncFromEditors);
+    elements.exportScale.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
       renderPreview();
+      scheduleAutosave();
     });
     elements.previewQuoteAvatar.addEventListener("error", () => {
       state.quoteAuthorProfileImageSrc = "";
       renderPreview();
+      scheduleAutosave();
     });
     elements.imageInput.addEventListener("change", onImageSelected);
     elements.removeImageBtn.addEventListener("click", onRemoveImage);
     elements.captureBtn.addEventListener("click", onCapture);
     elements.resetBtn.addEventListener("click", resetEditors);
+    elements.previewFocusBtn.addEventListener("click", () => {
+      setPreviewExpanded(!previewExpanded);
+    });
+    window.addEventListener("pagehide", persistDraft);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        persistDraft();
+      }
+    });
   }
 
   wireEvents();
+  const restoredDraft = restoreDraftIfAvailable();
   applyStateToInputs();
   renderPreview();
+  if (restoredDraft) {
+    setStatus("임시 저장된 작업을 복원했습니다.", "success");
+  }
 })();

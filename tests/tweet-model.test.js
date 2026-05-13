@@ -13,6 +13,9 @@ test("createInitialState exposes the expected defaults", () => {
   assert.equal(state.authorName, "X User");
   assert.equal(state.authorHandle, "@x");
   assert.equal(state.showReply, true);
+  assert.equal(state.stylePreset, "classic");
+  assert.equal(state.exportFormat, "png");
+  assert.equal(state.exportScale, "auto");
   assert.deepEqual(state.imageDataUrls, []);
 });
 

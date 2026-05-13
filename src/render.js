@@ -3,13 +3,24 @@ import {
   normalizeHandle,
   toDisplayText,
 } from "./utils.js";
+import {
+  normalizeExportFormat,
+  normalizeExportScale,
+  normalizeStylePreset,
+} from "./domain/capture-settings.js";
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
 import { createMediaSelector } from "./render/media-selector.js";
 import { populateTweetMedia } from "./render/media.js";
 import { createReplyTweetCard } from "./render/reply-card.js";
 import { resolveSourceMeta } from "./render/source-meta.js";
 
-export function createRenderer(elements, state) {
+export function createRenderer(elements, state, options = {}) {
+  function notifyStateChange() {
+    if (typeof options.onStateChange === "function") {
+      options.onStateChange();
+    }
+  }
+
   function getReplyParentsInDisplayOrder() {
     if (!Array.isArray(state.replyParents) || !state.replyParents.length) {
       return [];
@@ -75,6 +86,7 @@ export function createRenderer(elements, state) {
         }
         state.replyParents[stateIndex].text = event.target.value;
         renderPreview();
+        notifyStateChange();
       });
       bodyField.appendChild(bodyLabel);
       bodyField.appendChild(bodyTextarea);
@@ -102,6 +114,7 @@ export function createRenderer(elements, state) {
         }
         state.replyParents[stateIndex].translationText = event.target.value;
         renderPreview();
+        notifyStateChange();
       });
       translationField.appendChild(translationLabel);
       translationField.appendChild(translationTextarea);
@@ -128,6 +141,7 @@ export function createRenderer(elements, state) {
           state.imageDataUrls = items;
           renderPreview();
           renderMediaSelectors();
+          notifyStateChange();
         },
       );
       if (selector) {
@@ -152,6 +166,7 @@ export function createRenderer(elements, state) {
           state.quoteDataUrls = items;
           renderPreview();
           renderMediaSelectors();
+          notifyStateChange();
         },
       );
       if (selector) {
@@ -191,6 +206,7 @@ export function createRenderer(elements, state) {
             state.replyParents[stateIndex].dataUrls = items;
             renderPreview();
             renderMediaSelectors();
+            notifyStateChange();
           },
         );
         if (selector) {
@@ -224,6 +240,9 @@ export function createRenderer(elements, state) {
     elements.quoteAuthorName.value = toDisplayText(state.quoteAuthorName);
     elements.quoteAuthorHandle.value = toDisplayText(state.quoteAuthorHandle);
     elements.quoteText.value = toDisplayText(state.quoteText);
+    elements.stylePreset.value = normalizeStylePreset(state.stylePreset);
+    elements.exportFormat.value = normalizeExportFormat(state.exportFormat);
+    elements.exportScale.value = normalizeExportScale(state.exportScale);
     const hasQuoteEditorContent = Boolean(
       String(state.quoteAuthorName || "").trim() ||
       String(state.quoteAuthorHandle || "").trim() ||
@@ -382,6 +401,10 @@ export function createRenderer(elements, state) {
   }
 
   function renderPreview() {
+    elements.captureArea.dataset.stylePreset = normalizeStylePreset(
+      state.stylePreset,
+    );
+
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
     const handleWithPrefix = trimmedHandle.startsWith("@")

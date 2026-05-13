@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0e0e10" />
+    <meta name="theme-color" content="#0a0d10" />
     <title>X Capture Mobile</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -212,8 +212,48 @@
         </div>
       </section>
 
+      <section class="panel settings-panel">
+        <div class="panel-heading">
+          <h2>캡처 설정</h2>
+        </div>
+        <div class="settings-grid">
+          <label for="stylePreset">스타일</label>
+          <select id="stylePreset">
+            <option value="classic" selected>클래식</option>
+            <option value="translation">번역 강조</option>
+            <option value="media">이미지 중심</option>
+            <option value="compact">콤팩트</option>
+          </select>
+
+          <label for="exportFormat">파일 형식</label>
+          <select id="exportFormat">
+            <option value="png" selected>PNG</option>
+            <option value="jpg">JPG</option>
+            <option value="webp">WebP</option>
+          </select>
+
+          <label for="exportScale">해상도</label>
+          <select id="exportScale">
+            <option value="auto" selected>자동 고해상도</option>
+            <option value="2">2x</option>
+            <option value="3">3x</option>
+            <option value="4">4x</option>
+          </select>
+        </div>
+      </section>
+
       <section class="panel preview-panel">
-        <h2>미리보기</h2>
+        <div class="panel-heading">
+          <h2>미리보기</h2>
+          <button
+            id="previewFocusBtn"
+            class="btn btn-ghost btn-small"
+            type="button"
+            aria-pressed="false"
+          >
+            미리보기 확대
+          </button>
+        </div>
         <div id="captureArea" class="capture-area">
           <section
             id="previewReplyList"
@@ -354,7 +394,7 @@
           초기화
         </button>
         <button id="captureBtn" class="btn btn-accent" type="button">
-          PNG 저장
+          이미지 저장
         </button>
       </div>
       <a id="downloadFallbackLink" class="download-fallback hidden" href="#">

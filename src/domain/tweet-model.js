@@ -1,5 +1,6 @@
 import { currentDateTimeLabel, normalizeHandle } from "../utils.js";
 import { normalizeMediaItems } from "../media.js";
+import { createDefaultCaptureSettings } from "./capture-settings.js";
 
 export function createInitialState() {
   return {
@@ -27,6 +28,7 @@ export function createInitialState() {
     profileImageSrc: "",
     mediaLayout: "vertical",
     imageDataUrls: [],
+    ...createDefaultCaptureSettings(),
   };
 }
 

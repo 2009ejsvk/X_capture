@@ -1,3 +1,9 @@
+import {
+  resolveCaptureScale,
+  resolveExportFormat,
+} from "./domain/capture-settings.js";
+import { createCaptureFilename } from "./capture/filename.js";
+
 let activeDownloadHref = "";
 
 function waitForDocumentVisible(setStatus) {
@@ -56,6 +62,59 @@ async function downloadBlob(blob, filename, options = {}) {
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+function getExtensionFromMimeType(mimeType, fallbackExtension) {
+  if (mimeType === "image/jpeg") {
+    return "jpg";
+  }
+
+  if (mimeType === "image/webp") {
+    return "webp";
+  }
+
+  if (mimeType === "image/png") {
+    return "png";
+  }
+
+  return fallbackExtension;
+}
+
+function canvasToBlob(canvas, exportConfig) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (result) => {
+        if (result) {
+          resolve({
+            blob: result,
+            extension: getExtensionFromMimeType(
+              result.type,
+              exportConfig.extension,
+            ),
+          });
+          return;
+        }
+
+        if (exportConfig.mimeType !== "image/png") {
+          canvas.toBlob((pngResult) => {
+            if (pngResult) {
+              resolve({
+                blob: pngResult,
+                extension: "png",
+              });
+            } else {
+              reject(new Error("이미지 생성 실패"));
+            }
+          }, "image/png");
+          return;
+        }
+
+        reject(new Error("이미지 생성 실패"));
+      },
+      exportConfig.mimeType,
+      exportConfig.quality,
+    );
+  });
 }
 
 function waitForNextFrame() {
@@ -181,10 +240,13 @@ function getCaptureViewport(captureArea) {
   };
 }
 
-export async function captureElementAsPng({
+export async function captureElementAsImage({
   captureArea,
   captureButton,
   downloadFallbackLink,
+  exportFormat = "png",
+  exportScale = "auto",
+  filenameOptions = {},
   setStatus,
   html2canvasImpl = globalThis.html2canvas,
 }) {
@@ -199,39 +261,35 @@ export async function captureElementAsPng({
     await waitForDocumentVisible(setStatus);
     await waitForCaptureImages(captureArea);
     const viewport = getCaptureViewport(captureArea);
+    const exportConfig = resolveExportFormat(exportFormat);
 
     const elementWidth = captureArea.offsetWidth || 360;
     const deviceScale = window.devicePixelRatio || 1;
-    const minExportWidth = 1440;
-    const widthScale = minExportWidth / elementWidth;
-    const scale = Math.min(Math.max(deviceScale, widthScale, 2), 5);
+    const scale = resolveCaptureScale({
+      exportScale,
+      deviceScale,
+      elementWidth,
+    });
 
     const canvas = await html2canvasImpl(captureArea, {
       useCORS: true,
       allowTaint: false,
       scale,
-      backgroundColor: null,
+      backgroundColor: exportConfig.backgroundColor,
       imageTimeout: 15000,
       windowWidth: viewport.windowWidth,
       windowHeight: viewport.windowHeight,
     });
 
-    const blob = await new Promise((resolve, reject) => {
-      canvas.toBlob((result) => {
-        if (result) {
-          resolve(result);
-        } else {
-          reject(new Error("이미지 생성 실패"));
-        }
-      }, "image/png");
-    });
-
-    const filename = `x-capture-${Date.now()}.png`;
+    const { blob, extension } = await canvasToBlob(canvas, exportConfig);
+    const filename = createCaptureFilename(filenameOptions, extension);
     await downloadBlob(blob, filename, { downloadFallbackLink, setStatus });
-    setStatus("PNG 파일을 저장했습니다.", "success");
+    setStatus(`${extension.toUpperCase()} 파일을 저장했습니다.`, "success");
   } catch (error) {
     setStatus("이미지 저장에 실패했습니다.", "error");
   } finally {
     captureButton.disabled = false;
   }
 }
+
+export const captureElementAsPng = captureElementAsImage;
