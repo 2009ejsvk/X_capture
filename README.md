@@ -11,6 +11,8 @@
 - 다중 이미지 배치 옵션(메인/리트윗 원문: 나란히/세로)
 - 작성자/핸들/날짜/본문 수동 편집
 - 이미지 업로드(선택, 최대 4장)
+- 필요 시 `불러온 뒤 자동 저장` 옵션으로 즉시 PNG 저장
+- 브라우저 화면 복귀 후 저장 재개 및 다운로드 재시도 링크 제공
 - 모바일에서 고해상도 PNG 저장
 
 ## 실행
@@ -24,9 +26,23 @@ python -m http.server 5173
 
 브라우저에서 `http://localhost:5173` 접속
 
+## 개발
+
+```powershell
+npm install
+npm run check
+npm run format:check
+```
+
+- `npm run check`: 앱 JavaScript 파일 문법 검사
+- `npm run unit`: 핵심 유틸/모델 단위 테스트
+- `npm run format`: Prettier로 코드 포맷 정리
+- `npm test`: 문법 검사, 단위 테스트, 포맷 검사를 함께 실행
+
 ## 주의사항
 
 - X/Twitter 정책 또는 API 응답 변경 시 URL 자동 파싱이 실패할 수 있습니다.
 - 비공개 계정 트윗은 불러오지 못할 수 있습니다.
 - 일부 트윗은 공식 `oEmbed`에서 404가 날 수 있어 보조 API를 사용합니다.
+- PNG 저장은 로컬에 포함된 `vendor/html2canvas.min.js`에 의존합니다.
 - 원격 이미지 CORS 정책에 따라 자동 썸네일 반영이 실패할 수 있으며, 이 경우 이미지 파일을 직접 업로드하면 됩니다.

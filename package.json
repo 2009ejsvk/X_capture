@@ -1,0 +1,16 @@
+{
+  "name": "x-capture-mobile",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check-js.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "unit": "node --test tests/*.test.js",
+    "test": "npm run check && npm run unit && npm run format:check"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3"
+  }
+}

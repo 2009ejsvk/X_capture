@@ -129,6 +129,10 @@ textarea:focus-visible {
   color: var(--ink-soft);
 }
 
+.fetch-options {
+  margin-top: 8px;
+}
+
 .status.is-error {
   color: #ac1f1f;
 }
@@ -672,6 +676,20 @@ textarea:focus-visible {
   background: #fff;
   color: var(--ink);
   border: 1px solid var(--line);
+}
+
+.download-fallback {
+  display: block;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
 }
 
 .hidden {
