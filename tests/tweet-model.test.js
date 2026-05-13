@@ -27,11 +27,22 @@ test("createReplyParentState normalizes reply fields", () => {
   });
 
   assert.equal(reply.authorHandle, "@handle");
+  assert.equal(reply.visible, true);
   assert.equal(reply.text, "hello");
   assert.deepEqual(reply.dataUrls, [
     { src: "a", visible: true },
     { src: "b", visible: false },
   ]);
+});
+
+test("createReplyParentState preserves hidden replies", () => {
+  const reply = createReplyParentState({
+    visible: false,
+    text: "hidden",
+  });
+
+  assert.equal(reply.visible, false);
+  assert.equal(hasRenderableReply(reply), true);
 });
 
 test("hasRenderableReply detects empty and non-empty replies", () => {

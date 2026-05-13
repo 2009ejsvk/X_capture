@@ -59,6 +59,28 @@ export function createRenderer(elements, state, options = {}) {
       const editorItem = document.createElement("section");
       editorItem.className = "reply-editor-item";
 
+      const visibilityRow = document.createElement("label");
+      visibilityRow.className = "check-option reply-visibility-option";
+      const visibilityToggle = document.createElement("input");
+      visibilityToggle.type = "checkbox";
+      visibilityToggle.checked = item.visible !== false;
+      visibilityToggle.addEventListener("change", (event) => {
+        if (
+          !Array.isArray(state.replyParents) ||
+          !state.replyParents[stateIndex]
+        ) {
+          return;
+        }
+        state.replyParents[stateIndex].visible = Boolean(event.target.checked);
+        renderPreview();
+        notifyStateChange();
+      });
+      const visibilityText = document.createElement("span");
+      visibilityText.textContent = "캡처에 표시";
+      visibilityRow.appendChild(visibilityToggle);
+      visibilityRow.appendChild(visibilityText);
+      editorItem.appendChild(visibilityRow);
+
       const title = document.createElement("p");
       title.className = "reply-editor-title";
       title.textContent = toDisplayText(titleText);
@@ -284,6 +306,10 @@ export function createRenderer(elements, state, options = {}) {
     elements.previewReplyList.innerHTML = "";
     if (showReply && replyItems.length) {
       replyItems.forEach(({ item }) => {
+        if (item && item.visible === false) {
+          return;
+        }
+
         const authorName = String((item && item.authorName) || "").trim();
         const authorHandle = normalizeHandle(item && item.authorHandle, "");
         const text = String((item && item.text) || "")

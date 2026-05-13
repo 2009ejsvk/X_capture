@@ -200,11 +200,23 @@ import { createRenderer } from "./src/render.js";
 
     try {
       const loaded = await Promise.all(files.map(readFileAsDataUrl));
-      state.imageDataUrls = normalizeMediaItems(loaded.filter(Boolean));
+      const previousCount = normalizeMediaItems(state.imageDataUrls).length;
+      const nextImages = normalizeMediaItems([
+        ...normalizeMediaItems(state.imageDataUrls),
+        ...loaded.filter(Boolean),
+      ]);
+      state.imageDataUrls = nextImages;
+      elements.imageInput.value = "";
       applyStateToInputs();
       renderPreview();
       scheduleAutosave();
-      setStatus(`${state.imageDataUrls.length}장 이미지 반영 완료.`, "success");
+      const addedCount = Math.max(nextImages.length - previousCount, 0);
+      setStatus(
+        addedCount
+          ? `${addedCount}장 추가 완료. 현재 ${nextImages.length}장입니다.`
+          : "이미지는 최대 4장까지 추가할 수 있습니다.",
+        addedCount ? "success" : "error",
+      );
     } catch (error) {
       setStatus("이미지를 반영하지 못했습니다.", "error");
     }

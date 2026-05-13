@@ -34,6 +34,7 @@ export function createInitialState() {
 
 export function createReplyParentState(meta = {}) {
   return {
+    visible: meta.visible !== false,
     authorName: String(meta.authorName || "").trim(),
     authorHandle: normalizeHandle(meta.authorHandle, ""),
     text: String(meta.text || "")

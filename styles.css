@@ -227,6 +227,14 @@ textarea:focus-visible {
   text-overflow: ellipsis;
 }
 
+.reply-visibility-option {
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--ink);
+}
+
 .reply-editor-fields {
   display: grid;
   gap: 4px;
