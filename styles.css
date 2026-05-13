@@ -1,12 +1,25 @@
 :root {
-  --bg-top: #ffd79f;
-  --bg-bottom: #f5f7fb;
-  --ink: #17191c;
-  --ink-soft: #5d6470;
-  --line: #d8dde6;
-  --card: #ffffff;
-  --accent: #eb5e28;
+  color-scheme: dark;
+  --bg: #0e0e10;
+  --bg-bottom: #151218;
+  --panel: rgba(29, 26, 32, 0.88);
+  --panel-strong: #211d25;
+  --field: #141216;
+  --field-hover: #18151b;
+  --ink: #f5f2f7;
+  --ink-soft: #aaa3b2;
+  --ink-faint: #7f7788;
+  --line: #39333f;
+  --line-soft: #2a2630;
+  --card: #121316;
+  --card-raised: #18191d;
+  --media-bg: #0b0c0e;
+  --accent: #ff7a3d;
   --accent-ink: #ffffff;
+  --accent-soft: rgba(255, 122, 61, 0.17);
+  --danger: #ff7b7b;
+  --success: #54d990;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.26);
   --profile-avatar-size: 28px;
   --radius-xl: 22px;
   --radius-lg: 16px;
@@ -22,8 +35,8 @@ body {
   font-family: "Noto Sans KR", sans-serif;
   color: var(--ink);
   background:
-    radial-gradient(1000px 420px at 15% -5%, #ffefe0 0%, transparent 65%),
-    linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+    linear-gradient(180deg, rgba(255, 122, 61, 0.1), transparent 280px),
+    linear-gradient(160deg, var(--bg), var(--bg-bottom));
   min-height: 100vh;
 }
 
@@ -60,12 +73,12 @@ h1 {
 
 .panel {
   margin-top: 12px;
-  background: rgba(255, 255, 255, 0.76);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-xl);
   padding: 14px;
-  box-shadow: 0 6px 16px rgba(15, 18, 25, 0.04);
+  box-shadow: var(--shadow);
 }
 
 h2 {
@@ -94,9 +107,22 @@ textarea {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--field);
   padding: 11px 12px;
   color: var(--ink);
+}
+
+input[type="text"]::placeholder,
+input[type="url"]::placeholder,
+textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+input[type="text"]:hover,
+input[type="url"]:hover,
+select:hover,
+textarea:hover {
+  background: var(--field-hover);
 }
 
 textarea {
@@ -107,7 +133,7 @@ textarea {
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid color-mix(in oklab, var(--accent), white 30%);
+  outline: 2px solid color-mix(in oklab, var(--accent), white 18%);
   outline-offset: 1px;
 }
 
@@ -134,11 +160,11 @@ textarea:focus-visible {
 }
 
 .status.is-error {
-  color: #ac1f1f;
+  color: var(--danger);
 }
 
 .status.is-success {
-  color: #0c6b3a;
+  color: var(--success);
 }
 
 .editor-grid {
@@ -164,10 +190,10 @@ textarea:focus-visible {
 }
 
 .reply-editor-item {
-  border: 1px solid #d8dee8;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px;
-  background: #fff;
+  background: var(--panel-strong);
   display: grid;
   gap: 8px;
 }
@@ -176,7 +202,7 @@ textarea:focus-visible {
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  color: #1f2328;
+  color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -202,9 +228,9 @@ textarea:focus-visible {
   display: grid;
   gap: 6px;
   padding: 8px;
-  border: 1px solid #d8dee8;
+  border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--panel-strong);
 }
 
 .media-selector-thumb {
@@ -212,8 +238,8 @@ textarea:focus-visible {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border-radius: 10px;
-  border: 1px solid #e8ecf4;
-  background: #f6f8fb;
+  border: 1px solid var(--line);
+  background: var(--media-bg);
 }
 
 .media-selector-check {
@@ -235,7 +261,7 @@ textarea:focus-visible {
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .reply-editor-textarea {
@@ -265,10 +291,10 @@ textarea:focus-visible {
 
 .tweet-card {
   background: var(--card);
-  border: 1px solid #dce3ea;
+  border: 1px solid var(--line);
   border-radius: 18px;
   padding: 14px 14px 12px;
-  box-shadow: none;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
 }
 
 .tweet-head {
@@ -285,10 +311,10 @@ textarea:focus-visible {
   overflow: hidden;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--accent-ink);
   font-size: 14px;
   font-family: "Space Grotesk", sans-serif;
-  background: linear-gradient(135deg, #272f40, #090a0d);
+  background: linear-gradient(135deg, #4a3532, #111214);
 }
 
 .avatar-image {
@@ -318,14 +344,14 @@ textarea:focus-visible {
 
 .handle {
   font-size: 12px;
-  color: #697081;
+  color: var(--ink-soft);
 }
 
 .platform-mark {
   margin-left: auto;
   font-family: "Space Grotesk", sans-serif;
   font-size: 20px;
-  color: #14171a;
+  color: var(--ink);
   line-height: 1;
 }
 
@@ -340,23 +366,23 @@ textarea:focus-visible {
 .tweet-translation {
   margin: 0 0 10px;
   padding: 8px 10px;
-  border: 1px solid #dce3ea;
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card-raised);
 }
 
 .tweet-translation-label {
   margin: 0 0 4px;
   font-size: 11px;
   font-weight: 700;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .tweet-translation-text {
   margin: 0;
   font-size: 14px;
   line-height: 1.45;
-  color: #1f2328;
+  color: var(--ink);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -388,8 +414,8 @@ textarea:focus-visible {
   width: 100%;
   display: block;
   border-radius: 13px;
-  border: 1px solid #eff1f5;
-  background: #f6f8fb;
+  border: 1px solid var(--line-soft);
+  background: var(--media-bg);
 }
 
 .tweet-media[data-count="2"] .tweet-image,
@@ -414,10 +440,10 @@ textarea:focus-visible {
 
 .quote-card {
   margin: 4px 0 10px;
-  border: 1px solid #d3dce6;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 10px;
-  background: #fff;
+  background: var(--card-raised);
 }
 
 .capture-reply-list {
@@ -427,10 +453,10 @@ textarea:focus-visible {
 }
 
 .reply-item {
-  border: 1px solid #d3dce6;
+  border: 1px solid var(--line);
   border-radius: 12px;
   padding: 8px 10px;
-  background: #fff;
+  background: var(--card-raised);
 }
 
 .reply-item-head {
@@ -443,7 +469,7 @@ textarea:focus-visible {
   width: var(--profile-avatar-size);
   height: var(--profile-avatar-size);
   border-radius: 999px;
-  border: 1px solid #dce3ed;
+  border: 1px solid var(--line);
   object-fit: cover;
   flex: 0 0 auto;
 }
@@ -466,12 +492,12 @@ textarea:focus-visible {
 .reply-item-name {
   font-size: 13px;
   font-weight: 700;
-  color: #1f2328;
+  color: var(--ink);
 }
 
 .reply-item-handle {
   font-size: 12px;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .reply-item-text {
@@ -485,23 +511,23 @@ textarea:focus-visible {
 .reply-item-translation {
   margin: 6px 0 0;
   padding: 7px 9px;
-  border: 1px solid #dce3ea;
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fff;
+  background: var(--card);
 }
 
 .reply-item-translation-label {
   margin: 0 0 3px;
   font-size: 11px;
   font-weight: 700;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .reply-item-translation-text {
   margin: 0;
   font-size: 13px;
   line-height: 1.45;
-  color: #1f2328;
+  color: var(--ink);
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -517,7 +543,7 @@ textarea:focus-visible {
   width: var(--profile-avatar-size);
   height: var(--profile-avatar-size);
   border-radius: 999px;
-  border: 1px solid #dce3ed;
+  border: 1px solid var(--line);
   object-fit: cover;
   flex: 0 0 auto;
 }
@@ -542,7 +568,7 @@ textarea:focus-visible {
 }
 
 .quote-handle {
-  color: #697081;
+  color: var(--ink-soft);
 }
 
 .quote-text {
@@ -564,10 +590,10 @@ textarea:focus-visible {
   display: block;
   height: auto;
   border-radius: 10px;
-  border: 1px solid #e8ecf4;
+  border: 1px solid var(--line-soft);
   object-fit: contain;
   aspect-ratio: auto;
-  background: #f6f8fb;
+  background: var(--media-bg);
 }
 
 .quote-media[data-count="1"] {
@@ -603,7 +629,7 @@ textarea:focus-visible {
   gap: 8px;
   margin: 10px 0 6px;
   padding-top: 10px;
-  border-top: 1px solid #e4eaef;
+  border-top: 1px solid var(--line-soft);
 }
 
 .tweet-action-item {
@@ -611,7 +637,7 @@ textarea:focus-visible {
   align-items: center;
   gap: 6px;
   min-width: 0;
-  color: #536471;
+  color: var(--ink-soft);
   font-size: 12px;
 }
 
@@ -632,7 +658,7 @@ textarea:focus-visible {
   display: grid;
   gap: 3px;
   font-size: 12px;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .tweet-foot-meta {
@@ -642,7 +668,7 @@ textarea:focus-visible {
 
 .tweet-original-url {
   word-break: break-all;
-  color: #536471;
+  color: var(--ink-soft);
 }
 
 .actions {
@@ -652,6 +678,7 @@ textarea:focus-visible {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
   gap: 8px;
+  padding: 8px 0 0;
 }
 
 .btn {
@@ -660,6 +687,14 @@ textarea:focus-visible {
   padding: 11px 12px;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .btn:disabled {
@@ -670,12 +705,17 @@ textarea:focus-visible {
 .btn-accent {
   background: var(--accent);
   color: var(--accent-ink);
+  box-shadow: 0 10px 22px rgba(255, 122, 61, 0.22);
 }
 
 .btn-ghost {
-  background: #fff;
+  background: var(--field);
   color: var(--ink);
   border: 1px solid var(--line);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--accent), var(--line) 62%);
 }
 
 .download-fallback {
@@ -684,7 +724,7 @@ textarea:focus-visible {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: #fff;
+  background: var(--panel-strong);
   color: var(--ink);
   font-size: 13px;
   font-weight: 700;
