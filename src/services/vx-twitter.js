@@ -4,6 +4,7 @@ import {
   formatDateLabel,
   normalizeHandle,
   pickFirstNonEmpty,
+  sanitizeFetchedTweetText,
 } from "../utils.js";
 import { normalizeMediaItems } from "../media.js";
 import { fetchWithTimeout } from "./http.js";
@@ -519,7 +520,7 @@ function normalizeQuoteMeta(payload) {
     return null;
   }
 
-  const text = pickVxText(payload);
+  const text = sanitizeFetchedTweetText(pickVxText(payload));
   const authorName = pickVxName(payload, "");
   const authorHandle = pickVxHandle(payload, "");
   const authorProfileImageUrl = pickVxProfileImage(payload);
@@ -724,6 +725,7 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
   if (retweetTextMatch) {
     tweetText = retweetTextMatch[2] || tweetText;
   }
+  tweetText = sanitizeFetchedTweetText(tweetText);
 
   const imageUrlsFromContent = pickVxImages(contentPayload);
   const imageUrlsFromPayload = pickVxImages(payload);
