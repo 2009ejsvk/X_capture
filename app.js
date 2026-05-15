@@ -1,10 +1,4 @@
 import { captureElementAsImage } from "./src/capture.js";
-import {
-  applyDraftToState,
-  clearDraft,
-  loadDraft,
-  saveDraft,
-} from "./src/app/autosave.js";
 import { getElements } from "./src/app/elements.js";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
@@ -13,19 +7,13 @@ import { normalizeMediaItems } from "./src/media.js";
 import { createRenderer } from "./src/render.js";
 
 (function () {
+  const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
   const elements = getElements();
 
   const state = createInitialState();
-  const { applyStateToInputs, renderPreview } = createRenderer(
-    elements,
-    state,
-    {
-      onStateChange: scheduleAutosave,
-    },
-  );
+  const { applyStateToInputs, renderPreview } = createRenderer(elements, state);
   let activeFetchController = null;
   let fetchRequestId = 0;
-  let autosaveTimerId = 0;
   let previewExpanded = false;
 
   function setStatus(message, type) {
@@ -70,53 +58,6 @@ import { createRenderer } from "./src/render.js";
     state.quoteText = elements.quoteText.value;
     Object.assign(state, captureSettings);
     renderPreview();
-    scheduleAutosave();
-  }
-
-  function persistDraft() {
-    if (!hasDraftContent()) {
-      clearDraft();
-      return;
-    }
-
-    saveDraft({
-      state,
-      tweetUrl: elements.tweetUrl.value,
-    });
-  }
-
-  function hasDraftContent() {
-    const defaultState = createInitialState();
-    return Boolean(
-      elements.tweetUrl.value.trim() ||
-      state.sourceUrl ||
-      state.authorName !== defaultState.authorName ||
-      state.authorHandle !== defaultState.authorHandle ||
-      state.tweetText !== defaultState.tweetText ||
-      state.translationText ||
-      state.profileImageSrc ||
-      normalizeMediaItems(state.imageDataUrls).length ||
-      (Array.isArray(state.replyParents) && state.replyParents.length) ||
-      state.quoteText ||
-      state.quoteAuthorName ||
-      state.quoteAuthorHandle ||
-      normalizeMediaItems(state.quoteDataUrls).length ||
-      state.replyCount !== defaultState.replyCount ||
-      state.retweetCount !== defaultState.retweetCount ||
-      state.likeCount !== defaultState.likeCount ||
-      state.bookmarkCount !== defaultState.bookmarkCount,
-    );
-  }
-
-  function scheduleAutosave() {
-    if (autosaveTimerId) {
-      clearTimeout(autosaveTimerId);
-    }
-
-    autosaveTimerId = window.setTimeout(() => {
-      autosaveTimerId = 0;
-      persistDraft();
-    }, 250);
   }
 
   async function onFetchClick() {
@@ -147,7 +88,6 @@ import { createRenderer } from "./src/render.js";
       Object.assign(state, result.patch);
       applyStateToInputs();
       renderPreview();
-      scheduleAutosave();
       if (result.usedFallback) {
         setStatus(
           "불러오기 완료(보조 경로). 필요하면 내용을 수정하고 저장하세요.",
@@ -209,7 +149,6 @@ import { createRenderer } from "./src/render.js";
       elements.imageInput.value = "";
       applyStateToInputs();
       renderPreview();
-      scheduleAutosave();
       const addedCount = Math.max(nextImages.length - previousCount, 0);
       setStatus(
         addedCount
@@ -227,7 +166,6 @@ import { createRenderer } from "./src/render.js";
     elements.imageInput.value = "";
     applyStateToInputs();
     renderPreview();
-    scheduleAutosave();
     setStatus("이미지를 제거했습니다.");
   }
 
@@ -250,24 +188,17 @@ import { createRenderer } from "./src/render.js";
   }
 
   function resetEditors() {
-    if (autosaveTimerId) {
-      clearTimeout(autosaveTimerId);
-      autosaveTimerId = 0;
-    }
-
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
     applyStateToInputs();
     renderPreview();
-    clearDraft();
     setStatus("입력값을 초기화했습니다.");
   }
 
   function onClearTweetUrl() {
     elements.tweetUrl.value = "";
     elements.tweetUrl.focus();
-    scheduleAutosave();
     setStatus("트윗 URL 입력값을 지웠습니다.");
   }
 
@@ -291,25 +222,17 @@ import { createRenderer } from "./src/render.js";
     }
   }
 
-  function restoreDraftIfAvailable() {
-    const draft = loadDraft();
-    if (!draft) {
-      return false;
+  function clearLegacyDraft() {
+    try {
+      window.localStorage.removeItem(LEGACY_DRAFT_KEY);
+    } catch (error) {
+      // Storage cleanup is best-effort.
     }
-
-    const restored = applyDraftToState(state, draft);
-    if (restored) {
-      elements.tweetUrl.value = String(draft.tweetUrl || "");
-      return true;
-    }
-
-    return false;
   }
 
   function wireEvents() {
     elements.fetchBtn.addEventListener("click", onFetchClick);
     elements.clearUrlBtn.addEventListener("click", onClearTweetUrl);
-    elements.tweetUrl.addEventListener("input", scheduleAutosave);
     elements.tweetUrl.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
@@ -341,12 +264,10 @@ import { createRenderer } from "./src/render.js";
     elements.previewAvatarImage.addEventListener("error", () => {
       state.profileImageSrc = "";
       renderPreview();
-      scheduleAutosave();
     });
     elements.previewQuoteAvatar.addEventListener("error", () => {
       state.quoteAuthorProfileImageSrc = "";
       renderPreview();
-      scheduleAutosave();
     });
     elements.imageInput.addEventListener("change", onImageSelected);
     elements.removeImageBtn.addEventListener("click", onRemoveImage);
@@ -355,19 +276,10 @@ import { createRenderer } from "./src/render.js";
     elements.previewFocusBtn.addEventListener("click", () => {
       setPreviewExpanded(!previewExpanded);
     });
-    window.addEventListener("pagehide", persistDraft);
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "hidden") {
-        persistDraft();
-      }
-    });
   }
 
+  clearLegacyDraft();
   wireEvents();
-  const restoredDraft = restoreDraftIfAvailable();
   applyStateToInputs();
   renderPreview();
-  if (restoredDraft) {
-    setStatus("임시 저장된 작업을 복원했습니다.", "success");
-  }
 })();
