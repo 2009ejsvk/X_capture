@@ -379,10 +379,44 @@ async function fetchRawTweetPayload(tweetId, options = {}) {
     return candidates[0];
   }
 
-  return [...candidates].sort(
+  const [best, ...rest] = [...candidates].sort(
     (left, right) =>
       scoreTweetPayloadRichness(right) - scoreTweetPayloadRichness(left),
-  )[0];
+  );
+
+  // The richest payload is selected by media richness, but the candidate APIs
+  // expose different engagement metrics: vxtwitter omits bookmarks (and views,
+  // quotes) that fxtwitter provides. Backfill those scalar counts from the
+  // other candidates so they are not lost when the media-richer payload wins.
+  return backfillEngagementCounts(best, rest);
+}
+
+const BACKFILL_COUNT_KEYS = [
+  "bookmarks",
+  "bookmark_count",
+  "bookmarkCount",
+  "views",
+  "view_count",
+  "quotes",
+  "quote_count",
+];
+
+function backfillEngagementCounts(best, others) {
+  if (!best || !others.length) {
+    return best;
+  }
+
+  const merged = { ...best };
+  for (const key of BACKFILL_COUNT_KEYS) {
+    if (merged[key] != null) {
+      continue;
+    }
+    const donor = others.find((other) => other && other[key] != null);
+    if (donor) {
+      merged[key] = donor[key];
+    }
+  }
+  return merged;
 }
 
 async function resolveReplyParentPayloads(

@@ -149,3 +149,55 @@ test("fetchTweetFromVx prefers the richer endpoint payload", async (t) => {
   assert.equal(result.tweetText, "rich body");
   assert.deepEqual(result.imageUrls, [photoUrl]);
 });
+
+test("fetchTweetFromVx backfills bookmark count when the richer payload omits it", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "5555555555";
+  const photoUrl = "https://pbs.twimg.com/media/BM.jpg";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    const url = String(resource);
+
+    // fxtwitter exposes bookmarks but scores lower on media richness
+    if (url.includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "User",
+          user_screen_name: "user",
+          text: "hello",
+          likes: 100,
+          bookmarks: 6439,
+          media: { all: [{ type: "photo", url: photoUrl }] },
+        },
+      });
+    }
+
+    // vxtwitter wins richness (media_extended + mediaURLs) but has no bookmarks
+    if (url.includes("api.vxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "User",
+          user_screen_name: "user",
+          text: "hello",
+          likes: 100,
+          media_extended: [
+            { type: "image", url: photoUrl, thumbnail_url: photoUrl },
+          ],
+          mediaURLs: [photoUrl],
+        },
+      });
+    }
+
+    return jsonResponse({}, 404);
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.bookmarkCount, "6.4천");
+});
