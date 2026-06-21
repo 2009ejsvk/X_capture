@@ -6,7 +6,6 @@
 
 - `x.com` 또는 `twitter.com` 트윗 URL 불러오기 (`oEmbed`)
 - `oEmbed` 실패 시 `vxtwitter` 보조 경로로 자동 재시도
-- `threads.com` / `threads.net` 게시물 URL 불러오기 (로컬 프록시 경유, 본문/작성자/카운트/이미지)
 - 작성자 프로필 이미지 자동 반영(실패 시 이니셜 폴백)
 - 트윗 첨부 이미지 다중 표시(최대 4장)
 - 다중 이미지 배치 옵션(메인/리트윗 원문: 나란히/세로)
@@ -31,20 +30,6 @@ python -m http.server 5173
 
 브라우저에서 `http://localhost:5173` 접속
 
-### Threads(메타) 게시물 불러오기
-
-Threads는 크롤러(`facebookexternalhit`)에만 게시물 데이터를 서빙하고 브라우저에서는
-`User-Agent` 변경과 CORS가 막힙니다. 그래서 게시물 데이터를 받아오는 **로컬 프록시**를
-정적 서버와 함께 실행해야 합니다.
-
-```powershell
-node scripts/threads-proxy.mjs
-```
-
-- 기본 포트는 `5174`이며 `THREADS_PROXY_PORT` 환경 변수로 변경할 수 있습니다.
-- 포트를 바꾼 경우 페이지에서 `window.__THREADS_PROXY_URL__`로 프록시 주소를 지정하면 됩니다.
-- 프록시가 떠 있으면 X와 동일하게 Threads 게시물 URL을 붙여 넣고 `불러오기`를 누르면 됩니다.
-
 ## 개발
 
 ```powershell
@@ -65,4 +50,3 @@ npm run format:check
 - 일부 트윗은 공식 `oEmbed`에서 404가 날 수 있어 보조 API를 사용합니다.
 - PNG 저장은 로컬에 포함된 `vendor/html2canvas.min.js`에 의존합니다.
 - 원격 이미지 CORS 정책에 따라 자동 썸네일 반영이 실패할 수 있으며, 이 경우 이미지 파일을 직접 업로드하면 됩니다.
-- Threads 불러오기는 `node scripts/threads-proxy.mjs` 프록시가 실행 중이어야 하며, 공개 게시물만 지원합니다. Threads 페이지 구조가 바뀌면 파싱이 실패할 수 있습니다(이 경우 본문/이미지를 직접 입력·업로드).

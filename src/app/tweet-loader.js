@@ -60,7 +60,6 @@ export async function loadTweetFromUrl(tweetUrl, options = {}) {
   let fallbackStatusMessage = "";
 
   const patch = {
-    platform: "x",
     translationText: "",
   };
 

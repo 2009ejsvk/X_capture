@@ -4,7 +4,6 @@ import { createDefaultCaptureSettings } from "./capture-settings.js";
 
 export function createInitialState() {
   return {
-    platform: "x",
     sourceUrl: "",
     authorName: "X User",
     authorHandle: "@x",

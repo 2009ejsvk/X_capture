@@ -175,57 +175,6 @@ export function normalizeUrl(input) {
   };
 }
 
-export function detectPlatform(input) {
-  try {
-    const host = new URL(String(input || "").trim()).hostname.replace(
-      /^www\./i,
-      "",
-    );
-    if (host === "threads.com" || host === "threads.net") {
-      return "threads";
-    }
-  } catch (error) {
-    // Fall through to the default platform.
-  }
-  return "x";
-}
-
-export function parseThreadsUrl(input) {
-  const urlText = (input || "").trim();
-  if (!urlText) {
-    throw new Error("Threads URL을 입력해 주세요.");
-  }
-
-  let url;
-  try {
-    url = new URL(urlText);
-  } catch (error) {
-    throw new Error("URL 형식이 올바르지 않습니다.");
-  }
-
-  const host = url.hostname.replace(/^www\./i, "");
-  if (host !== "threads.com" && host !== "threads.net") {
-    throw new Error("threads.com 또는 threads.net URL만 지원합니다.");
-  }
-
-  const segments = url.pathname.split("/").filter(Boolean);
-  const markerIndex = segments.findIndex(
-    (segment) => segment === "post" || segment === "t",
-  );
-  const code = markerIndex >= 0 ? segments[markerIndex + 1] : "";
-  if (!code || !/^[A-Za-z0-9_-]+$/.test(code)) {
-    throw new Error("Threads 게시물 URL(/post/코드) 형식만 지원합니다.");
-  }
-
-  const username =
-    segments[0] && segments[0].startsWith("@") ? segments[0] : "";
-  const canonicalUrl = username
-    ? `https://www.threads.com/${username}/post/${code}`
-    : `https://www.threads.com/t/${code}`;
-
-  return { code, username, canonicalUrl };
-}
-
 export function formatDateLabel(rawDate) {
   if (!rawDate) {
     return currentDateTimeLabel();

@@ -1,8 +1,6 @@
 import { captureElementAsImage } from "./src/capture.js";
 import { getElements } from "./src/app/elements.js";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js";
-import { loadThreadsFromUrl } from "./src/app/threads-loader.js";
-import { detectPlatform } from "./src/utils.js";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js";
 import { normalizeMediaItems } from "./src/media.js";
@@ -79,15 +77,9 @@ import { createRenderer } from "./src/render.js";
         elements.autoCaptureToggle && elements.autoCaptureToggle.checked,
       );
 
-      const platform = detectPlatform(elements.tweetUrl.value);
-      const result =
-        platform === "threads"
-          ? await loadThreadsFromUrl(elements.tweetUrl.value, {
-              signal: fetchController.signal,
-            })
-          : await loadTweetFromUrl(elements.tweetUrl.value, {
-              signal: fetchController.signal,
-            });
+      const result = await loadTweetFromUrl(elements.tweetUrl.value, {
+        signal: fetchController.signal,
+      });
 
       if (fetchController.signal.aborted || requestId !== fetchRequestId) {
         return;
