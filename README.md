@@ -24,7 +24,7 @@
 정적 파일만으로 동작합니다. 로컬 서버로 열어 주세요.
 
 ```powershell
-cd e:\X_capture
+cd D:\X_capture
 python -m http.server 5173
 ```
 

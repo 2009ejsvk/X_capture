@@ -78,3 +78,74 @@ test("fetchTweetFromVx keeps media-only reply images without leaking t.co text",
     { src: photoUrl, visible: true },
   ]);
 });
+
+test("fetchTweetFromVx strips a leading RT @handle: retweet prefix", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "3333333333";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "Retweeter",
+        user_screen_name: "retweeter",
+        text: "RT @original: actual content here",
+      },
+    });
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.tweetText, "actual content here");
+});
+
+test("fetchTweetFromVx prefers the richer endpoint payload", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "4444444444";
+  const photoUrl = "https://pbs.twimg.com/media/RICH.jpg";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    const url = String(resource);
+
+    // fxtwitter returns a thin payload (no media)
+    if (url.includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "Thin",
+          user_screen_name: "thin",
+          text: "thin body",
+        },
+      });
+    }
+
+    // vxtwitter returns a media-rich payload and should win the richness sort
+    if (url.includes("api.vxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "Rich",
+          user_screen_name: "rich",
+          text: "rich body",
+          mediaURLs: [photoUrl],
+          media_extended: [{ type: "image", url: photoUrl }],
+        },
+      });
+    }
+
+    return jsonResponse({}, 404);
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.authorHandle, "@rich");
+  assert.equal(result.tweetText, "rich body");
+  assert.deepEqual(result.imageUrls, [photoUrl]);
+});
