@@ -439,6 +439,10 @@ export function createRenderer(elements, state, options = {}) {
 
     elements.previewName.textContent = toDisplayText(trimmedName);
     elements.previewHandle.textContent = toDisplayText(handleWithPrefix);
+    if (elements.previewPlatformMark) {
+      elements.previewPlatformMark.textContent =
+        state.platform === "threads" ? "@" : "𝕏";
+    }
     elements.previewDate.textContent =
       state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");

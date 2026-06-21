@@ -43,6 +43,7 @@ export function getElements() {
     previewAvatarInitial: document.getElementById("previewAvatarInitial"),
     previewName: document.getElementById("previewName"),
     previewHandle: document.getElementById("previewHandle"),
+    previewPlatformMark: document.getElementById("previewPlatformMark"),
     previewReplyList: document.getElementById("previewReplyList"),
     previewQuote: document.getElementById("previewQuote"),
     previewQuoteAvatar: document.getElementById("previewQuoteAvatar"),
