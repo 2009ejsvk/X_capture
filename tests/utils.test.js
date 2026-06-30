@@ -5,6 +5,7 @@ import {
   formatCountLabel,
   normalizeUrl,
   sanitizeFetchedTweetText,
+  toDisplayText,
 } from "../src/utils.js";
 
 test("normalizeUrl extracts and canonicalizes status URLs", () => {
@@ -35,4 +36,8 @@ test("sanitizeFetchedTweetText strips URL-only noise", () => {
 test("formatCountLabel compacts large numbers", () => {
   assert.equal(formatCountLabel("999"), "999");
   assert.equal(formatCountLabel("1,200"), "1.2천");
+});
+
+test("toDisplayText preserves flag emoji", () => {
+  assert.equal(toDisplayText("Korea 🇰🇷 Japan 🇯🇵"), "Korea 🇰🇷 Japan 🇯🇵");
 });

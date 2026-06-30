@@ -46,37 +46,11 @@ export function formatCountLabel(rawValue) {
   return text;
 }
 
-function flagEmojiToCode(flagEmoji) {
-  const codePoints = Array.from(String(flagEmoji || ""), (char) =>
-    char.codePointAt(0),
-  );
-  if (codePoints.length !== 2) {
-    return "";
-  }
-
-  const base = 0x1f1e6;
-  const letters = codePoints.map((point) => {
-    if (!Number.isFinite(point) || point < base || point > 0x1f1ff) {
-      return "";
-    }
-    return String.fromCharCode(65 + (point - base));
-  });
-
-  if (letters.some((letter) => !letter)) {
-    return "";
-  }
-
-  return letters.join("");
-}
-
 export function toDisplayText(value) {
   if (value === null || value === undefined || value === false) {
     return "";
   }
-  return String(value).replace(/[\u{1F1E6}-\u{1F1FF}]{2}/gu, (match) => {
-    const code = flagEmojiToCode(match);
-    return code ? `[${code}]` : match;
-  });
+  return String(value);
 }
 
 export function parseHandle(authorUrl, fallbackName) {
