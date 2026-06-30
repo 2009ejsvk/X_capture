@@ -2,7 +2,7 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   toDisplayText,
-} from "./utils.js";
+} from "./utils.js?v=flag-emoji-20260630";
 import {
   normalizeExportFormat,
   normalizeExportScale,
@@ -11,7 +11,7 @@ import {
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
 import { createMediaSelector } from "./render/media-selector.js";
 import { populateTweetMedia } from "./render/media.js";
-import { createReplyTweetCard } from "./render/reply-card.js";
+import { createReplyTweetCard } from "./render/reply-card.js?v=flag-emoji-20260630";
 import { resolveSourceMeta } from "./render/source-meta.js";
 
 export function createRenderer(elements, state, options = {}) {

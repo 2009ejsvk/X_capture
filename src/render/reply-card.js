@@ -1,5 +1,8 @@
 import { getVisibleMediaSrcs } from "../media.js";
-import { normalizeHandle, toDisplayText } from "../utils.js";
+import {
+  normalizeHandle,
+  toDisplayText,
+} from "../utils.js?v=flag-emoji-20260630";
 import { createTweetActionItem } from "./action-item.js";
 import { populateTweetMedia } from "./media.js";
 import { resolveSourceMeta } from "./source-meta.js";

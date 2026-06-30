@@ -4,7 +4,7 @@ import { loadTweetFromUrl } from "./src/app/tweet-loader.js";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js";
+import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
