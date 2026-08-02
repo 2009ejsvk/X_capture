@@ -4,6 +4,10 @@ import test from "node:test";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+const renderer = readFileSync(
+  new URL("../src/render.js", import.meta.url),
+  "utf8",
+);
 
 test("editor controls keep unique ids after the UX layout change", () => {
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
@@ -27,4 +31,10 @@ test("responsive UX controls and editor sections are present", () => {
   assert.match(css, /@media \(min-width: 980px\)/);
   assert.match(css, /"fetch preview"/);
   assert.match(css, /position: sticky/);
+});
+
+test("reply editors always expose image add and remove controls", () => {
+  assert.match(renderer, /이미지 수정 · 추가/);
+  assert.match(renderer, /reply-image-input-/);
+  assert.match(renderer, /전체 삭제/);
 });

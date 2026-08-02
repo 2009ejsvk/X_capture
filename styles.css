@@ -417,6 +417,22 @@ textarea:focus-visible {
   background: transparent;
 }
 
+.reply-media-edit {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.reply-media-hint {
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.reply-media-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .reply-visibility-option {
   padding: 6px 8px;
   border: 1px solid var(--line);
