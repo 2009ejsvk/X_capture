@@ -279,6 +279,15 @@ export function createRenderer(elements, state, options = {}) {
       normalizeMediaItems(state.quoteDataUrls).length,
     );
     elements.quoteEditor.classList.toggle("hidden", !hasQuoteEditorContent);
+    if (normalizeMediaItems(state.imageDataUrls).length) {
+      elements.mediaEditorSection.open = true;
+    }
+    if (Array.isArray(state.replyParents) && state.replyParents.length) {
+      elements.replyEditorSection.open = true;
+    }
+    if (hasQuoteEditorContent) {
+      elements.quoteEditorSection.open = true;
+    }
     renderReplyEditors();
     renderMediaSelectors();
   }
