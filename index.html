@@ -15,7 +15,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=font-effects-20260802" />
+    <link rel="stylesheet" href="./styles.css?v=settings-access-20260802" />
   </head>
   <body>
     <main class="app-shell">
@@ -63,6 +63,13 @@
           type="button"
         >
           미리보기
+        </button>
+        <button
+          id="jumpSettingsBtn"
+          class="btn btn-ghost btn-small"
+          type="button"
+        >
+          설정
         </button>
         <button
           id="quickCaptureBtn"
@@ -289,86 +296,93 @@
       </section>
 
       <section class="panel settings-panel">
-        <div class="panel-heading">
-          <h2>캡처 설정</h2>
-        </div>
-        <div class="settings-grid">
-          <label for="stylePreset">스타일</label>
-          <select id="stylePreset">
-            <option value="classic" selected>클래식</option>
-            <option value="translation">번역 강조</option>
-            <option value="media">이미지 중심</option>
-            <option value="compact">콤팩트</option>
-          </select>
-
-          <label for="captureFontSize">글자 크기</label>
-          <select id="captureFontSize">
-            <option value="small">작게</option>
-            <option value="default" selected>기본 (크게)</option>
-            <option value="large">더 크게</option>
-            <option value="xlarge">매우 크게</option>
-          </select>
-
-          <label for="captureFontFamily">폰트</label>
-          <select id="captureFontFamily">
-            <option value="system" selected>기본 · X 시스템</option>
-            <option value="pretendard">Pretendard</option>
-            <option value="noto-sans">Noto Sans KR</option>
-            <option value="noto-serif">Noto Serif KR</option>
-            <option value="dnf-bitbit">DNF BitBit · 픽셀 게임</option>
-            <option value="gasoek">Gasoek One · 초굵게</option>
-            <option value="black-han">Black Han Sans · 액션</option>
-            <option value="bagel-fat">Bagel Fat One · 캐주얼</option>
-          </select>
-          <p
-            id="captureFontSample"
-            class="font-sample"
-            data-font-family="system"
-            aria-live="polite"
-          >
-            가나다 게임 UI · ABC 123
-          </p>
-
-          <label for="captureOutlineWidth">글자 테두리</label>
-          <div class="text-effect-row">
-            <select id="captureOutlineWidth" aria-label="글자 테두리 굵기">
-              <option value="0" selected>없음</option>
-              <option value="1">얇게 · 1px</option>
-              <option value="2">보통 · 2px</option>
-              <option value="3">굵게 · 3px</option>
-              <option value="4">매우 굵게 · 4px</option>
-              <option value="6">게임 타이틀 · 6px</option>
+        <details
+          id="captureSettingsSection"
+          class="editor-section settings-section"
+          open
+        >
+          <summary>
+            <span>캡처 설정</span>
+            <small>스타일 · 글자 · 저장 품질</small>
+          </summary>
+          <div class="settings-grid editor-section-content">
+            <label for="stylePreset">스타일</label>
+            <select id="stylePreset">
+              <option value="classic" selected>클래식</option>
+              <option value="translation">번역 강조</option>
+              <option value="media">이미지 중심</option>
+              <option value="compact">콤팩트</option>
             </select>
-            <input
-              id="captureOutlineColor"
-              class="color-input"
-              type="color"
-              value="#000000"
-              aria-label="글자 테두리 색상"
-              title="글자 테두리 색상"
-            />
+
+            <label for="captureFontSize">글자 크기</label>
+            <select id="captureFontSize">
+              <option value="small">작게</option>
+              <option value="default" selected>기본 (크게)</option>
+              <option value="large">더 크게</option>
+              <option value="xlarge">매우 크게</option>
+            </select>
+
+            <label for="captureFontFamily">폰트</label>
+            <select id="captureFontFamily">
+              <option value="system" selected>기본 · X 시스템</option>
+              <option value="pretendard">Pretendard</option>
+              <option value="noto-sans">Noto Sans KR</option>
+              <option value="noto-serif">Noto Serif KR</option>
+              <option value="dnf-bitbit">DNF BitBit · 픽셀 게임</option>
+              <option value="gasoek">Gasoek One · 초굵게</option>
+              <option value="black-han">Black Han Sans · 액션</option>
+              <option value="bagel-fat">Bagel Fat One · 캐주얼</option>
+            </select>
+            <p
+              id="captureFontSample"
+              class="font-sample"
+              data-font-family="system"
+              aria-live="polite"
+            >
+              가나다 게임 UI · ABC 123
+            </p>
+
+            <label for="captureOutlineWidth">글자 테두리</label>
+            <div class="text-effect-row">
+              <select id="captureOutlineWidth" aria-label="글자 테두리 굵기">
+                <option value="0" selected>없음</option>
+                <option value="1">얇게 · 1px</option>
+                <option value="2">보통 · 2px</option>
+                <option value="3">굵게 · 3px</option>
+                <option value="4">매우 굵게 · 4px</option>
+                <option value="6">게임 타이틀 · 6px</option>
+              </select>
+              <input
+                id="captureOutlineColor"
+                class="color-input"
+                type="color"
+                value="#000000"
+                aria-label="글자 테두리 색상"
+                title="글자 테두리 색상"
+              />
+            </div>
+
+            <label class="check-option settings-check" for="captureTextShadow">
+              <input id="captureTextShadow" type="checkbox" />
+              게임식 그림자 추가
+            </label>
+
+            <label for="exportFormat">파일 형식</label>
+            <select id="exportFormat">
+              <option value="png" selected>PNG</option>
+              <option value="jpg">JPG</option>
+              <option value="webp">WebP</option>
+            </select>
+
+            <label for="exportScale">해상도</label>
+            <select id="exportScale">
+              <option value="auto" selected>자동 고해상도</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+            </select>
           </div>
-
-          <label class="check-option settings-check" for="captureTextShadow">
-            <input id="captureTextShadow" type="checkbox" />
-            게임식 그림자 추가
-          </label>
-
-          <label for="exportFormat">파일 형식</label>
-          <select id="exportFormat">
-            <option value="png" selected>PNG</option>
-            <option value="jpg">JPG</option>
-            <option value="webp">WebP</option>
-          </select>
-
-          <label for="exportScale">해상도</label>
-          <select id="exportScale">
-            <option value="auto" selected>자동 고해상도</option>
-            <option value="2">2x</option>
-            <option value="3">3x</option>
-            <option value="4">4x</option>
-          </select>
-        </div>
+        </details>
       </section>
 
       <section class="panel preview-panel">
@@ -532,6 +546,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=font-effects-20260802"></script>
+    <script type="module" src="./app.js?v=settings-access-20260802"></script>
   </body>
 </html>
