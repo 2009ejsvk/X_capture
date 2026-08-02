@@ -9,6 +9,7 @@ export function getElements() {
     captureFontSize: document.getElementById("captureFontSize"),
     captureFontFamily: document.getElementById("captureFontFamily"),
     captureFontSample: document.getElementById("captureFontSample"),
+    captureGameFontScope: document.getElementById("captureGameFontScope"),
     captureOutlineWidth: document.getElementById("captureOutlineWidth"),
     captureOutlineColor: document.getElementById("captureOutlineColor"),
     captureTextShadow: document.getElementById("captureTextShadow"),

@@ -5,6 +5,8 @@ import {
   toDisplayText,
 } from "./utils.js?v=reply-thread-v2-20260802";
 import {
+  isGameCaptureFontFamily,
+  normalizeCaptureGameFontScope,
   normalizeCaptureFontFamily,
   normalizeCaptureFontSize,
   normalizeCaptureOutlineColor,
@@ -12,7 +14,7 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=font-effects-20260802";
+} from "./domain/capture-settings.js?v=font-legibility-20260802";
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
 import {
   formatQuoteText,
@@ -461,6 +463,9 @@ export function createRenderer(elements, state, options = {}) {
     elements.captureFontFamily.value = normalizeCaptureFontFamily(
       state.captureFontFamily,
     );
+    elements.captureGameFontScope.value = normalizeCaptureGameFontScope(
+      state.captureGameFontScope,
+    );
     elements.captureOutlineWidth.value = normalizeCaptureOutlineWidth(
       state.captureOutlineWidth,
     );
@@ -645,7 +650,12 @@ export function createRenderer(elements, state, options = {}) {
     const captureFontFamily = normalizeCaptureFontFamily(
       state.captureFontFamily,
     );
+    const usesGameFont = isGameCaptureFontFamily(captureFontFamily);
+    const captureFontScope = usesGameFont
+      ? normalizeCaptureGameFontScope(state.captureGameFontScope)
+      : "all";
     elements.captureArea.dataset.fontFamily = captureFontFamily;
+    elements.captureArea.dataset.fontScope = captureFontScope;
     elements.captureArea.dataset.textShadow =
       state.captureTextShadow === true ? "on" : "off";
     elements.captureArea.style.setProperty(
@@ -659,6 +669,7 @@ export function createRenderer(elements, state, options = {}) {
     if (elements.captureFontSample) {
       elements.captureFontSample.dataset.fontFamily = captureFontFamily;
     }
+    elements.captureGameFontScope.disabled = !usesGameFont;
 
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
