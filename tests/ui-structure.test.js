@@ -24,6 +24,9 @@ test("responsive UX controls and editor sections are present", () => {
     "mediaEditorSection",
     "replyEditorSection",
     "quoteEditorSection",
+    "threadsApiSettings",
+    "threadsAccessToken",
+    "clearThreadsTokenBtn",
   ].forEach((id) => {
     assert.match(html, new RegExp(`id="${id}"`));
   });
