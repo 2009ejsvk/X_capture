@@ -859,9 +859,9 @@ textarea:focus-visible {
 
 .tweet-translation-text {
   margin: 0;
-  font-size: var(--capture-secondary-size);
+  font-size: var(--capture-text-size);
   font-weight: var(--capture-body-weight);
-  line-height: 1.45;
+  line-height: var(--capture-text-line);
   color: var(--capture-translation-color);
   white-space: pre-wrap;
   word-break: break-word;
@@ -1009,7 +1009,7 @@ textarea:focus-visible {
 
 .reply-item-translation-text {
   margin: 0;
-  font-size: var(--capture-secondary-size);
+  font-size: var(--capture-quote-size);
   font-weight: var(--capture-body-weight);
   line-height: 1.45;
   color: var(--capture-translation-color);
