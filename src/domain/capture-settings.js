@@ -58,12 +58,12 @@ export function normalizeStylePreset(value) {
 
 export function normalizeCaptureFontSize(value) {
   const size = String(value || "").trim();
-  return CAPTURE_FONT_SIZES.has(size) ? size : "default";
+  return CAPTURE_FONT_SIZES.has(size) ? size : "xlarge";
 }
 
 export function normalizeCaptureFontFamily(value) {
   const family = String(value || "").trim();
-  return CAPTURE_FONT_FAMILIES.has(family) ? family : "system";
+  return CAPTURE_FONT_FAMILIES.has(family) ? family : "suit-heavy";
 }
 
 export function isGameCaptureFontFamily(value) {
@@ -121,8 +121,8 @@ export function resolveCaptureScale({
 export function createDefaultCaptureSettings() {
   return {
     stylePreset: "classic",
-    captureFontSize: "default",
-    captureFontFamily: "system",
+    captureFontSize: "xlarge",
+    captureFontFamily: "suit-heavy",
     captureGameFontScope: "emphasis",
     captureOutlineWidth: "0",
     captureOutlineColor: "#000000",
