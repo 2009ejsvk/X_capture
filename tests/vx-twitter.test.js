@@ -79,6 +79,99 @@ test("fetchTweetFromVx keeps media-only reply images without leaking t.co text",
   ]);
 });
 
+test("fetchTweetFromVx removes FxTwitter media facets but keeps the attached image", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "2083770343177740438";
+  const mediaLink = "https://t.co/fSSNTuXl2r";
+  const photoUrl = "https://pbs.twimg.com/media/HOsJqxCagAAVQ30.jpg?name=orig";
+  const cleanText = "보통 명절 2~3주 전을 대목 시작으로 잡고 명절을 준비함.";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    if (String(resource).includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "User",
+          user_screen_name: "user",
+          text: cleanText,
+          raw_text: {
+            text: `${cleanText} ${mediaLink}`,
+            facets: [
+              {
+                type: "media",
+                original: mediaLink,
+                replacement: `https://x.com/user/status/${tweetId}/photo/1`,
+              },
+            ],
+          },
+          media: { all: [{ type: "photo", url: photoUrl }] },
+        },
+      });
+    }
+
+    return jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "User",
+        user_screen_name: "user",
+        text: cleanText,
+        mediaURLs: [photoUrl],
+        media_extended: [{ type: "image", url: photoUrl }],
+      },
+    });
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.tweetText, cleanText);
+  assert.deepEqual(result.imageUrls, [photoUrl]);
+});
+
+test("fetchTweetFromVx removes only a media URL when an article link is also present", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "6666666666";
+  const articleLink = "https://t.co/article";
+  const mediaLink = "https://t.co/media";
+  const photoUrl = "https://pbs.twimg.com/media/MIXED.jpg";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "Mixed Links",
+        user_screen_name: "mixed",
+        text: `article ${articleLink} ${mediaLink}`,
+        entities: {
+          urls: [
+            {
+              url: articleLink,
+              expanded_url: "https://example.com/article",
+            },
+          ],
+        },
+        raw_text: {
+          text: `article ${articleLink} ${mediaLink}`,
+          facets: [{ type: "media", original: mediaLink }],
+        },
+        mediaURLs: [photoUrl],
+        media_extended: [{ type: "image", url: photoUrl }],
+      },
+    });
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.tweetText, "article https://example.com/article");
+  assert.deepEqual(result.imageUrls, [photoUrl]);
+});
+
 test("fetchTweetFromVx strips a leading RT @handle: retweet prefix", async (t) => {
   const originalFetch = globalThis.fetch;
   const tweetId = "3333333333";

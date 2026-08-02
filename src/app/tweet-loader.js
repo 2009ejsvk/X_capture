@@ -19,7 +19,7 @@ import {
   fetchTweetFromVx,
   formatOembedError,
   parseOembedHtml,
-} from "../twitter-api.js?v=reply-thread-v2-20260802";
+} from "../twitter-api.js?v=media-links-20260802";
 
 async function normalizeReplyParents(replyParentMetas, options = {}) {
   return await Promise.all(
