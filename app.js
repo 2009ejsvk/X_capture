@@ -4,7 +4,7 @@ import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=reply-thread-v2-20
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=reply-thread-v2-20260802";
+import { createRenderer } from "./src/render.js?v=reply-images-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";

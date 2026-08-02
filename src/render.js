@@ -22,6 +22,16 @@ import { resolveSourceMeta } from "./render/source-meta.js";
 import { renderTextWithLinks } from "./render/text.js";
 
 export function createRenderer(elements, state, options = {}) {
+  function readImageFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () =>
+        resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onerror = () => reject(new Error("이미지를 읽지 못했습니다."));
+      reader.readAsDataURL(file);
+    });
+  }
+
   function notifyStateChange() {
     if (typeof options.onStateChange === "function") {
       options.onStateChange();
@@ -223,6 +233,84 @@ export function createRenderer(elements, state, options = {}) {
         ],
       });
       editorItem.appendChild(fields);
+
+      const mediaEdit = document.createElement("div");
+      mediaEdit.className = "field-group reply-media-edit";
+      const mediaInputId = `reply-image-input-${stateIndex}`;
+      const mediaLabel = document.createElement("label");
+      mediaLabel.htmlFor = mediaInputId;
+      mediaLabel.textContent = "이미지 수정 · 추가";
+
+      const mediaRow = document.createElement("div");
+      mediaRow.className = "image-row";
+      const mediaInput = document.createElement("input");
+      mediaInput.id = mediaInputId;
+      mediaInput.type = "file";
+      mediaInput.accept = "image/*";
+      mediaInput.multiple = true;
+      mediaInput.addEventListener("change", async (event) => {
+        if (!state.replyParents[stateIndex]) {
+          return;
+        }
+        const currentItems = normalizeMediaItems(
+          state.replyParents[stateIndex].dataUrls,
+        );
+        const remainingSlots = Math.max(4 - currentItems.length, 0);
+        const files = Array.from(event.target.files || []).slice(
+          0,
+          remainingSlots,
+        );
+        event.target.value = "";
+        if (!files.length) {
+          return;
+        }
+
+        try {
+          const loaded = await Promise.all(
+            files.map((file) => readImageFileAsDataUrl(file)),
+          );
+          if (!state.replyParents[stateIndex]) {
+            return;
+          }
+          state.replyParents[stateIndex].dataUrls = normalizeMediaItems([
+            ...currentItems,
+            ...loaded.filter(Boolean),
+          ]);
+          renderPreview();
+          renderReplyEditors();
+          notifyStateChange();
+        } catch (error) {
+          mediaInput.setCustomValidity("이미지를 읽지 못했습니다.");
+          mediaInput.reportValidity();
+          mediaInput.setCustomValidity("");
+        }
+      });
+
+      const removeMediaButton = document.createElement("button");
+      removeMediaButton.className = "btn btn-ghost reply-media-remove";
+      removeMediaButton.type = "button";
+      removeMediaButton.textContent = "전체 삭제";
+      removeMediaButton.disabled = !normalizeMediaItems(item.dataUrls).length;
+      removeMediaButton.addEventListener("click", () => {
+        if (!state.replyParents[stateIndex]) {
+          return;
+        }
+        state.replyParents[stateIndex].dataUrls = [];
+        renderPreview();
+        renderReplyEditors();
+        notifyStateChange();
+      });
+
+      mediaRow.appendChild(mediaInput);
+      mediaRow.appendChild(removeMediaButton);
+      mediaEdit.appendChild(mediaLabel);
+      mediaEdit.appendChild(mediaRow);
+      const mediaHint = document.createElement("small");
+      mediaHint.className = "reply-media-hint";
+      mediaHint.textContent =
+        "이미지가 없어도 추가할 수 있으며 최대 4장까지 가능합니다.";
+      mediaEdit.appendChild(mediaHint);
+      editorItem.appendChild(mediaEdit);
 
       const mediaSelector = createMediaSelector(
         `${title.textContent} 이미지 선택`,
