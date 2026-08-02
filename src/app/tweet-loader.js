@@ -13,8 +13,7 @@ import {
   normalizeUrl,
   parseHandle,
   sanitizeFetchedTweetText,
-} from "../utils.js?v=threads-api-20260802";
-import { fetchThreadsPost } from "../services/threads-api.js?v=threads-api-20260802";
+} from "../utils.js?v=reply-thread-v2-20260802";
 import {
   fetchTweetFromOembed,
   fetchTweetFromVx,
@@ -53,9 +52,6 @@ async function normalizeReplyParents(replyParentMetas, options = {}) {
 
 export async function loadTweetFromUrl(tweetUrl, options = {}) {
   const normalized = normalizeUrl(tweetUrl);
-  if (normalized.platform === "threads") {
-    return loadThreadsFromUrl(normalized, options);
-  }
   let imageUrls = [];
   let profileImageUrl = "";
   let quoteMeta = null;
@@ -193,52 +189,5 @@ export async function loadTweetFromUrl(tweetUrl, options = {}) {
     patch,
     usedFallback,
     fallbackStatusMessage,
-  };
-}
-
-async function loadThreadsFromUrl(normalized, options = {}) {
-  const result = await fetchThreadsPost(normalized, {
-    ...options,
-    accessToken: options.threadsAccessToken,
-  });
-  const post = result.post;
-  const quote = result.quote;
-
-  const [profileImageSrc, mainImages, quoteProfileImageSrc, quoteImages] =
-    await Promise.all([
-      toDisplayImageSrc(post.authorProfileImageUrl, options),
-      toDisplayImageSrcs(post.imageUrls, options),
-      toDisplayImageSrc(quote?.authorProfileImageUrl || "", options),
-      toDisplayImageSrcs(quote?.imageUrls || [], options),
-    ]);
-  const replyParents = await normalizeReplyParents(
-    result.replyParents,
-    options,
-  );
-
-  return {
-    patch: {
-      sourceUrl: post.sourceUrl || normalized.canonicalUrl,
-      authorName: post.authorName,
-      authorHandle: post.authorHandle,
-      profileImageSrc,
-      tweetDate: formatDateLabel(post.tweetDate),
-      tweetText: post.text,
-      translationText: "",
-      replyCount: post.replyCount || "0",
-      retweetCount: post.retweetCount || "0",
-      likeCount: post.likeCount || "0",
-      bookmarkCount: "0",
-      imageDataUrls: normalizeMediaItems(mainImages),
-      quoteAuthorName: quote?.authorName || "",
-      quoteAuthorHandle: quote?.authorHandle || "",
-      quoteAuthorProfileImageSrc: quoteProfileImageSrc,
-      quoteText: quote?.text || "",
-      quoteDataUrls: normalizeMediaItems(quoteImages),
-      replyParents: replyParents.filter(hasRenderableReply),
-    },
-    usedFallback: false,
-    statusMessage:
-      "Threads 글을 불러왔습니다. 공개 반응 수는 API에서 제공되지 않을 수 있어 직접 수정할 수 있습니다.",
   };
 }

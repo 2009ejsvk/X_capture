@@ -1,6 +1,6 @@
 import { captureElementAsImage } from "./src/capture.js";
-import { getElements } from "./src/app/elements.js?v=threads-api-20260802";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=threads-api-20260802";
+import { getElements } from "./src/app/elements.js?v=reply-thread-v2-20260802";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=reply-thread-v2-20260802";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "./src/media.js";
@@ -8,7 +8,6 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
-  const THREADS_TOKEN_KEY = "x-capture:threads-token:v1";
   const elements = getElements();
 
   const state = createInitialState();
@@ -27,51 +26,6 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
 
     if (type === "success") {
       elements.statusText.classList.add("is-success");
-    }
-  }
-
-  function isThreadsUrl(value) {
-    try {
-      const host = new URL(String(value || "").trim()).hostname.replace(
-        /^www\./i,
-        "",
-      );
-      return host === "threads.net" || host === "threads.com";
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function syncThreadsSettings() {
-    const threadsLinkEntered = isThreadsUrl(elements.tweetUrl.value);
-    elements.threadsApiSettings.classList.toggle(
-      "is-recommended",
-      threadsLinkEntered,
-    );
-    if (threadsLinkEntered && !elements.threadsAccessToken.value.trim()) {
-      elements.threadsApiSettings.open = true;
-    }
-  }
-
-  function saveThreadsTokenForTab() {
-    try {
-      const token = elements.threadsAccessToken.value.trim();
-      if (token) {
-        window.sessionStorage.setItem(THREADS_TOKEN_KEY, token);
-      } else {
-        window.sessionStorage.removeItem(THREADS_TOKEN_KEY);
-      }
-    } catch (error) {
-      // Private browsing can disable storage; the in-memory input still works.
-    }
-  }
-
-  function restoreThreadsTokenForTab() {
-    try {
-      elements.threadsAccessToken.value =
-        window.sessionStorage.getItem(THREADS_TOKEN_KEY) || "";
-    } catch (error) {
-      elements.threadsAccessToken.value = "";
     }
   }
 
@@ -121,14 +75,13 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
 
     try {
       elements.fetchBtn.disabled = true;
-      setStatus("게시물 정보를 가져오는 중...");
+      setStatus("트윗 정보를 가져오는 중...");
       const shouldAutoCapture = Boolean(
         elements.autoCaptureToggle && elements.autoCaptureToggle.checked,
       );
 
       const result = await loadTweetFromUrl(elements.tweetUrl.value, {
         signal: fetchController.signal,
-        threadsAccessToken: elements.threadsAccessToken.value.trim(),
       });
 
       if (fetchController.signal.aborted || requestId !== fetchRequestId) {
@@ -138,9 +91,7 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
       Object.assign(state, result.patch);
       applyStateToInputs();
       renderPreview();
-      if (result.statusMessage) {
-        setStatus(result.statusMessage, "success");
-      } else if (result.usedFallback) {
+      if (result.usedFallback) {
         setStatus(
           "불러오기 완료(보조 경로). 필요하면 내용을 수정하고 저장하세요.",
           "success",
@@ -158,10 +109,6 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
     } catch (error) {
       if (fetchController.signal.aborted) {
         return;
-      }
-
-      if (isThreadsUrl(elements.tweetUrl.value)) {
-        elements.threadsApiSettings.open = true;
       }
 
       setStatus(
@@ -253,7 +200,6 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
-    syncThreadsSettings();
     applyStateToInputs();
     renderPreview();
     setStatus("입력값을 초기화했습니다.");
@@ -262,25 +208,7 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
   function onClearTweetUrl() {
     elements.tweetUrl.value = "";
     elements.tweetUrl.focus();
-    syncThreadsSettings();
-    setStatus("게시물 URL 입력값을 지웠습니다.");
-  }
-
-  function onToggleThreadsToken() {
-    const showing = elements.threadsAccessToken.type === "text";
-    elements.threadsAccessToken.type = showing ? "password" : "text";
-    elements.toggleThreadsTokenBtn.textContent = showing ? "보기" : "숨기기";
-    elements.toggleThreadsTokenBtn.setAttribute(
-      "aria-pressed",
-      String(!showing),
-    );
-  }
-
-  function onClearThreadsToken() {
-    elements.threadsAccessToken.value = "";
-    saveThreadsTokenForTab();
-    elements.threadsAccessToken.focus();
-    setStatus("현재 탭에 보관한 Threads 토큰을 지웠습니다.");
+    setStatus("트윗 URL 입력값을 지웠습니다.");
   }
 
   function scrollToElement(element) {
@@ -322,25 +250,12 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
   function wireEvents() {
     elements.fetchBtn.addEventListener("click", onFetchClick);
     elements.clearUrlBtn.addEventListener("click", onClearTweetUrl);
-    elements.tweetUrl.addEventListener("input", syncThreadsSettings);
     elements.tweetUrl.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
         onFetchClick();
       }
     });
-    elements.threadsAccessToken.addEventListener(
-      "input",
-      saveThreadsTokenForTab,
-    );
-    elements.toggleThreadsTokenBtn.addEventListener(
-      "click",
-      onToggleThreadsToken,
-    );
-    elements.clearThreadsTokenBtn.addEventListener(
-      "click",
-      onClearThreadsToken,
-    );
 
     elements.authorName.addEventListener("input", syncFromEditors);
     elements.authorHandle.addEventListener("input", syncFromEditors);
@@ -390,9 +305,7 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
   }
 
   clearLegacyDraft();
-  restoreThreadsTokenForTab();
   wireEvents();
-  syncThreadsSettings();
   applyStateToInputs();
   renderPreview();
 })();

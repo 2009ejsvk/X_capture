@@ -32,17 +32,3 @@ test("createCaptureFilename sanitizes unsafe filename characters", () => {
     "A-B-C-D-20260513.jpg",
   );
 });
-
-test("createCaptureFilename includes a Threads shortcode", () => {
-  assert.equal(
-    createCaptureFilename(
-      {
-        authorHandle: "@threads_user",
-        tweetDate: "2026-08-02 12:00",
-        sourceUrl: "https://www.threads.com/@threads_user/post/AbC_123",
-      },
-      "png",
-    ),
-    "threads_user-20260802-AbC_123.png",
-  );
-});
