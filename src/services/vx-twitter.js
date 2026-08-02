@@ -176,7 +176,92 @@ function expandKnownUrls(text, payload) {
   return expandedText;
 }
 
-function pickVxText(payload) {
+function collectKnownMediaUrls(payload) {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const urls = new Set();
+  const addUrl = (value) => {
+    const url = String(value || "").trim();
+    if (/^https?:\/\/\S+$/i.test(url)) {
+      urls.add(url);
+    }
+  };
+  const addEntityUrls = (entity) => {
+    if (!entity || typeof entity !== "object") {
+      return;
+    }
+    [
+      entity.url,
+      entity.short_url,
+      entity.expanded_url,
+      entity.expandedUrl,
+      entity.unwound_url,
+      entity.unwoundUrl,
+      entity.replacement,
+      entity.original,
+    ].forEach(addUrl);
+  };
+
+  const facetGroups = [
+    payload.facets,
+    payload.raw_text && payload.raw_text.facets,
+    payload.rawText && payload.rawText.facets,
+    payload.note_tweet && payload.note_tweet.facets,
+    payload.noteTweet && payload.noteTweet.facets,
+  ];
+  facetGroups
+    .filter(Array.isArray)
+    .flat()
+    .filter(
+      (facet) => facet && String(facet.type || "").toLowerCase() === "media",
+    )
+    .forEach(addEntityUrls);
+
+  const mediaEntityGroups = [
+    payload.entities && payload.entities.media,
+    payload.extended_entities && payload.extended_entities.media,
+    payload.raw_text &&
+      payload.raw_text.entities &&
+      payload.raw_text.entities.media,
+    payload.rawText &&
+      payload.rawText.entities &&
+      payload.rawText.entities.media,
+    payload.note_tweet &&
+      payload.note_tweet.entity_set &&
+      payload.note_tweet.entity_set.media,
+    payload.noteTweet &&
+      payload.noteTweet.entitySet &&
+      payload.noteTweet.entitySet.media,
+  ];
+  mediaEntityGroups.filter(Array.isArray).flat().forEach(addEntityUrls);
+
+  return [...urls];
+}
+
+function stripKnownMediaUrls(text, payload, additionalUrls = []) {
+  let stripped = String(text || "");
+  const urls = [
+    ...collectKnownMediaUrls(payload),
+    ...(Array.isArray(additionalUrls) ? additionalUrls : []),
+  ];
+
+  [...new Set(urls)]
+    .sort((left, right) => right.length - left.length)
+    .forEach((url) => {
+      stripped = stripped.split(url).join("");
+    });
+
+  return stripped
+    .replace(/(?:https?:\/\/)?pic\.twitter\.com\/[^\s]+/gi, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function pickVxText(payload, additionalMediaUrls = []) {
   const textCandidates = [
     payload && payload.full_text,
     payload && payload.text,
@@ -188,7 +273,17 @@ function pickVxText(payload) {
     payload && payload.noteTweet && payload.noteTweet.text,
   ]
     .filter((value) => typeof value === "string" && value.trim())
-    .map((value) => expandKnownUrls(value, payload).replace(/\r\n/g, "\n"));
+    .map((value) =>
+      stripKnownMediaUrls(
+        expandKnownUrls(
+          stripKnownMediaUrls(value, payload, additionalMediaUrls),
+          payload,
+        ),
+        payload,
+        additionalMediaUrls,
+      ).replace(/\r\n/g, "\n"),
+    )
+    .filter(Boolean);
   const text = textCandidates.sort(
     (left, right) => Array.from(right).length - Array.from(left).length,
   )[0];
@@ -460,14 +555,15 @@ function backfillEngagementCounts(best, others) {
   }
 
   const merged = { ...best };
+  const knownMediaUrls = [best, ...others].flatMap(collectKnownMediaUrls);
 
   const richestText = [best, ...others]
-    .map((candidate) => pickVxText(candidate))
+    .map((candidate) => pickVxText(candidate, knownMediaUrls))
     .filter(Boolean)
     .sort(
       (left, right) => Array.from(right).length - Array.from(left).length,
     )[0];
-  if (richestText && richestText !== pickVxText(merged)) {
+  if (richestText && richestText !== pickVxText(merged, knownMediaUrls)) {
     merged.full_text = richestText;
   }
 

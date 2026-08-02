@@ -1,6 +1,6 @@
 import { captureElementAsImage } from "./src/capture.js";
 import { getElements } from "./src/app/elements.js?v=reply-thread-v2-20260802";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=reply-thread-v2-20260802";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media-links-20260802";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "./src/media.js";
