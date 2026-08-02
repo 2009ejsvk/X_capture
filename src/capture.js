@@ -213,6 +213,17 @@ async function waitForCaptureImages(captureArea) {
   await waitForNextFrame();
 }
 
+async function waitForCaptureFonts() {
+  if (!document.fonts || !document.fonts.ready) {
+    return;
+  }
+
+  await Promise.race([
+    document.fonts.ready,
+    new Promise((resolve) => window.setTimeout(resolve, 10000)),
+  ]);
+}
+
 function getCaptureViewport(captureArea) {
   const rect = captureArea.getBoundingClientRect();
   const scrollX = window.scrollX || window.pageXOffset || 0;
@@ -259,6 +270,7 @@ export async function captureElementAsImage({
     captureButton.disabled = true;
     setStatus("고해상도 이미지 생성 중...");
     await waitForDocumentVisible(setStatus);
+    await waitForCaptureFonts();
     await waitForCaptureImages(captureArea);
     const viewport = getCaptureViewport(captureArea);
     const exportConfig = resolveExportFormat(exportFormat);

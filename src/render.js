@@ -5,11 +5,14 @@ import {
   toDisplayText,
 } from "./utils.js?v=reply-thread-v2-20260802";
 import {
+  normalizeCaptureFontFamily,
   normalizeCaptureFontSize,
+  normalizeCaptureOutlineColor,
+  normalizeCaptureOutlineWidth,
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js";
+} from "./domain/capture-settings.js?v=font-effects-20260802";
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
 import {
   formatQuoteText,
@@ -455,6 +458,16 @@ export function createRenderer(elements, state, options = {}) {
     elements.captureFontSize.value = normalizeCaptureFontSize(
       state.captureFontSize,
     );
+    elements.captureFontFamily.value = normalizeCaptureFontFamily(
+      state.captureFontFamily,
+    );
+    elements.captureOutlineWidth.value = normalizeCaptureOutlineWidth(
+      state.captureOutlineWidth,
+    );
+    elements.captureOutlineColor.value = normalizeCaptureOutlineColor(
+      state.captureOutlineColor,
+    );
+    elements.captureTextShadow.checked = state.captureTextShadow === true;
     elements.exportFormat.value = normalizeExportFormat(state.exportFormat);
     elements.exportScale.value = normalizeExportScale(state.exportScale);
     const hasQuoteEditorContent = Boolean(
@@ -629,6 +642,23 @@ export function createRenderer(elements, state, options = {}) {
     elements.captureArea.dataset.fontSize = normalizeCaptureFontSize(
       state.captureFontSize,
     );
+    const captureFontFamily = normalizeCaptureFontFamily(
+      state.captureFontFamily,
+    );
+    elements.captureArea.dataset.fontFamily = captureFontFamily;
+    elements.captureArea.dataset.textShadow =
+      state.captureTextShadow === true ? "on" : "off";
+    elements.captureArea.style.setProperty(
+      "--capture-outline-width",
+      `${normalizeCaptureOutlineWidth(state.captureOutlineWidth)}px`,
+    );
+    elements.captureArea.style.setProperty(
+      "--capture-outline-color",
+      normalizeCaptureOutlineColor(state.captureOutlineColor),
+    );
+    if (elements.captureFontSample) {
+      elements.captureFontSample.dataset.fontFamily = captureFontFamily;
+    }
 
     const trimmedName = state.authorName.trim() || "X User";
     const trimmedHandle = state.authorHandle.trim() || "@x";
