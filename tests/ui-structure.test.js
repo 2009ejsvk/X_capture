@@ -28,6 +28,7 @@ test("responsive UX controls and editor sections are present", () => {
     "captureOutlineColor",
     "captureTextShadow",
     "mainEditorSection",
+    "mainMetaSection",
     "mediaEditorSection",
     "replyEditorSection",
     "quoteEditorSection",
@@ -57,12 +58,21 @@ test("reply editors always expose image add and remove controls", () => {
 
 test("retweet source editor is embedded in the main content editor", () => {
   const mainEditor = html.match(
-    /<details id="mainEditorSection"[\s\S]*?<\/details>/,
+    /<details\s+[^>]*id="mainEditorSection"[\s\S]*?<\/details>/,
   )?.[0];
   assert.ok(mainEditor);
   assert.match(mainEditor, /id="quoteEditorSection"/);
   assert.doesNotMatch(html, /<details id="quoteEditorSection"/);
   assert.match(css, /\.inline-quote-editor/);
+});
+
+test("content editing prioritizes post text and folds secondary metadata", () => {
+  assert.match(html, /id="postBodyHeading">글 내용/);
+  assert.match(html, /id="mainMetaSection" class="editor-subsection"/);
+  assert.match(html, /작성자 · 날짜 · 반응 수/);
+  assert.match(html, /대화의 이전 글/);
+  assert.match(css, /\.editor-focus-block/);
+  assert.match(css, /\.editor-subsection > summary/);
 });
 
 test("translations use the same text scale as their corresponding body", () => {

@@ -31,7 +31,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=inline-quote-editor-20260802" />
+    <link rel="stylesheet" href="./styles.css?v=editor-ux-v2-20260802" />
   </head>
   <body>
     <main class="app-shell">
@@ -100,158 +100,206 @@
         <div class="panel-heading editor-heading">
           <div>
             <h2>내용 편집</h2>
-            <p class="panel-description">필요한 부분만 열어서 수정하세요.</p>
+            <p class="panel-description">
+              글 내용부터 확인하고, 필요한 상세 항목만 여세요.
+            </p>
           </div>
         </div>
         <div class="editor-stack">
-          <details id="mainEditorSection" class="editor-section" open>
+          <details
+            id="mainEditorSection"
+            class="editor-section editor-section-primary"
+            open
+          >
             <summary>
-              <span id="mainEditorTitle">기본 정보</span>
-              <small id="mainEditorSummary">작성자 · 본문 · 반응 수</small>
+              <span id="mainEditorTitle">현재 글</span>
+              <small id="mainEditorSummary">본문 · 번역 · 리트윗 원문</small>
             </summary>
-            <div class="editor-grid editor-section-content">
-              <div class="field-group">
-                <label for="authorName">작성자명</label>
-                <input id="authorName" type="text" maxlength="40" />
-              </div>
-              <div class="field-group">
-                <label for="authorHandle">핸들</label>
-                <input id="authorHandle" type="text" maxlength="40" />
-              </div>
-              <div class="field-group field-span-full">
-                <label for="tweetDate">날짜</label>
-                <input id="tweetDate" type="text" maxlength="40" />
-              </div>
-              <div class="field-group field-span-full">
-                <label for="tweetText">본문</label>
-                <textarea id="tweetText" rows="5"></textarea>
-              </div>
-              <div class="field-group field-span-full">
-                <label for="translationText">번역</label>
-                <textarea
-                  id="translationText"
-                  rows="4"
-                  placeholder="번역 내용을 입력하세요."
-                ></textarea>
-              </div>
-              <div class="metrics-grid field-span-full">
-                <div class="field-group">
-                  <label for="replyCount">댓글</label>
-                  <input
-                    id="replyCount"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="20"
-                  />
+            <div class="editor-section-content main-editor-content">
+              <section
+                class="editor-focus-block"
+                aria-labelledby="postBodyHeading"
+              >
+                <div class="editor-block-heading">
+                  <span class="editor-step-badge">1</span>
+                  <div>
+                    <h3 id="postBodyHeading">글 내용</h3>
+                    <p>캡처에서 가장 크게 보이는 내용입니다.</p>
+                  </div>
                 </div>
                 <div class="field-group">
-                  <label for="retweetCount">리트윗</label>
-                  <input
-                    id="retweetCount"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="20"
-                  />
+                  <label for="tweetText">본문 내용</label>
+                  <textarea id="tweetText" rows="6"></textarea>
                 </div>
                 <div class="field-group">
-                  <label for="likeCount">좋아요</label>
-                  <input
-                    id="likeCount"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="20"
-                  />
+                  <label for="translationText">번역 <small>선택</small></label>
+                  <textarea
+                    id="translationText"
+                    rows="4"
+                    placeholder="번역이 필요할 때만 입력하세요."
+                  ></textarea>
                 </div>
-                <div class="field-group">
-                  <label for="bookmarkCount">북마크</label>
-                  <input
-                    id="bookmarkCount"
-                    type="text"
-                    inputmode="numeric"
-                    maxlength="20"
-                  />
-                </div>
-              </div>
+              </section>
 
               <section
                 id="quoteEditorSection"
-                class="inline-quote-editor field-span-full hidden"
+                class="inline-quote-editor hidden"
                 aria-labelledby="quoteEditorHeading"
               >
                 <div class="inline-editor-heading">
-                  <div>
-                    <h3 id="quoteEditorHeading">리트윗 원문</h3>
-                    <p>본문과 이어서 원문 내용과 이미지를 수정하세요.</p>
+                  <div class="editor-block-heading">
+                    <span class="editor-step-badge editor-step-badge-quote"
+                      >2</span
+                    >
+                    <div>
+                      <h3 id="quoteEditorHeading">리트윗 원문</h3>
+                      <p>현재 글 아래에 함께 표시되는 원문입니다.</p>
+                    </div>
                   </div>
-                  <label class="check-option" for="showQuoteToggle">
+                  <label
+                    class="check-option compact-toggle"
+                    for="showQuoteToggle"
+                  >
                     <input id="showQuoteToggle" type="checkbox" checked />
-                    원문 표시
+                    표시
                   </label>
-                </div>
-                <div class="option-row option-row-inline">
-                  <label class="check-option" for="showQuoteMediaToggle">
-                    <input id="showQuoteMediaToggle" type="checkbox" checked />
-                    이미지 표시
-                  </label>
-                  <div class="field-group">
-                    <label for="quoteTextMode">원문 길이</label>
-                    <select id="quoteTextMode">
-                      <option value="full" selected>전체 내용</option>
-                      <option value="preview">일부만 표시 (160자)</option>
-                    </select>
-                  </div>
                 </div>
                 <div id="quoteEditor" class="inline-quote-fields">
-                  <div class="reply-editor-fields">
-                    <label class="reply-editor-label" for="quoteMediaLayout"
-                      >이미지 배치</label
-                    >
-                    <select id="quoteMediaLayout">
-                      <option value="vertical" selected>세로</option>
-                      <option value="grid">나란히</option>
-                    </select>
-                  </div>
-                  <div class="reply-editor-fields">
-                    <label class="reply-editor-label" for="quoteAuthorName"
-                      >작성자명</label
-                    >
-                    <input id="quoteAuthorName" type="text" maxlength="40" />
-                  </div>
-                  <div class="reply-editor-fields">
-                    <label class="reply-editor-label" for="quoteAuthorHandle"
-                      >핸들</label
-                    >
-                    <input
-                      id="quoteAuthorHandle"
-                      type="text"
-                      maxlength="40"
-                      placeholder="@handle"
-                    />
-                  </div>
-                  <div class="reply-editor-fields">
-                    <label class="reply-editor-label" for="quoteText"
-                      >본문</label
-                    >
+                  <div class="field-group">
+                    <label for="quoteText">원문 내용</label>
                     <textarea
                       id="quoteText"
                       class="reply-editor-textarea"
-                      rows="3"
+                      rows="5"
                     ></textarea>
                   </div>
-                  <div
-                    id="quoteImageSelector"
-                    class="media-selector-list hidden"
-                    aria-label="리트윗 원문 이미지 선택"
-                  ></div>
+                  <details class="editor-subsection">
+                    <summary>
+                      <span>원문 상세 설정</span>
+                      <small>작성자 · 길이 · 이미지</small>
+                    </summary>
+                    <div class="editor-subsection-content">
+                      <div class="editor-grid">
+                        <div class="field-group">
+                          <label for="quoteAuthorName">작성자명</label>
+                          <input
+                            id="quoteAuthorName"
+                            type="text"
+                            maxlength="40"
+                          />
+                        </div>
+                        <div class="field-group">
+                          <label for="quoteAuthorHandle">핸들</label>
+                          <input
+                            id="quoteAuthorHandle"
+                            type="text"
+                            maxlength="40"
+                            placeholder="@handle"
+                          />
+                        </div>
+                      </div>
+                      <div class="option-row option-row-inline">
+                        <div class="field-group">
+                          <label for="quoteTextMode">원문 길이</label>
+                          <select id="quoteTextMode">
+                            <option value="full" selected>전체 내용</option>
+                            <option value="preview">일부만 표시 (160자)</option>
+                          </select>
+                        </div>
+                        <div class="field-group">
+                          <label for="quoteMediaLayout">이미지 배치</label>
+                          <select id="quoteMediaLayout">
+                            <option value="vertical" selected>세로</option>
+                            <option value="grid">나란히</option>
+                          </select>
+                        </div>
+                      </div>
+                      <label
+                        class="check-option setting-toggle"
+                        for="showQuoteMediaToggle"
+                      >
+                        <input
+                          id="showQuoteMediaToggle"
+                          type="checkbox"
+                          checked
+                        />
+                        원문 이미지 표시
+                      </label>
+                      <div
+                        id="quoteImageSelector"
+                        class="media-selector-list hidden"
+                        aria-label="리트윗 원문 이미지 선택"
+                      ></div>
+                    </div>
+                  </details>
                 </div>
               </section>
+
+              <details id="mainMetaSection" class="editor-subsection">
+                <summary>
+                  <span>작성자 · 날짜 · 반응 수</span>
+                  <small>필요할 때만 수정</small>
+                </summary>
+                <div class="editor-grid editor-subsection-content">
+                  <div class="field-group">
+                    <label for="authorName">작성자명</label>
+                    <input id="authorName" type="text" maxlength="40" />
+                  </div>
+                  <div class="field-group">
+                    <label for="authorHandle">핸들</label>
+                    <input id="authorHandle" type="text" maxlength="40" />
+                  </div>
+                  <div class="field-group field-span-full">
+                    <label for="tweetDate">날짜</label>
+                    <input id="tweetDate" type="text" maxlength="40" />
+                  </div>
+                  <div class="metrics-grid field-span-full">
+                    <div class="field-group">
+                      <label for="replyCount">댓글</label>
+                      <input
+                        id="replyCount"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="20"
+                      />
+                    </div>
+                    <div class="field-group">
+                      <label for="retweetCount">리트윗</label>
+                      <input
+                        id="retweetCount"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="20"
+                      />
+                    </div>
+                    <div class="field-group">
+                      <label for="likeCount">좋아요</label>
+                      <input
+                        id="likeCount"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="20"
+                      />
+                    </div>
+                    <div class="field-group">
+                      <label for="bookmarkCount">북마크</label>
+                      <input
+                        id="bookmarkCount"
+                        type="text"
+                        inputmode="numeric"
+                        maxlength="20"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
           </details>
 
           <details id="mediaEditorSection" class="editor-section">
             <summary>
-              <span>미디어</span>
-              <small>이미지 추가 · 표시 · 배치</small>
+              <span>첨부 이미지</span>
+              <small>추가 · 순서 · 배치</small>
             </summary>
             <div class="editor-section-content">
               <div class="field-group">
@@ -289,8 +337,8 @@
 
           <details id="replyEditorSection" class="editor-section">
             <summary>
-              <span>이전 글</span>
-              <small>원글부터 시간순으로 수정</small>
+              <span>대화의 이전 글</span>
+              <small>원글부터 순서대로 편집</small>
             </summary>
             <div class="editor-section-content">
               <div class="option-row option-row-inline">
@@ -587,9 +635,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script
-      type="module"
-      src="./app.js?v=inline-quote-editor-20260802"
-    ></script>
+    <script type="module" src="./app.js?v=editor-ux-v2-20260802"></script>
   </body>
 </html>

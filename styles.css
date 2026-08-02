@@ -316,7 +316,7 @@ textarea:focus-visible {
   background: var(--field);
 }
 
-.editor-section summary {
+.editor-section > summary {
   position: relative;
   display: flex;
   align-items: center;
@@ -328,11 +328,11 @@ textarea:focus-visible {
   user-select: none;
 }
 
-.editor-section summary::-webkit-details-marker {
+.editor-section > summary::-webkit-details-marker {
   display: none;
 }
 
-.editor-section summary::after {
+.editor-section > summary::after {
   position: absolute;
   right: 14px;
   content: "+";
@@ -342,16 +342,16 @@ textarea:focus-visible {
   line-height: 1;
 }
 
-.editor-section[open] summary::after {
+.editor-section[open] > summary::after {
   content: "−";
 }
 
-.editor-section summary span {
+.editor-section > summary span {
   font-size: 14px;
   font-weight: 700;
 }
 
-.editor-section summary small {
+.editor-section > summary small {
   min-width: 0;
   overflow: hidden;
   color: var(--ink-soft);
@@ -360,7 +360,7 @@ textarea:focus-visible {
   white-space: nowrap;
 }
 
-.editor-section[open] summary {
+.editor-section[open] > summary {
   background: var(--field-hover);
 }
 
@@ -368,6 +368,133 @@ textarea:focus-visible {
   display: grid;
   gap: 10px;
   padding: 12px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.editor-section-primary {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+}
+
+.main-editor-content {
+  gap: 12px;
+  background: color-mix(in srgb, var(--panel) 78%, #000000);
+}
+
+.editor-focus-block {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel-strong);
+}
+
+.editor-block-heading {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.editor-block-heading h3,
+.editor-block-heading p {
+  margin: 0;
+}
+
+.editor-block-heading h3 {
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.editor-block-heading p {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.editor-step-badge {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.editor-step-badge-quote {
+  background: #7856ff;
+}
+
+.field-group label small {
+  margin-left: 3px;
+  color: var(--ink-softer);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.editor-subsection {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+}
+
+.editor-subsection > summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 38px 10px 11px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.editor-subsection > summary::-webkit-details-marker {
+  display: none;
+}
+
+.editor-subsection > summary::after {
+  position: absolute;
+  right: 12px;
+  content: "+";
+  color: var(--ink-soft);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.editor-subsection[open] > summary::after {
+  content: "−";
+}
+
+.editor-subsection > summary span {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.editor-subsection > summary small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink-soft);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-subsection[open] > summary {
+  background: var(--field-hover);
+}
+
+.editor-subsection-content {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -431,10 +558,11 @@ textarea:focus-visible {
 
 .inline-quote-editor {
   display: grid;
-  gap: 10px;
-  margin-top: 4px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, #7856ff 42%, var(--line));
+  border-radius: 14px;
+  background: color-mix(in srgb, #7856ff 8%, var(--panel-strong));
 }
 
 .inline-quote-editor.hidden {
@@ -448,33 +576,26 @@ textarea:focus-visible {
   gap: 12px;
 }
 
-.inline-editor-heading h3,
-.inline-editor-heading p {
-  margin: 0;
-}
-
-.inline-editor-heading h3 {
-  font-size: 14px;
-}
-
-.inline-editor-heading p {
-  margin-top: 3px;
-  color: var(--ink-soft);
-  font-size: 11px;
-  line-height: 1.4;
-}
-
 .inline-editor-heading .check-option {
   flex: 0 0 auto;
 }
 
 .inline-quote-fields {
   display: grid;
-  gap: 8px;
-  padding: 10px;
+  gap: 10px;
+}
+
+.compact-toggle,
+.setting-toggle {
+  min-height: 36px;
+  padding: 7px 9px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--panel-strong);
+  border-radius: 10px;
+  background: var(--field);
+}
+
+.setting-toggle {
+  justify-self: start;
 }
 
 .reply-editor-title {

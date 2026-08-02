@@ -403,6 +403,13 @@ export function createRenderer(elements, state, options = {}) {
     const hasReplyThread = Boolean(
       Array.isArray(state.replyParents) && state.replyParents.length,
     );
+    const hasQuoteEditorContent = Boolean(
+      String(state.quoteAuthorName || "").trim() ||
+      String(state.quoteAuthorHandle || "").trim() ||
+      String(state.quoteText || "").trim() ||
+      String(state.quoteAuthorProfileImageSrc || "").trim() ||
+      normalizeMediaItems(state.quoteDataUrls).length,
+    );
     if (
       elements.editorStack &&
       elements.mainEditorSection &&
@@ -423,12 +430,12 @@ export function createRenderer(elements, state, options = {}) {
     if (elements.mainEditorTitle) {
       elements.mainEditorTitle.textContent = hasReplyThread
         ? `${state.replyParents.length + 1}. 마지막 답글`
-        : "기본 정보";
+        : "현재 글";
     }
     if (elements.mainEditorSummary) {
-      elements.mainEditorSummary.textContent = hasReplyThread
-        ? "대화의 마지막 글 · 본문 · 반응 수"
-        : "작성자 · 본문 · 반응 수";
+      elements.mainEditorSummary.textContent = hasQuoteEditorContent
+        ? "본문 · 번역 · 리트윗 원문"
+        : "본문 · 번역";
     }
 
     elements.authorName.value = toDisplayText(state.authorName);
@@ -469,13 +476,6 @@ export function createRenderer(elements, state, options = {}) {
     elements.captureTextShadow.checked = state.captureTextShadow === true;
     elements.exportFormat.value = normalizeExportFormat(state.exportFormat);
     elements.exportScale.value = normalizeExportScale(state.exportScale);
-    const hasQuoteEditorContent = Boolean(
-      String(state.quoteAuthorName || "").trim() ||
-      String(state.quoteAuthorHandle || "").trim() ||
-      String(state.quoteText || "").trim() ||
-      String(state.quoteAuthorProfileImageSrc || "").trim() ||
-      normalizeMediaItems(state.quoteDataUrls).length,
-    );
     elements.quoteEditorSection.classList.toggle(
       "hidden",
       !hasQuoteEditorContent,
