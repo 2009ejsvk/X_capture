@@ -418,12 +418,6 @@ export function createRenderer(elements, state, options = {}) {
           elements.mainEditorSection,
           elements.mediaEditorSection,
         );
-        if (elements.quoteEditorSection) {
-          elements.editorStack.insertBefore(
-            elements.replyEditorSection,
-            elements.quoteEditorSection,
-          );
-        }
       }
     }
     if (elements.mainEditorTitle) {
@@ -482,15 +476,15 @@ export function createRenderer(elements, state, options = {}) {
       String(state.quoteAuthorProfileImageSrc || "").trim() ||
       normalizeMediaItems(state.quoteDataUrls).length,
     );
-    elements.quoteEditor.classList.toggle("hidden", !hasQuoteEditorContent);
+    elements.quoteEditorSection.classList.toggle(
+      "hidden",
+      !hasQuoteEditorContent,
+    );
     if (normalizeMediaItems(state.imageDataUrls).length) {
       elements.mediaEditorSection.open = true;
     }
     if (Array.isArray(state.replyParents) && state.replyParents.length) {
       elements.replyEditorSection.open = true;
-    }
-    if (hasQuoteEditorContent) {
-      elements.quoteEditorSection.open = true;
     }
     renderReplyEditors();
     renderMediaSelectors();
