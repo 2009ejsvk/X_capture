@@ -1,11 +1,6 @@
-function extractPostId(sourceUrl) {
-  const value = String(sourceUrl || "");
-  const tweetMatch = value.match(/\/status\/(\d{5,})/i);
-  if (tweetMatch) {
-    return tweetMatch[1];
-  }
-  const threadsMatch = value.match(/\/post\/([A-Za-z0-9_-]+)/i);
-  return threadsMatch ? threadsMatch[1] : "";
+function extractTweetId(sourceUrl) {
+  const matched = String(sourceUrl || "").match(/\/status\/(\d{5,})/i);
+  return matched ? matched[1] : "";
 }
 
 function safeFilenamePart(value, fallback = "") {
@@ -46,7 +41,7 @@ export function createCaptureFilename(
 ) {
   const authorPart = safeFilenamePart(authorHandle || authorName, "x-capture");
   const datePart = safeFilenamePart(datePartFromLabel(tweetDate, timestamp));
-  const tweetId = safeFilenamePart(extractPostId(sourceUrl));
+  const tweetId = safeFilenamePart(extractTweetId(sourceUrl));
   const extensionPart = safeFilenamePart(extension, "png").toLowerCase();
   const parts = [authorPart, datePart, tweetId].filter(Boolean);
 
