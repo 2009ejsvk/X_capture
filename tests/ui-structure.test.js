@@ -54,3 +54,18 @@ test("reply editors always expose image add and remove controls", () => {
   assert.match(renderer, /reply-image-input-/);
   assert.match(renderer, /전체 삭제/);
 });
+
+test("translations use the same text scale as their corresponding body", () => {
+  assert.match(
+    css,
+    /\.tweet-translation-text\s*{[^}]*font-size:\s*var\(--capture-text-size\)/s,
+  );
+  assert.match(
+    css,
+    /\.tweet-translation-text\s*{[^}]*line-height:\s*var\(--capture-text-line\)/s,
+  );
+  assert.match(
+    css,
+    /\.reply-item-translation-text\s*{[^}]*font-size:\s*var\(--capture-quote-size\)/s,
+  );
+});
