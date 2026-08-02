@@ -2,10 +2,21 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  isGameCaptureFontFamily,
+  normalizeCaptureFontFamily,
   normalizeCaptureSettings,
   resolveCaptureScale,
   resolveExportFormat,
 } from "../src/domain/capture-settings.js";
+
+test("readable game fonts apply to the full body", () => {
+  ["galmuri", "neo-dgm", "suit-heavy", "wanted-heavy"].forEach((family) => {
+    assert.equal(normalizeCaptureFontFamily(family), family);
+    assert.equal(isGameCaptureFontFamily(family), false);
+  });
+
+  assert.equal(isGameCaptureFontFamily("dnf-bitbit"), true);
+});
 
 test("normalizeCaptureSettings keeps supported values", () => {
   assert.deepEqual(

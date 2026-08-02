@@ -1,10 +1,10 @@
 import { captureElementAsImage } from "./src/capture.js?v=font-effects-20260802";
-import { getElements } from "./src/app/elements.js?v=font-legibility-20260802";
+import { getElements } from "./src/app/elements.js?v=body-game-fonts-20260802";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media-links-20260802";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=font-legibility-20260802";
-import { createInitialState } from "./src/domain/tweet-model.js?v=font-legibility-20260802";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=body-game-fonts-20260802";
+import { createInitialState } from "./src/domain/tweet-model.js?v=body-game-fonts-20260802";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=font-legibility-20260802";
+import { createRenderer } from "./src/render.js?v=body-game-fonts-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";

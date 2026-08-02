@@ -257,7 +257,15 @@ textarea:focus-visible {
   background: var(--field);
   color: var(--ink);
   font-size: 17px;
+  font-weight: var(--capture-body-weight, 400);
   line-height: 1.35;
+}
+
+.settings-hint {
+  margin: -2px 0 4px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 .text-effect-row {
@@ -579,6 +587,7 @@ textarea:focus-visible {
   --capture-translation-bg: var(--card-raised);
   --capture-translation-border: var(--line);
   --capture-translation-color: var(--ink);
+  --capture-body-weight: 400;
   --capture-outline-width: 0px;
   --capture-outline-color: #000000;
   max-width: 598px;
@@ -622,6 +631,30 @@ textarea:focus-visible {
 .capture-area[data-font-family="noto-serif"],
 .font-sample[data-font-family="noto-serif"] {
   font-family: "Noto Serif KR", serif;
+}
+
+.capture-area[data-font-family="galmuri"],
+.font-sample[data-font-family="galmuri"] {
+  --capture-text-line: 1.5;
+  font-family: "Galmuri11", "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.capture-area[data-font-family="neo-dgm"],
+.font-sample[data-font-family="neo-dgm"] {
+  --capture-text-line: 1.5;
+  font-family: "NeoDunggeunmo", "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.capture-area[data-font-family="suit-heavy"],
+.font-sample[data-font-family="suit-heavy"] {
+  --capture-body-weight: 800;
+  font-family: "SUIT Variable", "Pretendard", "Noto Sans KR", sans-serif;
+}
+
+.capture-area[data-font-family="wanted-heavy"],
+.font-sample[data-font-family="wanted-heavy"] {
+  --capture-body-weight: 800;
+  font-family: "Wanted Sans Variable", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
 .capture-area[data-font-family="dnf-bitbit"][data-font-scope="all"],
@@ -798,6 +831,7 @@ textarea:focus-visible {
 .tweet-text {
   margin: 10px 0 12px;
   font-size: var(--capture-text-size);
+  font-weight: var(--capture-body-weight);
   line-height: var(--capture-text-line);
   white-space: pre-wrap;
   word-break: break-word;
@@ -826,6 +860,7 @@ textarea:focus-visible {
 .tweet-translation-text {
   margin: 0;
   font-size: var(--capture-secondary-size);
+  font-weight: var(--capture-body-weight);
   line-height: 1.45;
   color: var(--capture-translation-color);
   white-space: pre-wrap;
@@ -951,6 +986,7 @@ textarea:focus-visible {
 .reply-item-text {
   margin: 6px 0 0;
   font-size: var(--capture-quote-size);
+  font-weight: var(--capture-body-weight);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -974,6 +1010,7 @@ textarea:focus-visible {
 .reply-item-translation-text {
   margin: 0;
   font-size: var(--capture-secondary-size);
+  font-weight: var(--capture-body-weight);
   line-height: 1.45;
   color: var(--capture-translation-color);
   white-space: pre-wrap;
@@ -1022,6 +1059,7 @@ textarea:focus-visible {
 .quote-text {
   margin: 6px 0 0;
   font-size: var(--capture-quote-size);
+  font-weight: var(--capture-body-weight);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -1208,6 +1246,10 @@ textarea:focus-visible {
 
   .settings-grid label {
     margin: 0;
+  }
+
+  .settings-grid :is(.font-sample, .settings-hint) {
+    grid-column: 1 / -1;
   }
 
   .actions {

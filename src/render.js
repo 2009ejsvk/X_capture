@@ -14,7 +14,7 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=font-legibility-20260802";
+} from "./domain/capture-settings.js?v=body-game-fonts-20260802";
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
 import {
   formatQuoteText,
