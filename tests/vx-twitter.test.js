@@ -70,7 +70,7 @@ test("fetchTweetFromVx keeps media-only reply images without leaking t.co text",
 
   const result = await fetchTweetFromVx(mainTweetId, { timeoutMs: 0 });
 
-  assert.equal(result.tweetText, "answer");
+  assert.equal(result.tweetText, "answer https://t.co/main");
   assert.equal(result.quote.text, "quoted");
   assert.equal(result.replyParents.length, 1);
   assert.equal(result.replyParents[0].text, "");
@@ -147,6 +147,57 @@ test("fetchTweetFromVx prefers the richer endpoint payload", async (t) => {
 
   assert.equal(result.authorHandle, "@rich");
   assert.equal(result.tweetText, "rich body");
+  assert.deepEqual(result.imageUrls, [photoUrl]);
+});
+
+test("fetchTweetFromVx keeps the longest text and expands known links", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "5555555555";
+  const photoUrl = "https://pbs.twimg.com/media/LONG.jpg";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    const url = String(resource);
+    if (url.includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "Full Text",
+          user_screen_name: "full_text",
+          full_text: "long complete body https://t.co/article",
+          entities: {
+            urls: [
+              {
+                url: "https://t.co/article",
+                expanded_url: "https://example.com/full-article",
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    return jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "Media Rich",
+        user_screen_name: "media_rich",
+        text: "short",
+        mediaURLs: [photoUrl],
+        media_extended: [{ type: "image", url: photoUrl }],
+      },
+    });
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(
+    result.tweetText,
+    "long complete body https://example.com/full-article",
+  );
   assert.deepEqual(result.imageUrls, [photoUrl]);
 });
 

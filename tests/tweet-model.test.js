@@ -4,7 +4,9 @@ import test from "node:test";
 import {
   createInitialState,
   createReplyParentState,
+  formatQuoteText,
   hasRenderableReply,
+  normalizeQuoteTextMode,
 } from "../src/domain/tweet-model.js";
 
 test("createInitialState exposes the expected defaults", () => {
@@ -13,6 +15,7 @@ test("createInitialState exposes the expected defaults", () => {
   assert.equal(state.authorName, "X User");
   assert.equal(state.authorHandle, "@x");
   assert.equal(state.showReply, true);
+  assert.equal(state.quoteTextMode, "full");
   assert.equal(state.stylePreset, "classic");
   assert.equal(state.exportFormat, "png");
   assert.equal(state.exportScale, "auto");
@@ -51,4 +54,15 @@ test("hasRenderableReply detects empty and non-empty replies", () => {
     hasRenderableReply(createReplyParentState({ text: "hi" })),
     true,
   );
+  assert.equal(
+    hasRenderableReply(createReplyParentState({ authorHandle: "target" })),
+    false,
+  );
+});
+
+test("formatQuoteText supports full and preview modes", () => {
+  assert.equal(normalizeQuoteTextMode("unknown"), "full");
+  assert.equal(formatQuoteText("full text", "full", 4), "full text");
+  assert.equal(formatQuoteText("123456", "preview", 4), "1234…");
+  assert.equal(formatQuoteText("1234", "preview", 4), "1234");
 });

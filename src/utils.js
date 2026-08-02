@@ -187,17 +187,24 @@ export function formatDateLabel(rawDate) {
   return formatNumericDateTime(parsed);
 }
 
-function stripAllLinks(rawText) {
-  return String(rawText || "")
-    .replace(/https?:\/\/[^\s]+/gi, "")
-    .replace(/\bpic\.twitter\.com\/[^\s]+/gi, "")
+function stripMediaLinks(rawText, stripShortLinks) {
+  let text = String(rawText || "").replace(
+    /(?:https?:\/\/)?pic\.twitter\.com\/[^\s]+/gi,
+    "",
+  );
+
+  if (stripShortLinks) {
+    text = text.replace(/https?:\/\/t\.co\/[^\s]+/gi, "");
+  }
+
+  return text
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
 
-export function sanitizeFetchedTweetText(rawText) {
+export function sanitizeFetchedTweetText(rawText, options = {}) {
   const normalized = String(rawText || "")
     .replace(/\r\n/g, "\n")
     .trim();
@@ -205,15 +212,13 @@ export function sanitizeFetchedTweetText(rawText) {
     return "";
   }
 
-  const withoutLinks = stripAllLinks(normalized);
-  if (!withoutLinks) {
+  const withoutMediaLinks = stripMediaLinks(
+    normalized,
+    Boolean(options.stripShortLinks),
+  );
+  if (!withoutMediaLinks) {
     return "";
   }
 
-  // If only a single URL remains, consider it empty
-  if (/^https?:\/\/\S+$/i.test(withoutLinks)) {
-    return "";
-  }
-
-  return withoutLinks;
+  return withoutMediaLinks;
 }

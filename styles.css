@@ -6,22 +6,22 @@
   --panel-strong: #181d22;
   --field: #0f1317;
   --field-hover: #141a1f;
-  --ink: #f4f8f8;
-  --ink-soft: #a8b4b9;
-  --ink-faint: #6f7c83;
-  --line: #2d363c;
-  --line-soft: #20282e;
-  --card: #101418;
-  --card-raised: #161b20;
-  --media-bg: #080b0d;
-  --accent: #39dcc3;
-  --accent-strong: #8be9fd;
-  --accent-ink: #04110f;
-  --accent-soft: rgba(57, 220, 195, 0.16);
+  --ink: #e7e9ea;
+  --ink-soft: #71767b;
+  --ink-faint: #536471;
+  --line: #2f3336;
+  --line-soft: #202327;
+  --card: #000000;
+  --card-raised: #000000;
+  --media-bg: #16181c;
+  --accent: #1d9bf0;
+  --accent-strong: #8ecdf8;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(29, 155, 240, 0.16);
   --danger: #ff8a8a;
   --success: #72e6a8;
   --shadow: 0 18px 44px rgba(0, 0, 0, 0.34);
-  --profile-avatar-size: 28px;
+  --profile-avatar-size: 40px;
   --radius-xl: 22px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -36,14 +36,14 @@ body {
   font-family: "Noto Sans KR", sans-serif;
   color: var(--ink);
   background:
-    linear-gradient(180deg, rgba(57, 220, 195, 0.1), transparent 280px),
-    linear-gradient(135deg, rgba(255, 183, 77, 0.04), transparent 520px),
+    linear-gradient(180deg, rgba(29, 155, 240, 0.09), transparent 280px),
+    linear-gradient(135deg, rgba(120, 86, 255, 0.04), transparent 520px),
     linear-gradient(160deg, var(--bg), var(--bg-bottom));
   min-height: 100vh;
 }
 
 .app-shell {
-  max-width: 550px;
+  max-width: 650px;
   margin: 0 auto;
   padding: 20px 16px 34px;
 }
@@ -311,20 +311,23 @@ textarea:focus-visible {
 }
 
 .capture-area {
-  --capture-card-bg: var(--card);
-  --capture-card-raised-bg: var(--card-raised);
-  --capture-card-border: var(--line);
-  --capture-card-radius: 18px;
-  --capture-card-padding: 14px 14px 12px;
-  --capture-text-size: 17px;
-  --capture-text-line: 1.5;
-  --capture-media-gap: 8px;
+  --profile-avatar-size: 40px;
+  --capture-card-bg: #000000;
+  --capture-card-raised-bg: #000000;
+  --capture-card-border: #2f3336;
+  --capture-card-radius: 0;
+  --capture-card-padding: 12px 16px;
+  --capture-text-size: 15px;
+  --capture-text-line: 1.34;
+  --capture-media-gap: 2px;
   --capture-translation-bg: var(--card-raised);
   --capture-translation-border: var(--line);
   --capture-translation-color: var(--ink);
+  max-width: 598px;
+  margin: 0 auto;
   border-radius: 0;
   padding: 0;
-  background: transparent;
+  background: #000000;
 }
 
 .capture-area[data-style-preset="translation"] {
@@ -359,13 +362,16 @@ textarea:focus-visible {
   border: 1px solid var(--capture-card-border);
   border-radius: var(--capture-card-radius);
   padding: var(--capture-card-padding);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
 }
 
 .tweet-head {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .avatar {
@@ -376,10 +382,11 @@ textarea:focus-visible {
   overflow: hidden;
   display: grid;
   place-items: center;
+  flex: 0 0 auto;
   color: var(--accent-ink);
   font-size: 14px;
   font-family: "Space Grotesk", sans-serif;
-  background: linear-gradient(135deg, #1f8d82, #101418);
+  background: linear-gradient(135deg, #1d9bf0, #7856ff);
 }
 
 .avatar-image {
@@ -392,6 +399,10 @@ textarea:focus-visible {
 
 .author-meta {
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex: 1 1 auto;
 }
 
 .name,
@@ -404,28 +415,36 @@ textarea:focus-visible {
 
 .name {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
+  color: #e7e9ea;
 }
 
 .handle {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--ink-soft);
 }
 
 .platform-mark {
   margin-left: auto;
-  font-family: "Space Grotesk", sans-serif;
-  font-size: 20px;
-  color: var(--ink);
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  color: var(--ink-soft);
   line-height: 1;
 }
 
 .tweet-text {
-  margin: 10px 0 10px;
+  margin: 10px 0 12px;
   font-size: var(--capture-text-size);
   line-height: var(--capture-text-line);
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.tweet-link {
+  color: #1d9bf0;
+  overflow-wrap: anywhere;
 }
 
 .tweet-translation {
@@ -455,7 +474,10 @@ textarea:focus-visible {
 .tweet-media {
   display: grid;
   gap: var(--capture-media-gap);
-  margin: 4px 0 10px;
+  margin: 2px 0 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
 }
 
 .tweet-media[data-count="1"] {
@@ -478,8 +500,8 @@ textarea:focus-visible {
 .tweet-image {
   width: 100%;
   display: block;
-  border-radius: 13px;
-  border: 1px solid var(--line-soft);
+  border-radius: 0;
+  border: 0;
   background: var(--media-bg);
 }
 
@@ -504,17 +526,21 @@ textarea:focus-visible {
 }
 
 .quote-card {
-  margin: 4px 0 10px;
+  margin: 2px 0 12px;
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 16px;
+  padding: 12px;
   background: var(--capture-card-raised-bg);
 }
 
 .capture-reply-list {
   display: grid;
-  gap: 8px;
-  margin: 0 0 10px;
+  gap: 0;
+  margin: 0;
+}
+
+.capture-reply-list .tweet-card {
+  border-bottom: 0;
 }
 
 .reply-item {
@@ -605,8 +631,8 @@ textarea:focus-visible {
 }
 
 .quote-avatar {
-  width: var(--profile-avatar-size);
-  height: var(--profile-avatar-size);
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
   border: 1px solid var(--line);
   object-fit: cover;
@@ -622,7 +648,7 @@ textarea:focus-visible {
 
 .quote-name,
 .quote-handle {
-  font-size: 12px;
+  font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -638,7 +664,7 @@ textarea:focus-visible {
 
 .quote-text {
   margin: 6px 0 0;
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -692,23 +718,24 @@ textarea:focus-visible {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: center;
   gap: 8px;
-  margin: 10px 0 6px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line-soft);
+  margin: 0;
+  padding: 10px 0 0;
+  order: 2;
 }
 
 .tweet-action-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  gap: 8px;
   min-width: 0;
   color: var(--ink-soft);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .tweet-action-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   fill: currentColor;
   flex: 0 0 auto;
 }
@@ -721,9 +748,12 @@ textarea:focus-visible {
 
 .tweet-foot {
   display: grid;
-  gap: 3px;
-  font-size: 12px;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
   color: var(--ink-soft);
+  order: 1;
 }
 
 .tweet-foot-meta {
@@ -733,7 +763,8 @@ textarea:focus-visible {
 
 .tweet-original-url {
   word-break: break-all;
-  color: var(--ink-soft);
+  color: #1d9bf0;
+  font-size: 12px;
 }
 
 .actions {
@@ -856,6 +887,6 @@ body.is-preview-expanded .preview-panel .panel-heading {
 }
 
 body.is-preview-expanded .capture-area {
-  max-width: 560px;
+  max-width: 598px;
   margin: 0 auto;
 }

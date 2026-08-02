@@ -51,6 +51,8 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
     state.showQuoteMedia = Boolean(elements.showQuoteMediaToggle.checked);
+    state.quoteTextMode =
+      elements.quoteTextMode.value === "preview" ? "preview" : "full";
     state.quoteMediaLayout =
       elements.quoteMediaLayout.value === "vertical" ? "vertical" : "grid";
     state.quoteAuthorName = elements.quoteAuthorName.value;
@@ -254,6 +256,7 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteMediaToggle.addEventListener("change", syncFromEditors);
+    elements.quoteTextMode.addEventListener("change", syncFromEditors);
     elements.quoteMediaLayout.addEventListener("change", syncFromEditors);
     elements.quoteAuthorName.addEventListener("input", syncFromEditors);
     elements.quoteAuthorHandle.addEventListener("input", syncFromEditors);

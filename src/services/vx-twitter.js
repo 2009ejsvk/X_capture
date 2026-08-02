@@ -128,8 +128,55 @@ function pickVxArticleTitle(payload) {
   ]);
 }
 
+function expandKnownUrls(text, payload) {
+  const entityGroups = [
+    payload && payload.entities && payload.entities.urls,
+    payload &&
+      payload.raw_text &&
+      payload.raw_text.entities &&
+      payload.raw_text.entities.urls,
+    payload &&
+      payload.rawText &&
+      payload.rawText.entities &&
+      payload.rawText.entities.urls,
+    payload &&
+      payload.note_tweet &&
+      payload.note_tweet.entity_set &&
+      payload.note_tweet.entity_set.urls,
+    payload &&
+      payload.noteTweet &&
+      payload.noteTweet.entitySet &&
+      payload.noteTweet.entitySet.urls,
+  ];
+
+  let expandedText = String(text || "");
+  entityGroups
+    .filter(Array.isArray)
+    .flat()
+    .forEach((entity) => {
+      if (!entity || typeof entity !== "object") {
+        return;
+      }
+
+      const shortUrl = pickFirstNonEmpty([entity.url, entity.short_url]);
+      const expandedUrl = pickFirstNonEmpty([
+        entity.expanded_url,
+        entity.expandedUrl,
+        entity.unwound_url,
+        entity.unwoundUrl,
+        entity.display_url,
+        entity.displayUrl,
+      ]);
+      if (shortUrl && expandedUrl) {
+        expandedText = expandedText.split(shortUrl).join(expandedUrl);
+      }
+    });
+
+  return expandedText;
+}
+
 function pickVxText(payload) {
-  const text = pickFirstNonEmpty([
+  const textCandidates = [
     payload && payload.full_text,
     payload && payload.text,
     payload && payload.tweet_text,
@@ -138,7 +185,12 @@ function pickVxText(payload) {
     payload && payload.rawText && payload.rawText.text,
     payload && payload.note_tweet && payload.note_tweet.text,
     payload && payload.noteTweet && payload.noteTweet.text,
-  ]).replace(/\r\n/g, "\n");
+  ]
+    .filter((value) => typeof value === "string" && value.trim())
+    .map((value) => expandKnownUrls(value, payload).replace(/\r\n/g, "\n"));
+  const text = textCandidates.sort(
+    (left, right) => Array.from(right).length - Array.from(left).length,
+  )[0];
 
   const articleTitle = pickVxArticleTitle(payload);
   if (!text) {
@@ -407,6 +459,26 @@ function backfillEngagementCounts(best, others) {
   }
 
   const merged = { ...best };
+
+  const richestText = [best, ...others]
+    .map((candidate) => pickVxText(candidate))
+    .filter(Boolean)
+    .sort(
+      (left, right) => Array.from(right).length - Array.from(left).length,
+    )[0];
+  if (richestText && richestText !== pickVxText(merged)) {
+    merged.full_text = richestText;
+  }
+
+  if (!pickVxQuotePayload(merged)) {
+    const quoteDonor = others.find((candidate) =>
+      pickVxQuotePayload(candidate),
+    );
+    if (quoteDonor) {
+      merged.quote = pickVxQuotePayload(quoteDonor);
+    }
+  }
+
   for (const key of BACKFILL_COUNT_KEYS) {
     if (merged[key] != null) {
       continue;
@@ -493,73 +565,19 @@ async function resolveReplyParentPayloads(
   return [];
 }
 
-function resolveReplyContextMeta(contentPayload, fallbackPayload) {
-  const directHandle =
-    pickReplyContextHandle(contentPayload) ||
-    pickReplyContextHandle(fallbackPayload);
-  if (directHandle) {
-    return {
-      text: "",
-      translationText: "",
-      authorName: "",
-      authorHandle: directHandle,
-      authorProfileImageUrl: "",
-      sourceUrl: "",
-      imageUrls: [],
-      tweetDate: "",
-      replyCount: "0",
-      retweetCount: "0",
-      likeCount: "0",
-      bookmarkCount: "0",
-    };
-  }
-
-  const references = [
-    pickReplyParentReference(contentPayload),
-    pickReplyParentReference(fallbackPayload),
-  ].filter(Boolean);
-
-  for (const reference of references) {
-    if (!reference.payload) {
-      continue;
-    }
-
-    const authorHandle =
-      pickReplyContextHandle(reference.payload) ||
-      pickVxHandle(reference.payload, "");
-    const authorName = pickVxName(reference.payload, "");
-    if (authorHandle || authorName) {
-      return {
-        text: "",
-        translationText: "",
-        authorName,
-        authorHandle: normalizeHandle(authorHandle, ""),
-        authorProfileImageUrl: "",
-        sourceUrl: "",
-        imageUrls: [],
-        tweetDate: "",
-        replyCount: "0",
-        retweetCount: "0",
-        likeCount: "0",
-        bookmarkCount: "0",
-      };
-    }
-  }
-
-  return null;
-}
-
 function normalizeQuoteMeta(payload) {
   if (!payload || typeof payload !== "object") {
     return null;
   }
 
-  const text = sanitizeFetchedTweetText(pickVxText(payload));
+  const imageUrls = pickVxImages(payload);
+  const text = sanitizeFetchedTweetText(pickVxText(payload), {
+    stripShortLinks: imageUrls.length > 0,
+  });
   const authorName = pickVxName(payload, "");
   const authorHandle = pickVxHandle(payload, "");
   const authorProfileImageUrl = pickVxProfileImage(payload);
   const sourceUrl = pickVxTweetUrl(payload);
-  const imageUrls = pickVxImages(payload);
   const metrics = extractTweetMetrics(payload);
 
   if (
@@ -746,8 +764,6 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
     5,
     options,
   );
-  const replyContextMeta = resolveReplyContextMeta(contentPayload, payload);
-
   const retweeterName = pickVxName(payload, "X User");
   const retweeterHandle = pickVxHandle(payload, "@x");
   const retweeterProfileImageUrl = pickVxProfileImage(payload);
@@ -759,10 +775,12 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
   if (retweetTextMatch) {
     tweetText = retweetTextMatch[2] || tweetText;
   }
-  tweetText = sanitizeFetchedTweetText(tweetText);
-
   const imageUrlsFromContent = pickVxImages(contentPayload);
   const imageUrlsFromPayload = pickVxImages(payload);
+  tweetText = sanitizeFetchedTweetText(tweetText, {
+    stripShortLinks:
+      imageUrlsFromContent.length > 0 || imageUrlsFromPayload.length > 0,
+  });
   const replyCountRaw =
     pickVxCount(contentPayload, ["replies", "reply_count", "replyCount"]) ||
     pickVxCount(payload, ["replies", "reply_count", "replyCount"]);
@@ -819,10 +837,6 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
       seenReplyKeys.add(key);
       replyParents.push(meta);
     });
-
-  if (!replyParents.length && replyContextMeta) {
-    replyParents.push(replyContextMeta);
-  }
 
   return {
     sourceUrl,

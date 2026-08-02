@@ -25,12 +25,21 @@ test("normalizeUrl rejects unsupported hosts", () => {
   );
 });
 
-test("sanitizeFetchedTweetText strips URL-only noise", () => {
+test("sanitizeFetchedTweetText preserves links and strips media noise", () => {
   assert.equal(
     sanitizeFetchedTweetText("hello https://t.co/abc\npic.twitter.com/xyz"),
+    "hello https://t.co/abc",
+  );
+  assert.equal(
+    sanitizeFetchedTweetText("hello https://t.co/abc\npic.twitter.com/xyz", {
+      stripShortLinks: true,
+    }),
     "hello",
   );
-  assert.equal(sanitizeFetchedTweetText("https://x.com/example/status/1"), "");
+  assert.equal(
+    sanitizeFetchedTweetText("https://x.com/example/status/1"),
+    "https://x.com/example/status/1",
+  );
 });
 
 test("formatCountLabel compacts large numbers", () => {
