@@ -429,6 +429,54 @@ textarea:focus-visible {
   gap: 8px;
 }
 
+.inline-quote-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.inline-quote-editor.hidden {
+  display: none;
+}
+
+.inline-editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.inline-editor-heading h3,
+.inline-editor-heading p {
+  margin: 0;
+}
+
+.inline-editor-heading h3 {
+  font-size: 14px;
+}
+
+.inline-editor-heading p {
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.inline-editor-heading .check-option {
+  flex: 0 0 auto;
+}
+
+.inline-quote-fields {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-strong);
+}
+
 .reply-editor-title {
   margin: 0;
   font-size: 12px;

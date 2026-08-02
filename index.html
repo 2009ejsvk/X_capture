@@ -31,10 +31,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link
-      rel="stylesheet"
-      href="./styles.css?v=translation-body-size-20260802"
-    />
+    <link rel="stylesheet" href="./styles.css?v=inline-quote-editor-20260802" />
   </head>
   <body>
     <main class="app-shell">
@@ -175,6 +172,79 @@
                   />
                 </div>
               </div>
+
+              <section
+                id="quoteEditorSection"
+                class="inline-quote-editor field-span-full hidden"
+                aria-labelledby="quoteEditorHeading"
+              >
+                <div class="inline-editor-heading">
+                  <div>
+                    <h3 id="quoteEditorHeading">리트윗 원문</h3>
+                    <p>본문과 이어서 원문 내용과 이미지를 수정하세요.</p>
+                  </div>
+                  <label class="check-option" for="showQuoteToggle">
+                    <input id="showQuoteToggle" type="checkbox" checked />
+                    원문 표시
+                  </label>
+                </div>
+                <div class="option-row option-row-inline">
+                  <label class="check-option" for="showQuoteMediaToggle">
+                    <input id="showQuoteMediaToggle" type="checkbox" checked />
+                    이미지 표시
+                  </label>
+                  <div class="field-group">
+                    <label for="quoteTextMode">원문 길이</label>
+                    <select id="quoteTextMode">
+                      <option value="full" selected>전체 내용</option>
+                      <option value="preview">일부만 표시 (160자)</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="quoteEditor" class="inline-quote-fields">
+                  <div class="reply-editor-fields">
+                    <label class="reply-editor-label" for="quoteMediaLayout"
+                      >이미지 배치</label
+                    >
+                    <select id="quoteMediaLayout">
+                      <option value="vertical" selected>세로</option>
+                      <option value="grid">나란히</option>
+                    </select>
+                  </div>
+                  <div class="reply-editor-fields">
+                    <label class="reply-editor-label" for="quoteAuthorName"
+                      >작성자명</label
+                    >
+                    <input id="quoteAuthorName" type="text" maxlength="40" />
+                  </div>
+                  <div class="reply-editor-fields">
+                    <label class="reply-editor-label" for="quoteAuthorHandle"
+                      >핸들</label
+                    >
+                    <input
+                      id="quoteAuthorHandle"
+                      type="text"
+                      maxlength="40"
+                      placeholder="@handle"
+                    />
+                  </div>
+                  <div class="reply-editor-fields">
+                    <label class="reply-editor-label" for="quoteText"
+                      >본문</label
+                    >
+                    <textarea
+                      id="quoteText"
+                      class="reply-editor-textarea"
+                      rows="3"
+                    ></textarea>
+                  </div>
+                  <div
+                    id="quoteImageSelector"
+                    class="media-selector-list hidden"
+                    aria-label="리트윗 원문 이미지 선택"
+                  ></div>
+                </div>
+              </section>
             </div>
           </details>
 
@@ -238,77 +308,6 @@
                 class="reply-editor-list hidden"
                 aria-label="이전 글 편집 목록"
               ></div>
-            </div>
-          </details>
-
-          <details id="quoteEditorSection" class="editor-section">
-            <summary>
-              <span>리트윗 원문</span>
-              <small>전체/일부 · 내용 · 이미지</small>
-            </summary>
-            <div class="editor-section-content">
-              <div class="option-row option-row-inline">
-                <label class="check-option" for="showQuoteToggle">
-                  <input id="showQuoteToggle" type="checkbox" checked />
-                  원문 표시
-                </label>
-                <label class="check-option" for="showQuoteMediaToggle">
-                  <input id="showQuoteMediaToggle" type="checkbox" checked />
-                  이미지 표시
-                </label>
-              </div>
-              <div class="field-group">
-                <label for="quoteTextMode">원문 길이</label>
-                <select id="quoteTextMode">
-                  <option value="full" selected>전체 내용</option>
-                  <option value="preview">일부만 표시 (160자)</option>
-                </select>
-              </div>
-              <section
-                id="quoteEditor"
-                class="reply-editor-item hidden"
-                aria-label="리트윗 원문 편집"
-              >
-                <div class="reply-editor-fields">
-                  <label class="reply-editor-label" for="quoteMediaLayout"
-                    >이미지 배치</label
-                  >
-                  <select id="quoteMediaLayout">
-                    <option value="vertical" selected>세로</option>
-                    <option value="grid">나란히</option>
-                  </select>
-                </div>
-                <div class="reply-editor-fields">
-                  <label class="reply-editor-label" for="quoteAuthorName"
-                    >작성자명</label
-                  >
-                  <input id="quoteAuthorName" type="text" maxlength="40" />
-                </div>
-                <div class="reply-editor-fields">
-                  <label class="reply-editor-label" for="quoteAuthorHandle"
-                    >핸들</label
-                  >
-                  <input
-                    id="quoteAuthorHandle"
-                    type="text"
-                    maxlength="40"
-                    placeholder="@handle"
-                  />
-                </div>
-                <div class="reply-editor-fields">
-                  <label class="reply-editor-label" for="quoteText">본문</label>
-                  <textarea
-                    id="quoteText"
-                    class="reply-editor-textarea"
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div
-                  id="quoteImageSelector"
-                  class="media-selector-list hidden"
-                  aria-label="리트윗 원문 이미지 선택"
-                ></div>
-              </section>
             </div>
           </details>
         </div>
@@ -590,7 +589,7 @@
     <script src="./vendor/html2canvas.min.js"></script>
     <script
       type="module"
-      src="./app.js?v=default-suit-xlarge-20260802"
+      src="./app.js?v=inline-quote-editor-20260802"
     ></script>
   </body>
 </html>

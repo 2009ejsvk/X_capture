@@ -55,6 +55,16 @@ test("reply editors always expose image add and remove controls", () => {
   assert.match(renderer, /전체 삭제/);
 });
 
+test("retweet source editor is embedded in the main content editor", () => {
+  const mainEditor = html.match(
+    /<details id="mainEditorSection"[\s\S]*?<\/details>/,
+  )?.[0];
+  assert.ok(mainEditor);
+  assert.match(mainEditor, /id="quoteEditorSection"/);
+  assert.doesNotMatch(html, /<details id="quoteEditorSection"/);
+  assert.match(css, /\.inline-quote-editor/);
+});
+
 test("translations use the same text scale as their corresponding body", () => {
   assert.match(
     css,
