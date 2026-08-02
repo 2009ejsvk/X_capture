@@ -148,6 +148,7 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
         ...loaded.filter(Boolean),
       ]);
       state.imageDataUrls = nextImages;
+      elements.mediaEditorSection.open = true;
       elements.imageInput.value = "";
       applyStateToInputs();
       renderPreview();
@@ -172,21 +173,26 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
   }
 
   async function onCapture() {
-    await captureElementAsImage({
-      captureArea: elements.captureArea,
-      captureButton: elements.captureBtn,
-      downloadFallbackLink: elements.downloadFallbackLink,
-      exportFormat: state.exportFormat,
-      exportScale: state.exportScale,
-      filenameOptions: {
-        authorHandle: state.authorHandle,
-        authorName: state.authorName,
-        tweetDate: state.tweetDate,
-        sourceUrl: state.sourceUrl,
-      },
-      setStatus,
-      html2canvasImpl: window.html2canvas,
-    });
+    elements.quickCaptureBtn.disabled = true;
+    try {
+      await captureElementAsImage({
+        captureArea: elements.captureArea,
+        captureButton: elements.captureBtn,
+        downloadFallbackLink: elements.downloadFallbackLink,
+        exportFormat: state.exportFormat,
+        exportScale: state.exportScale,
+        filenameOptions: {
+          authorHandle: state.authorHandle,
+          authorName: state.authorName,
+          tweetDate: state.tweetDate,
+          sourceUrl: state.sourceUrl,
+        },
+        setStatus,
+        html2canvasImpl: window.html2canvas,
+      });
+    } finally {
+      elements.quickCaptureBtn.disabled = false;
+    }
   }
 
   function resetEditors() {
@@ -202,6 +208,14 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
     elements.tweetUrl.value = "";
     elements.tweetUrl.focus();
     setStatus("트윗 URL 입력값을 지웠습니다.");
+  }
+
+  function scrollToElement(element) {
+    if (!element) {
+      return;
+    }
+
+    element.scrollIntoView({ block: "start", behavior: "smooth" });
   }
 
   function setPreviewExpanded(nextExpanded) {
@@ -275,7 +289,14 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
     elements.imageInput.addEventListener("change", onImageSelected);
     elements.removeImageBtn.addEventListener("click", onRemoveImage);
     elements.captureBtn.addEventListener("click", onCapture);
+    elements.quickCaptureBtn.addEventListener("click", onCapture);
     elements.resetBtn.addEventListener("click", resetEditors);
+    elements.jumpEditorBtn.addEventListener("click", () => {
+      scrollToElement(elements.editorPanel);
+    });
+    elements.jumpPreviewBtn.addEventListener("click", () => {
+      scrollToElement(elements.previewPanel);
+    });
     elements.previewFocusBtn.addEventListener("click", () => {
       setPreviewExpanded(!previewExpanded);
     });
