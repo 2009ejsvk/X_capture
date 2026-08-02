@@ -9,10 +9,15 @@ import {
   normalizeStylePreset,
 } from "./domain/capture-settings.js";
 import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
+import {
+  formatQuoteText,
+  normalizeQuoteTextMode,
+} from "./domain/tweet-model.js";
 import { createMediaSelector } from "./render/media-selector.js";
 import { populateTweetMedia } from "./render/media.js";
 import { createReplyTweetCard } from "./render/reply-card.js?v=flag-emoji-20260630";
 import { resolveSourceMeta } from "./render/source-meta.js";
+import { renderTextWithLinks } from "./render/text.js";
 
 export function createRenderer(elements, state, options = {}) {
   function notifyStateChange() {
@@ -258,6 +263,7 @@ export function createRenderer(elements, state, options = {}) {
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
     elements.showQuoteMediaToggle.checked = Boolean(state.showQuoteMedia);
+    elements.quoteTextMode.value = normalizeQuoteTextMode(state.quoteTextMode);
     elements.quoteMediaLayout.value = state.quoteMediaLayout;
     elements.quoteAuthorName.value = toDisplayText(state.quoteAuthorName);
     elements.quoteAuthorHandle.value = toDisplayText(state.quoteAuthorHandle);
@@ -310,8 +316,6 @@ export function createRenderer(elements, state, options = {}) {
           return;
         }
 
-        const authorName = String((item && item.authorName) || "").trim();
-        const authorHandle = normalizeHandle(item && item.authorHandle, "");
         const text = String((item && item.text) || "")
           .replace(/\r\n/g, "\n")
           .trim();
@@ -320,13 +324,7 @@ export function createRenderer(elements, state, options = {}) {
           .trim();
         const media = getVisibleMediaSrcs(item && item.dataUrls);
         const hasMedia = showReplyMedia && media.length > 0;
-        if (
-          !authorName &&
-          !authorHandle &&
-          !text &&
-          !translation &&
-          !hasMedia
-        ) {
+        if (!text && !translation && !hasMedia) {
           return;
         }
 
@@ -413,7 +411,10 @@ export function createRenderer(elements, state, options = {}) {
       elements.previewQuoteHandle.textContent = toDisplayText(
         quoteHandle || "",
       );
-      elements.previewQuoteText.textContent = toDisplayText(quoteText || "");
+      renderTextWithLinks(
+        elements.previewQuoteText,
+        formatQuoteText(quoteText, state.quoteTextMode),
+      );
       elements.previewQuote.classList.remove("hidden");
       return;
     }
@@ -442,9 +443,10 @@ export function createRenderer(elements, state, options = {}) {
     elements.previewDate.textContent =
       state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
-    elements.previewText.textContent = /\S/.test(rawText)
-      ? toDisplayText(rawText)
-      : "";
+    renderTextWithLinks(
+      elements.previewText,
+      /\S/.test(rawText) ? toDisplayText(rawText) : "",
+    );
 
     if (elements.previewTranslation && elements.previewTranslationText) {
       const rawTranslation = String(state.translationText || "").replace(

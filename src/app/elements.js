@@ -27,6 +27,7 @@ export function getElements() {
     replyImageSelectorList: document.getElementById("replyImageSelectorList"),
     showQuoteToggle: document.getElementById("showQuoteToggle"),
     showQuoteMediaToggle: document.getElementById("showQuoteMediaToggle"),
+    quoteTextMode: document.getElementById("quoteTextMode"),
     quoteEditor: document.getElementById("quoteEditor"),
     quoteMediaLayout: document.getElementById("quoteMediaLayout"),
     quoteAuthorName: document.getElementById("quoteAuthorName"),

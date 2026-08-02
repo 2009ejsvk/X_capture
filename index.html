@@ -129,7 +129,6 @@
               답글 이미지 표시
             </label>
           </div>
-
           <div
             id="replyEditorList"
             class="reply-editor-list hidden"
@@ -151,6 +150,15 @@
               <input id="showQuoteMediaToggle" type="checkbox" checked />
               리트윗 원문 이미지 표시
             </label>
+          </div>
+          <div class="reply-editor-fields">
+            <label class="reply-editor-label" for="quoteTextMode"
+              >리트윗 원문 길이</label
+            >
+            <select id="quoteTextMode">
+              <option value="full" selected>전체 내용</option>
+              <option value="preview">일부만 표시 (160자)</option>
+            </select>
           </div>
           <section
             id="quoteEditor"
@@ -274,7 +282,7 @@
                 <p id="previewName" class="name">X User</p>
                 <p id="previewHandle" class="handle">@x</p>
               </div>
-              <span class="platform-mark">𝕏</span>
+              <span class="platform-mark" aria-hidden="true">···</span>
             </header>
             <p id="previewText" class="tweet-text">
               캡처할 트윗 본문이 여기에 표시됩니다.

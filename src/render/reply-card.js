@@ -6,6 +6,7 @@ import {
 import { createTweetActionItem } from "./action-item.js";
 import { populateTweetMedia } from "./media.js";
 import { resolveSourceMeta } from "./source-meta.js";
+import { renderTextWithLinks } from "./text.js";
 import { tweetActionIconPaths } from "./tweet-action-icons.js";
 
 export function createReplyTweetCard(item, options) {
@@ -84,7 +85,7 @@ export function createReplyTweetCard(item, options) {
 
   const platformMark = document.createElement("span");
   platformMark.className = "platform-mark";
-  platformMark.textContent = "𝕏";
+  platformMark.textContent = "···";
 
   head.appendChild(avatar);
   head.appendChild(meta);
@@ -93,7 +94,7 @@ export function createReplyTweetCard(item, options) {
 
   const textNode = document.createElement("p");
   textNode.className = "tweet-text";
-  textNode.textContent = /\S/.test(text) ? toDisplayText(text) : "";
+  renderTextWithLinks(textNode, /\S/.test(text) ? toDisplayText(text) : "");
   if (!/\S/.test(text)) {
     textNode.classList.add("hidden");
   }

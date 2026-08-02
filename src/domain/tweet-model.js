@@ -21,6 +21,7 @@ export function createInitialState() {
     showReplyMedia: true,
     showQuote: true,
     showQuoteMedia: true,
+    quoteTextMode: "full",
     quoteMediaLayout: "vertical",
     tweetDate: currentDateTimeLabel(),
     tweetText: "캡처할 트윗 본문이 여기에 표시됩니다.",
@@ -56,10 +57,29 @@ export function createReplyParentState(meta = {}) {
 
 export function hasRenderableReply(item) {
   return Boolean(
-    String(item.authorHandle || "").trim() ||
-    String(item.authorName || "").trim() ||
     String(item.text || "").trim() ||
     String(item.translationText || "").trim() ||
     normalizeMediaItems(item.dataUrls).length,
   );
+}
+
+export function normalizeQuoteTextMode(value) {
+  return value === "preview" ? "preview" : "full";
+}
+
+export function formatQuoteText(text, mode, maxLength = 160) {
+  const normalized = String(text || "")
+    .replace(/\r\n/g, "\n")
+    .trim();
+  if (normalizeQuoteTextMode(mode) === "full") {
+    return normalized;
+  }
+
+  const characters = Array.from(normalized);
+  const limit = Math.max(1, Number(maxLength) || 160);
+  if (characters.length <= limit) {
+    return normalized;
+  }
+
+  return `${characters.slice(0, limit).join("").trimEnd()}…`;
 }
