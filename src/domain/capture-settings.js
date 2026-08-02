@@ -10,6 +10,13 @@ const CAPTURE_FONT_FAMILIES = new Set([
   "black-han",
   "bagel-fat",
 ]);
+const GAME_CAPTURE_FONT_FAMILIES = new Set([
+  "dnf-bitbit",
+  "gasoek",
+  "black-han",
+  "bagel-fat",
+]);
+const CAPTURE_GAME_FONT_SCOPES = new Set(["emphasis", "all"]);
 const CAPTURE_OUTLINE_WIDTHS = new Set(["0", "1", "2", "3", "4", "6"]);
 const EXPORT_SCALES = new Set(["auto", "2", "3", "4"]);
 
@@ -53,6 +60,15 @@ export function normalizeCaptureFontSize(value) {
 export function normalizeCaptureFontFamily(value) {
   const family = String(value || "").trim();
   return CAPTURE_FONT_FAMILIES.has(family) ? family : "system";
+}
+
+export function isGameCaptureFontFamily(value) {
+  return GAME_CAPTURE_FONT_FAMILIES.has(normalizeCaptureFontFamily(value));
+}
+
+export function normalizeCaptureGameFontScope(value) {
+  const scope = String(value || "").trim();
+  return CAPTURE_GAME_FONT_SCOPES.has(scope) ? scope : "emphasis";
 }
 
 export function normalizeCaptureOutlineWidth(value) {
@@ -103,6 +119,7 @@ export function createDefaultCaptureSettings() {
     stylePreset: "classic",
     captureFontSize: "default",
     captureFontFamily: "system",
+    captureGameFontScope: "emphasis",
     captureOutlineWidth: "0",
     captureOutlineColor: "#000000",
     captureTextShadow: false,
@@ -116,6 +133,9 @@ export function normalizeCaptureSettings(settings = {}) {
     stylePreset: normalizeStylePreset(settings.stylePreset),
     captureFontSize: normalizeCaptureFontSize(settings.captureFontSize),
     captureFontFamily: normalizeCaptureFontFamily(settings.captureFontFamily),
+    captureGameFontScope: normalizeCaptureGameFontScope(
+      settings.captureGameFontScope,
+    ),
     captureOutlineWidth: normalizeCaptureOutlineWidth(
       settings.captureOutlineWidth,
     ),

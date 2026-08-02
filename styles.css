@@ -589,6 +589,15 @@ textarea:focus-visible {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     "Noto Sans KR", sans-serif;
+}
+
+.capture-area[data-font-scope="all"] {
+  -webkit-text-stroke: var(--capture-outline-width) var(--capture-outline-color);
+  paint-order: stroke fill;
+}
+
+.capture-area[data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name) {
   -webkit-text-stroke: var(--capture-outline-width) var(--capture-outline-color);
   paint-order: stroke fill;
 }
@@ -615,27 +624,42 @@ textarea:focus-visible {
   font-family: "Noto Serif KR", serif;
 }
 
-.capture-area[data-font-family="dnf-bitbit"],
+.capture-area[data-font-family="dnf-bitbit"][data-font-scope="all"],
+.capture-area[data-font-family="dnf-bitbit"][data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="dnf-bitbit"] {
   font-family: "DNF BitBit", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
-.capture-area[data-font-family="gasoek"],
+.capture-area[data-font-family="gasoek"][data-font-scope="all"],
+.capture-area[data-font-family="gasoek"][data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="gasoek"] {
   font-family: "Gasoek One", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
-.capture-area[data-font-family="black-han"],
+.capture-area[data-font-family="black-han"][data-font-scope="all"],
+.capture-area[data-font-family="black-han"][data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="black-han"] {
   font-family: "Black Han Sans", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
-.capture-area[data-font-family="bagel-fat"],
+.capture-area[data-font-family="bagel-fat"][data-font-scope="all"],
+.capture-area[data-font-family="bagel-fat"][data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="bagel-fat"] {
   font-family: "Bagel Fat One", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
-.capture-area[data-text-shadow="on"] {
+.capture-area[data-text-shadow="on"][data-font-scope="all"] {
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.92),
+    0 4px 8px rgba(0, 0, 0, 0.72);
+}
+
+.capture-area[data-text-shadow="on"][data-font-scope="emphasis"]
+  :is(.name, .reply-item-name, .quote-name) {
   text-shadow:
     0 2px 0 rgba(0, 0, 0, 0.92),
     0 4px 8px rgba(0, 0, 0, 0.72);

@@ -23,6 +23,7 @@ test("responsive UX controls and editor sections are present", () => {
     "captureSettingsSection",
     "captureFontSize",
     "captureFontFamily",
+    "captureGameFontScope",
     "captureOutlineWidth",
     "captureOutlineColor",
     "captureTextShadow",
@@ -40,6 +41,7 @@ test("responsive UX controls and editor sections are present", () => {
   assert.match(css, /\.settings-panel\s*{\s*order: 4;/);
   assert.match(css, /position: sticky/);
   assert.match(css, /data-font-family="dnf-bitbit"/);
+  assert.match(css, /data-font-scope="emphasis"/);
   assert.match(css, /--capture-outline-width/);
 });
 
