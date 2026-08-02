@@ -16,6 +16,7 @@ test("responsive UX controls and editor sections are present", () => {
     "jumpPreviewBtn",
     "quickCaptureBtn",
     "captureFontSize",
+    "mainEditorSection",
     "mediaEditorSection",
     "replyEditorSection",
     "quoteEditorSection",

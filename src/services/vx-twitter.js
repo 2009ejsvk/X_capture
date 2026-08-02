@@ -5,7 +5,8 @@ import {
   normalizeHandle,
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
-} from "../utils.js";
+  stripLeadingReplyMentions,
+} from "../utils.js?v=reply-thread-20260802";
 import { normalizeMediaItems } from "../media.js";
 import { fetchWithTimeout } from "./http.js";
 
@@ -613,8 +614,13 @@ function normalizeReplyParentMeta(payload) {
 
   const normalized = normalizeQuoteMeta(payload);
   if (normalized) {
+    const replyText = sanitizeFetchedTweetText(
+      stripLeadingReplyMentions(pickVxText(payload)),
+      { stripShortLinks: normalized.imageUrls.length > 0 },
+    );
     return {
       ...normalized,
+      text: replyText,
       translationText: "",
     };
   }
@@ -838,6 +844,15 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
       replyParents.push(meta);
     });
 
+  const resolvedImageUrls = imageUrlsFromContent.length
+    ? imageUrlsFromContent
+    : imageUrlsFromPayload;
+  const resolvedTweetText = replyParents.length
+    ? sanitizeFetchedTweetText(stripLeadingReplyMentions(tweetText), {
+        stripShortLinks: resolvedImageUrls.length > 0,
+      })
+    : tweetText;
+
   return {
     sourceUrl,
     authorName: pickVxName(contentPayload, retweeterName),
@@ -845,12 +860,10 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
     tweetDate: formatDateLabel(
       payload.created_at || payload.createdAt || payload.date,
     ),
-    tweetText,
+    tweetText: resolvedTweetText,
     profileImageUrl:
       pickVxProfileImage(contentPayload) || retweeterProfileImageUrl,
-    imageUrls: imageUrlsFromContent.length
-      ? imageUrlsFromContent
-      : imageUrlsFromPayload,
+    imageUrls: resolvedImageUrls,
     replyCount: formatCountLabel(replyCountRaw),
     retweetCount: formatCountLabel(retweetCountRaw),
     likeCount: formatCountLabel(likeCountRaw),

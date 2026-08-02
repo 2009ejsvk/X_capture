@@ -1,8 +1,9 @@
 import {
   currentDateTimeLabel,
   normalizeHandle,
+  stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=flag-emoji-20260630";
+} from "./utils.js?v=reply-thread-20260802";
 import {
   normalizeCaptureFontSize,
   normalizeExportFormat,
@@ -16,7 +17,7 @@ import {
 } from "./domain/tweet-model.js";
 import { createMediaSelector } from "./render/media-selector.js";
 import { populateTweetMedia } from "./render/media.js";
-import { createReplyTweetCard } from "./render/reply-card.js?v=flag-emoji-20260630";
+import { createReplyTweetCard } from "./render/reply-card.js?v=reply-thread-20260802";
 import { resolveSourceMeta } from "./render/source-meta.js";
 import { renderTextWithLinks } from "./render/text.js";
 
@@ -56,14 +57,28 @@ export function createRenderer(elements, state, options = {}) {
     }
 
     orderedReplies.forEach(({ item, stateIndex }, orderIndex) => {
-      const authorName = String((item && item.authorName) || "").trim();
-      const authorHandle = normalizeHandle(item && item.authorHandle, "");
-      const titleText =
-        [authorName, authorHandle].filter(Boolean).join(" ") ||
-        `답글 ${orderIndex + 1}`;
-
       const editorItem = document.createElement("section");
-      editorItem.className = "reply-editor-item";
+      editorItem.className = "reply-editor-item thread-editor-card";
+
+      const header = document.createElement("header");
+      header.className = "reply-editor-header";
+
+      const sequence = document.createElement("span");
+      sequence.className = "thread-editor-sequence";
+      sequence.textContent = String(orderIndex + 1);
+
+      const title = document.createElement("p");
+      title.className = "reply-editor-title";
+      const updateTitle = () => {
+        const currentItem = state.replyParents[stateIndex] || item;
+        const authorName = String(currentItem.authorName || "").trim();
+        const authorHandle = normalizeHandle(currentItem.authorHandle, "");
+        title.textContent = toDisplayText(
+          [authorName, authorHandle].filter(Boolean).join(" ") ||
+            `이전 글 ${orderIndex + 1}`,
+        );
+      };
+      updateTitle();
 
       const visibilityRow = document.createElement("label");
       visibilityRow.className = "check-option reply-visibility-option";
@@ -71,10 +86,7 @@ export function createRenderer(elements, state, options = {}) {
       visibilityToggle.type = "checkbox";
       visibilityToggle.checked = item.visible !== false;
       visibilityToggle.addEventListener("change", (event) => {
-        if (
-          !Array.isArray(state.replyParents) ||
-          !state.replyParents[stateIndex]
-        ) {
+        if (!state.replyParents[stateIndex]) {
           return;
         }
         state.replyParents[stateIndex].visible = Boolean(event.target.checked);
@@ -82,71 +94,159 @@ export function createRenderer(elements, state, options = {}) {
         notifyStateChange();
       });
       const visibilityText = document.createElement("span");
-      visibilityText.textContent = "캡처에 표시";
+      visibilityText.textContent = "표시";
       visibilityRow.appendChild(visibilityToggle);
       visibilityRow.appendChild(visibilityText);
-      editorItem.appendChild(visibilityRow);
 
-      const title = document.createElement("p");
-      title.className = "reply-editor-title";
-      title.textContent = toDisplayText(titleText);
-      editorItem.appendChild(title);
+      header.appendChild(sequence);
+      header.appendChild(title);
+      header.appendChild(visibilityRow);
+      editorItem.appendChild(header);
 
-      const bodyField = document.createElement("div");
-      bodyField.className = "reply-editor-fields";
-      const bodyInputId = `replyBodyInput-${stateIndex}`;
-      const bodyLabel = document.createElement("label");
-      bodyLabel.className = "reply-editor-label";
-      bodyLabel.htmlFor = bodyInputId;
-      bodyLabel.textContent = "본문";
-      const bodyTextarea = document.createElement("textarea");
-      bodyTextarea.className = "reply-editor-textarea";
-      bodyTextarea.id = bodyInputId;
-      bodyTextarea.rows = 3;
-      bodyTextarea.value = String((item && item.text) || "");
-      bodyTextarea.placeholder = "답글 본문을 입력하세요.";
-      bodyTextarea.addEventListener("input", (event) => {
-        if (
-          !Array.isArray(state.replyParents) ||
-          !state.replyParents[stateIndex]
-        ) {
-          return;
+      const fields = document.createElement("div");
+      fields.className = "editor-grid reply-editor-grid";
+
+      const appendField = (property, labelText, fieldOptions = {}) => {
+        const group = document.createElement("div");
+        group.className = "field-group";
+        if (fieldOptions.full) {
+          group.classList.add("field-span-full");
         }
-        state.replyParents[stateIndex].text = event.target.value;
-        renderPreview();
-        notifyStateChange();
-      });
-      bodyField.appendChild(bodyLabel);
-      bodyField.appendChild(bodyTextarea);
-      editorItem.appendChild(bodyField);
 
-      const translationField = document.createElement("div");
-      translationField.className = "reply-editor-fields";
-      const translationInputId = `replyTranslationInput-${stateIndex}`;
-      const translationLabel = document.createElement("label");
-      translationLabel.className = "reply-editor-label";
-      translationLabel.htmlFor = translationInputId;
-      translationLabel.textContent = "번역";
-      const translationTextarea = document.createElement("textarea");
-      translationTextarea.className = "reply-editor-textarea";
-      translationTextarea.id = translationInputId;
-      translationTextarea.rows = 3;
-      translationTextarea.value = String((item && item.translationText) || "");
-      translationTextarea.placeholder = "답글 번역을 입력하세요.";
-      translationTextarea.addEventListener("input", (event) => {
-        if (
-          !Array.isArray(state.replyParents) ||
-          !state.replyParents[stateIndex]
-        ) {
-          return;
+        const inputId = `reply-${property}-${stateIndex}`;
+        const label = document.createElement("label");
+        label.htmlFor = inputId;
+        label.textContent = labelText;
+
+        let input;
+        if (fieldOptions.type === "textarea") {
+          input = document.createElement("textarea");
+          input.rows = fieldOptions.rows || 4;
+          input.placeholder = fieldOptions.placeholder || "";
+        } else if (fieldOptions.type === "select") {
+          input = document.createElement("select");
+          fieldOptions.options.forEach(({ value, text }) => {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = text;
+            input.appendChild(option);
+          });
+        } else {
+          input = document.createElement("input");
+          input.type = "text";
+          if (fieldOptions.inputMode) {
+            input.inputMode = fieldOptions.inputMode;
+          }
+          if (fieldOptions.maxLength) {
+            input.maxLength = fieldOptions.maxLength;
+          }
         }
-        state.replyParents[stateIndex].translationText = event.target.value;
-        renderPreview();
-        notifyStateChange();
+
+        input.id = inputId;
+        input.value = String(item[property] || "");
+        input.addEventListener(
+          fieldOptions.type === "select" ? "change" : "input",
+          (event) => {
+            if (!state.replyParents[stateIndex]) {
+              return;
+            }
+            state.replyParents[stateIndex][property] = event.target.value;
+            if (property === "authorName" || property === "authorHandle") {
+              updateTitle();
+            }
+            renderPreview();
+            notifyStateChange();
+          },
+        );
+
+        group.appendChild(label);
+        group.appendChild(input);
+        fields.appendChild(group);
+      };
+
+      appendField("authorName", "작성자명", { maxLength: 40 });
+      appendField("authorHandle", "핸들", { maxLength: 40 });
+      appendField("tweetDate", "날짜", { full: true, maxLength: 40 });
+      appendField("text", "본문", {
+        type: "textarea",
+        rows: 5,
+        full: true,
+        placeholder: "본문을 입력하세요.",
       });
-      translationField.appendChild(translationLabel);
-      translationField.appendChild(translationTextarea);
-      editorItem.appendChild(translationField);
+      appendField("translationText", "번역", {
+        type: "textarea",
+        rows: 4,
+        full: true,
+        placeholder: "번역 내용을 입력하세요.",
+      });
+
+      const metrics = document.createElement("div");
+      metrics.className = "metrics-grid field-span-full reply-metrics-grid";
+      [
+        ["replyCount", "댓글"],
+        ["retweetCount", "리트윗"],
+        ["likeCount", "좋아요"],
+        ["bookmarkCount", "북마크"],
+      ].forEach(([property, labelText]) => {
+        const group = document.createElement("div");
+        group.className = "field-group";
+        const inputId = `reply-${property}-${stateIndex}`;
+        const label = document.createElement("label");
+        label.htmlFor = inputId;
+        label.textContent = labelText;
+        const input = document.createElement("input");
+        input.id = inputId;
+        input.type = "text";
+        input.inputMode = "numeric";
+        input.maxLength = 20;
+        input.value = String(item[property] || "0");
+        input.addEventListener("input", (event) => {
+          if (!state.replyParents[stateIndex]) {
+            return;
+          }
+          state.replyParents[stateIndex][property] = event.target.value;
+          renderPreview();
+          notifyStateChange();
+        });
+        group.appendChild(label);
+        group.appendChild(input);
+        metrics.appendChild(group);
+      });
+      fields.appendChild(metrics);
+
+      appendField("mediaLayout", "이미지 배치", {
+        type: "select",
+        full: true,
+        options: [
+          { value: "vertical", text: "세로" },
+          { value: "grid", text: "나란히" },
+        ],
+      });
+      editorItem.appendChild(fields);
+
+      const mediaSelector = createMediaSelector(
+        `${title.textContent} 이미지 선택`,
+        item.dataUrls,
+        (index, visible) => {
+          if (!state.replyParents[stateIndex]) {
+            return;
+          }
+          const items = normalizeMediaItems(
+            state.replyParents[stateIndex].dataUrls,
+          );
+          if (!items[index]) {
+            return;
+          }
+          items[index].visible = visible;
+          state.replyParents[stateIndex].dataUrls = items;
+          renderPreview();
+          notifyStateChange();
+        },
+      );
+      if (mediaSelector) {
+        mediaSelector.classList.add("reply-inline-media");
+        editorItem.appendChild(mediaSelector);
+      }
 
       elements.replyEditorList.appendChild(editorItem);
     });
@@ -204,52 +304,46 @@ export function createRenderer(elements, state, options = {}) {
         elements.quoteImageSelector.classList.add("hidden");
       }
     }
-
-    if (elements.replyImageSelectorList) {
-      elements.replyImageSelectorList.innerHTML = "";
-      const orderedReplies = getReplyParentsInDisplayOrder();
-      orderedReplies.forEach(({ item, stateIndex }, orderIndex) => {
-        const authorName = String((item && item.authorName) || "").trim();
-        const authorHandle = normalizeHandle(item && item.authorHandle, "");
-        const titleText =
-          [authorName, authorHandle].filter(Boolean).join(" ") ||
-          `답글 ${orderIndex + 1}`;
-        const selector = createMediaSelector(
-          `${titleText} 이미지 선택`,
-          item && item.dataUrls,
-          (index, visible) => {
-            if (
-              !Array.isArray(state.replyParents) ||
-              !state.replyParents[stateIndex]
-            ) {
-              return;
-            }
-            const items = normalizeMediaItems(
-              state.replyParents[stateIndex].dataUrls,
-            );
-            if (!items[index]) {
-              return;
-            }
-            items[index].visible = visible;
-            state.replyParents[stateIndex].dataUrls = items;
-            renderPreview();
-            renderMediaSelectors();
-            notifyStateChange();
-          },
-        );
-        if (selector) {
-          elements.replyImageSelectorList.appendChild(selector);
-        }
-      });
-
-      elements.replyImageSelectorList.classList.toggle(
-        "hidden",
-        !elements.replyImageSelectorList.childElementCount,
-      );
-    }
   }
 
   function applyStateToInputs() {
+    const hasReplyThread = Boolean(
+      Array.isArray(state.replyParents) && state.replyParents.length,
+    );
+    if (
+      elements.editorStack &&
+      elements.mainEditorSection &&
+      elements.replyEditorSection
+    ) {
+      if (hasReplyThread) {
+        elements.editorStack.insertBefore(
+          elements.replyEditorSection,
+          elements.mainEditorSection,
+        );
+      } else if (elements.mediaEditorSection) {
+        elements.editorStack.insertBefore(
+          elements.mainEditorSection,
+          elements.mediaEditorSection,
+        );
+        if (elements.quoteEditorSection) {
+          elements.editorStack.insertBefore(
+            elements.replyEditorSection,
+            elements.quoteEditorSection,
+          );
+        }
+      }
+    }
+    if (elements.mainEditorTitle) {
+      elements.mainEditorTitle.textContent = hasReplyThread
+        ? `${state.replyParents.length + 1}. 마지막 답글`
+        : "기본 정보";
+    }
+    if (elements.mainEditorSummary) {
+      elements.mainEditorSummary.textContent = hasReplyThread
+        ? "대화의 마지막 글 · 본문 · 반응 수"
+        : "작성자 · 본문 · 반응 수";
+    }
+
     elements.authorName.value = toDisplayText(state.authorName);
     elements.authorHandle.value = toDisplayText(state.authorHandle);
     elements.tweetDate.value = state.tweetDate;
@@ -344,7 +438,7 @@ export function createRenderer(elements, state, options = {}) {
         elements.previewReplyList.appendChild(
           createReplyTweetCard(item, {
             showReplyMedia,
-            mediaLayout: state.mediaLayout,
+            mediaLayout: item.mediaLayout === "grid" ? "grid" : "vertical",
           }),
         );
       });
@@ -459,9 +553,13 @@ export function createRenderer(elements, state, options = {}) {
     elements.previewDate.textContent =
       state.tweetDate.trim() || currentDateTimeLabel();
     const rawText = String(state.tweetText || "").replace(/\r\n/g, "\n");
+    const displayText =
+      Array.isArray(state.replyParents) && state.replyParents.length
+        ? stripLeadingReplyMentions(rawText)
+        : rawText;
     renderTextWithLinks(
       elements.previewText,
-      /\S/.test(rawText) ? toDisplayText(rawText) : "",
+      /\S/.test(displayText) ? toDisplayText(displayText) : "",
     );
 
     if (elements.previewTranslation && elements.previewTranslationText) {

@@ -26,13 +26,14 @@ test("createInitialState exposes the expected defaults", () => {
 test("createReplyParentState normalizes reply fields", () => {
   const reply = createReplyParentState({
     authorHandle: "handle",
-    text: " hello\r\n ",
+    text: " @target hello\r\n ",
     dataUrls: ["a", "a", { url: "b", visible: false }],
   });
 
   assert.equal(reply.authorHandle, "@handle");
   assert.equal(reply.visible, true);
   assert.equal(reply.text, "hello");
+  assert.equal(reply.mediaLayout, "vertical");
   assert.deepEqual(reply.dataUrls, [
     { src: "a", visible: true },
     { src: "b", visible: false },

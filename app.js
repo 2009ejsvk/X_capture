@@ -1,10 +1,10 @@
 import { captureElementAsImage } from "./src/capture.js";
 import { getElements } from "./src/app/elements.js";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=reply-thread-20260802";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
 import { createInitialState } from "./src/domain/tweet-model.js";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
+import { createRenderer } from "./src/render.js?v=reply-thread-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";

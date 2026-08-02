@@ -230,3 +230,9 @@ export function sanitizeFetchedTweetText(rawText, options = {}) {
 
   return withoutMediaLinks;
 }
+
+export function stripLeadingReplyMentions(rawText) {
+  return String(rawText || "")
+    .replace(/^[ \t]*(?:@[A-Za-z0-9_]{1,30}(?:[ \t]+|(?=\r?\n|$)))+/, "")
+    .trimStart();
+}
