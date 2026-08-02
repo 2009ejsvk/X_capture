@@ -1,10 +1,10 @@
 import { captureElementAsImage } from "./src/capture.js?v=font-effects-20260802";
-import { getElements } from "./src/app/elements.js?v=default-suit-xlarge-20260802";
+import { getElements } from "./src/app/elements.js?v=editor-tabs-v3-20260802";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media-links-20260802";
 import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=default-suit-xlarge-20260802";
 import { createInitialState } from "./src/domain/tweet-model.js?v=default-suit-xlarge-20260802";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
+import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -15,6 +15,26 @@ import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
   let activeFetchController = null;
   let fetchRequestId = 0;
   let previewExpanded = false;
+  let activeEditorTab = "post";
+
+  function setEditorTab(nextTab) {
+    const tabs = {
+      post: [elements.editorPostTab, elements.mainEditorSection],
+      media: [elements.editorMediaTab, elements.mediaEditorSection],
+      reply: [elements.editorReplyTab, elements.replyEditorSection],
+    };
+    const requestedTab = tabs[nextTab];
+    activeEditorTab =
+      requestedTab && !requestedTab[0].disabled ? nextTab : "post";
+
+    Object.entries(tabs).forEach(([tabName, [button, panel]]) => {
+      const isActive = tabName === activeEditorTab;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+      button.tabIndex = isActive ? 0 : -1;
+      panel.classList.toggle("hidden", !isActive);
+    });
+  }
 
   function setStatus(message, type) {
     elements.statusText.textContent = message || "";
@@ -205,6 +225,7 @@ import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
+    setEditorTab("post");
     applyStateToInputs();
     renderPreview();
     setStatus("입력값을 초기화했습니다.");
@@ -304,6 +325,7 @@ import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
     elements.quickCaptureBtn.addEventListener("click", onCapture);
     elements.resetBtn.addEventListener("click", resetEditors);
     elements.jumpEditorBtn.addEventListener("click", () => {
+      setEditorTab("post");
       scrollToElement(elements.editorPanel);
     });
     elements.jumpPreviewBtn.addEventListener("click", () => {
@@ -313,6 +335,15 @@ import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
       elements.captureSettingsSection.open = true;
       scrollToElement(elements.settingsPanel);
     });
+    elements.editorPostTab.addEventListener("click", () => {
+      setEditorTab("post");
+    });
+    elements.editorMediaTab.addEventListener("click", () => {
+      setEditorTab("media");
+    });
+    elements.editorReplyTab.addEventListener("click", () => {
+      setEditorTab("reply");
+    });
     elements.previewFocusBtn.addEventListener("click", () => {
       setPreviewExpanded(!previewExpanded);
     });
@@ -321,5 +352,6 @@ import { createRenderer } from "./src/render.js?v=editor-ux-v2-20260802";
   clearLegacyDraft();
   wireEvents();
   applyStateToInputs();
+  setEditorTab(activeEditorTab);
   renderPreview();
 })();

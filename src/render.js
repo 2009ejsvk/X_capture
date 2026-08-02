@@ -410,33 +410,14 @@ export function createRenderer(elements, state, options = {}) {
       String(state.quoteAuthorProfileImageSrc || "").trim() ||
       normalizeMediaItems(state.quoteDataUrls).length,
     );
-    if (
-      elements.editorStack &&
-      elements.mainEditorSection &&
-      elements.replyEditorSection
-    ) {
-      if (hasReplyThread) {
-        elements.editorStack.insertBefore(
-          elements.replyEditorSection,
-          elements.mainEditorSection,
-        );
-      } else if (elements.mediaEditorSection) {
-        elements.editorStack.insertBefore(
-          elements.mainEditorSection,
-          elements.mediaEditorSection,
-        );
-      }
-    }
-    if (elements.mainEditorTitle) {
-      elements.mainEditorTitle.textContent = hasReplyThread
-        ? `${state.replyParents.length + 1}. 마지막 답글`
-        : "현재 글";
-    }
-    if (elements.mainEditorSummary) {
-      elements.mainEditorSummary.textContent = hasQuoteEditorContent
-        ? "본문 · 번역 · 리트윗 원문"
-        : "본문 · 번역";
-    }
+    const mediaCount = normalizeMediaItems(state.imageDataUrls).length;
+    elements.editorMediaTab.textContent = mediaCount
+      ? `이미지 ${mediaCount}`
+      : "이미지";
+    elements.editorReplyTab.textContent = hasReplyThread
+      ? `이전 글 ${state.replyParents.length}`
+      : "이전 글";
+    elements.editorReplyTab.disabled = !hasReplyThread;
 
     elements.authorName.value = toDisplayText(state.authorName);
     elements.authorHandle.value = toDisplayText(state.authorHandle);
@@ -480,12 +461,6 @@ export function createRenderer(elements, state, options = {}) {
       "hidden",
       !hasQuoteEditorContent,
     );
-    if (normalizeMediaItems(state.imageDataUrls).length) {
-      elements.mediaEditorSection.open = true;
-    }
-    if (Array.isArray(state.replyParents) && state.replyParents.length) {
-      elements.replyEditorSection.open = true;
-    }
     renderReplyEditors();
     renderMediaSelectors();
   }

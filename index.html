@@ -31,7 +31,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=editor-ux-v2-20260802" />
+    <link rel="stylesheet" href="./styles.css?v=editor-tabs-v3-20260802" />
   </head>
   <body>
     <main class="app-shell">
@@ -100,33 +100,56 @@
         <div class="panel-heading editor-heading">
           <div>
             <h2>내용 편집</h2>
-            <p class="panel-description">
-              글 내용부터 확인하고, 필요한 상세 항목만 여세요.
-            </p>
+            <p class="panel-description">한 번에 한 종류만 편집하세요.</p>
           </div>
         </div>
-        <div class="editor-stack">
-          <details
-            id="mainEditorSection"
-            class="editor-section editor-section-primary"
-            open
+        <div class="editor-tabs" role="tablist" aria-label="편집 항목">
+          <button
+            id="editorPostTab"
+            class="editor-tab is-active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="mainEditorSection"
           >
-            <summary>
-              <span id="mainEditorTitle">현재 글</span>
-              <small id="mainEditorSummary">본문 · 번역 · 리트윗 원문</small>
-            </summary>
-            <div class="editor-section-content main-editor-content">
+            글
+          </button>
+          <button
+            id="editorMediaTab"
+            class="editor-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="mediaEditorSection"
+            tabindex="-1"
+          >
+            이미지
+          </button>
+          <button
+            id="editorReplyTab"
+            class="editor-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="replyEditorSection"
+            tabindex="-1"
+          >
+            이전 글
+          </button>
+        </div>
+        <div class="editor-stack">
+          <section
+            id="mainEditorSection"
+            class="editor-pane"
+            role="tabpanel"
+            aria-labelledby="editorPostTab"
+          >
+            <div class="main-editor-content">
               <section
-                class="editor-focus-block"
+                class="editor-body-fields"
                 aria-labelledby="postBodyHeading"
               >
-                <div class="editor-block-heading">
-                  <span class="editor-step-badge">1</span>
-                  <div>
-                    <h3 id="postBodyHeading">글 내용</h3>
-                    <p>캡처에서 가장 크게 보이는 내용입니다.</p>
-                  </div>
-                </div>
+                <h3 id="postBodyHeading" class="sr-only">현재 글</h3>
                 <div class="field-group">
                   <label for="tweetText">본문 내용</label>
                   <textarea id="tweetText" rows="6"></textarea>
@@ -147,14 +170,9 @@
                 aria-labelledby="quoteEditorHeading"
               >
                 <div class="inline-editor-heading">
-                  <div class="editor-block-heading">
-                    <span class="editor-step-badge editor-step-badge-quote"
-                      >2</span
-                    >
-                    <div>
-                      <h3 id="quoteEditorHeading">리트윗 원문</h3>
-                      <p>현재 글 아래에 함께 표시되는 원문입니다.</p>
-                    </div>
+                  <div>
+                    <h3 id="quoteEditorHeading">리트윗 원문</h3>
+                    <p>현재 글 아래에 함께 표시됩니다.</p>
                   </div>
                   <label
                     class="check-option compact-toggle"
@@ -294,14 +312,19 @@
                 </div>
               </details>
             </div>
-          </details>
+          </section>
 
-          <details id="mediaEditorSection" class="editor-section">
-            <summary>
-              <span>첨부 이미지</span>
-              <small>추가 · 순서 · 배치</small>
-            </summary>
-            <div class="editor-section-content">
+          <section
+            id="mediaEditorSection"
+            class="editor-pane hidden"
+            role="tabpanel"
+            aria-labelledby="editorMediaTab"
+          >
+            <div class="editor-pane-heading">
+              <h3>첨부 이미지</h3>
+              <p>이미지를 추가하거나 표시 순서를 정하세요.</p>
+            </div>
+            <div class="editor-pane-content">
               <div class="field-group">
                 <label for="imageInput">이미지 추가</label>
                 <div class="image-row">
@@ -333,14 +356,19 @@
                 </select>
               </div>
             </div>
-          </details>
+          </section>
 
-          <details id="replyEditorSection" class="editor-section">
-            <summary>
-              <span>대화의 이전 글</span>
-              <small>원글부터 순서대로 편집</small>
-            </summary>
-            <div class="editor-section-content">
+          <section
+            id="replyEditorSection"
+            class="editor-pane hidden"
+            role="tabpanel"
+            aria-labelledby="editorReplyTab"
+          >
+            <div class="editor-pane-heading">
+              <h3>대화의 이전 글</h3>
+              <p>원글부터 시간순으로 수정하세요.</p>
+            </div>
+            <div class="editor-pane-content">
               <div class="option-row option-row-inline">
                 <label class="check-option" for="showReplyToggle">
                   <input id="showReplyToggle" type="checkbox" checked />
@@ -357,7 +385,7 @@
                 aria-label="이전 글 편집 목록"
               ></div>
             </div>
-          </details>
+          </section>
         </div>
       </section>
 
@@ -365,7 +393,6 @@
         <details
           id="captureSettingsSection"
           class="editor-section settings-section"
-          open
         >
           <summary>
             <span>캡처 설정</span>
@@ -635,6 +662,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=editor-ux-v2-20260802"></script>
+    <script type="module" src="./app.js?v=editor-tabs-v3-20260802"></script>
   </body>
 </html>
