@@ -8,6 +8,7 @@ const renderer = readFileSync(
   new URL("../src/render.js", import.meta.url),
   "utf8",
 );
+const app = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 
 test("editor controls keep unique ids after the UX layout change", () => {
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
@@ -20,6 +21,9 @@ test("responsive UX controls and editor sections are present", () => {
     "jumpPreviewBtn",
     "jumpSettingsBtn",
     "quickCaptureBtn",
+    "editorPostTab",
+    "editorMediaTab",
+    "editorReplyTab",
     "captureSettingsSection",
     "captureFontSize",
     "captureFontFamily",
@@ -38,7 +42,7 @@ test("responsive UX controls and editor sections are present", () => {
 
   assert.match(css, /@media \(min-width: 980px\)/);
   assert.match(css, /"fetch preview"/);
-  assert.match(css, /"settings preview"\s+"editor preview"/);
+  assert.match(css, /"editor preview"\s+"settings preview"/);
   assert.match(css, /\.settings-panel\s*{\s*order: 4;/);
   assert.match(css, /position: sticky/);
   assert.match(css, /data-font-family="dnf-bitbit"/);
@@ -57,22 +61,26 @@ test("reply editors always expose image add and remove controls", () => {
 });
 
 test("retweet source editor is embedded in the main content editor", () => {
-  const mainEditor = html.match(
-    /<details\s+[^>]*id="mainEditorSection"[\s\S]*?<\/details>/,
-  )?.[0];
-  assert.ok(mainEditor);
+  const mainStart = html.indexOf('id="mainEditorSection"');
+  const mediaStart = html.indexOf('id="mediaEditorSection"');
+  const mainEditor = html.slice(mainStart, mediaStart);
+  assert.ok(mainStart > -1 && mediaStart > mainStart);
   assert.match(mainEditor, /id="quoteEditorSection"/);
   assert.doesNotMatch(html, /<details id="quoteEditorSection"/);
   assert.match(css, /\.inline-quote-editor/);
 });
 
-test("content editing prioritizes post text and folds secondary metadata", () => {
-  assert.match(html, /id="postBodyHeading">글 내용/);
+test("content editing uses one flat tabbed pane at a time", () => {
+  assert.match(html, /role="tablist" aria-label="편집 항목"/);
+  assert.match(html, /id="postBodyHeading" class="sr-only">현재 글/);
   assert.match(html, /id="mainMetaSection" class="editor-subsection"/);
   assert.match(html, /작성자 · 날짜 · 반응 수/);
   assert.match(html, /대화의 이전 글/);
-  assert.match(css, /\.editor-focus-block/);
+  assert.match(css, /\.editor-tabs/);
+  assert.match(css, /\.editor-pane\.hidden/);
   assert.match(css, /\.editor-subsection > summary/);
+  assert.match(app, /function setEditorTab\(nextTab\)/);
+  assert.doesNotMatch(html, /id="captureSettingsSection"[^>]*\sopen(?:\s|>)/s);
 });
 
 test("translations use the same text scale as their corresponding body", () => {
