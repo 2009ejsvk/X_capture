@@ -20,6 +20,10 @@ test("responsive UX controls and editor sections are present", () => {
     "jumpPreviewBtn",
     "quickCaptureBtn",
     "captureFontSize",
+    "captureFontFamily",
+    "captureOutlineWidth",
+    "captureOutlineColor",
+    "captureTextShadow",
     "mainEditorSection",
     "mediaEditorSection",
     "replyEditorSection",
@@ -31,6 +35,8 @@ test("responsive UX controls and editor sections are present", () => {
   assert.match(css, /@media \(min-width: 980px\)/);
   assert.match(css, /"fetch preview"/);
   assert.match(css, /position: sticky/);
+  assert.match(css, /data-font-family="dnf-bitbit"/);
+  assert.match(css, /--capture-outline-width/);
 });
 
 test("reply editors always expose image add and remove controls", () => {

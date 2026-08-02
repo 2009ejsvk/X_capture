@@ -1,5 +1,16 @@
 const STYLE_PRESETS = new Set(["classic", "translation", "media", "compact"]);
 const CAPTURE_FONT_SIZES = new Set(["small", "default", "large", "xlarge"]);
+const CAPTURE_FONT_FAMILIES = new Set([
+  "system",
+  "pretendard",
+  "noto-sans",
+  "noto-serif",
+  "dnf-bitbit",
+  "gasoek",
+  "black-han",
+  "bagel-fat",
+]);
+const CAPTURE_OUTLINE_WIDTHS = new Set(["0", "1", "2", "3", "4", "6"]);
 const EXPORT_SCALES = new Set(["auto", "2", "3", "4"]);
 
 const EXPORT_FORMATS = {
@@ -39,6 +50,21 @@ export function normalizeCaptureFontSize(value) {
   return CAPTURE_FONT_SIZES.has(size) ? size : "default";
 }
 
+export function normalizeCaptureFontFamily(value) {
+  const family = String(value || "").trim();
+  return CAPTURE_FONT_FAMILIES.has(family) ? family : "system";
+}
+
+export function normalizeCaptureOutlineWidth(value) {
+  const width = String(value ?? "").trim();
+  return CAPTURE_OUTLINE_WIDTHS.has(width) ? width : "0";
+}
+
+export function normalizeCaptureOutlineColor(value) {
+  const color = String(value || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(color) ? color.toLowerCase() : "#000000";
+}
+
 export function normalizeExportFormat(value) {
   const format = String(value || "")
     .trim()
@@ -76,6 +102,10 @@ export function createDefaultCaptureSettings() {
   return {
     stylePreset: "classic",
     captureFontSize: "default",
+    captureFontFamily: "system",
+    captureOutlineWidth: "0",
+    captureOutlineColor: "#000000",
+    captureTextShadow: false,
     exportFormat: "png",
     exportScale: "auto",
   };
@@ -85,6 +115,14 @@ export function normalizeCaptureSettings(settings = {}) {
   return {
     stylePreset: normalizeStylePreset(settings.stylePreset),
     captureFontSize: normalizeCaptureFontSize(settings.captureFontSize),
+    captureFontFamily: normalizeCaptureFontFamily(settings.captureFontFamily),
+    captureOutlineWidth: normalizeCaptureOutlineWidth(
+      settings.captureOutlineWidth,
+    ),
+    captureOutlineColor: normalizeCaptureOutlineColor(
+      settings.captureOutlineColor,
+    ),
+    captureTextShadow: settings.captureTextShadow === true,
     exportFormat: normalizeExportFormat(settings.exportFormat),
     exportScale: normalizeExportScale(settings.exportScale),
   };

@@ -1,10 +1,10 @@
-import { captureElementAsImage } from "./src/capture.js";
-import { getElements } from "./src/app/elements.js?v=reply-thread-v2-20260802";
+import { captureElementAsImage } from "./src/capture.js?v=font-effects-20260802";
+import { getElements } from "./src/app/elements.js?v=font-effects-20260802";
 import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media-links-20260802";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js";
-import { createInitialState } from "./src/domain/tweet-model.js?v=reply-thread-v2-20260802";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=font-effects-20260802";
+import { createInitialState } from "./src/domain/tweet-model.js?v=font-effects-20260802";
 import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=reply-images-20260802";
+import { createRenderer } from "./src/render.js?v=font-effects-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -33,6 +33,10 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
     const captureSettings = normalizeCaptureSettings({
       stylePreset: elements.stylePreset.value,
       captureFontSize: elements.captureFontSize.value,
+      captureFontFamily: elements.captureFontFamily.value,
+      captureOutlineWidth: elements.captureOutlineWidth.value,
+      captureOutlineColor: elements.captureOutlineColor.value,
+      captureTextShadow: elements.captureTextShadow.checked,
       exportFormat: elements.exportFormat.value,
       exportScale: elements.exportScale.value,
     });
@@ -278,6 +282,10 @@ import { createRenderer } from "./src/render.js?v=reply-images-20260802";
     elements.quoteText.addEventListener("input", syncFromEditors);
     elements.stylePreset.addEventListener("change", syncFromEditors);
     elements.captureFontSize.addEventListener("change", syncFromEditors);
+    elements.captureFontFamily.addEventListener("change", syncFromEditors);
+    elements.captureOutlineWidth.addEventListener("change", syncFromEditors);
+    elements.captureOutlineColor.addEventListener("input", syncFromEditors);
+    elements.captureTextShadow.addEventListener("change", syncFromEditors);
     elements.exportFormat.addEventListener("change", syncFromEditors);
     elements.exportScale.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {

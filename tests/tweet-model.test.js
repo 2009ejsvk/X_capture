@@ -18,6 +18,10 @@ test("createInitialState exposes the expected defaults", () => {
   assert.equal(state.quoteTextMode, "full");
   assert.equal(state.stylePreset, "classic");
   assert.equal(state.captureFontSize, "default");
+  assert.equal(state.captureFontFamily, "system");
+  assert.equal(state.captureOutlineWidth, "0");
+  assert.equal(state.captureOutlineColor, "#000000");
+  assert.equal(state.captureTextShadow, false);
   assert.equal(state.exportFormat, "png");
   assert.equal(state.exportScale, "auto");
   assert.deepEqual(state.imageDataUrls, []);

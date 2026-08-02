@@ -4,7 +4,7 @@ import {
   stripLeadingReplyMentions,
 } from "../utils.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "../media.js";
-import { createDefaultCaptureSettings } from "./capture-settings.js";
+import { createDefaultCaptureSettings } from "./capture-settings.js?v=font-effects-20260802";
 
 export function createInitialState() {
   return {
