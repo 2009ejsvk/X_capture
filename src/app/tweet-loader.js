@@ -1,7 +1,7 @@
 import {
   createReplyParentState,
   hasRenderableReply,
-} from "../domain/tweet-model.js?v=reply-thread-20260802";
+} from "../domain/tweet-model.js?v=reply-thread-v2-20260802";
 import {
   normalizeMediaItems,
   toDisplayImageSrc,
@@ -13,13 +13,13 @@ import {
   normalizeUrl,
   parseHandle,
   sanitizeFetchedTweetText,
-} from "../utils.js?v=reply-thread-20260802";
+} from "../utils.js?v=reply-thread-v2-20260802";
 import {
   fetchTweetFromOembed,
   fetchTweetFromVx,
   formatOembedError,
   parseOembedHtml,
-} from "../twitter-api.js?v=reply-thread-20260802";
+} from "../twitter-api.js?v=reply-thread-v2-20260802";
 
 async function normalizeReplyParents(replyParentMetas, options = {}) {
   return await Promise.all(

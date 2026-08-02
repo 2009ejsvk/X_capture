@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "../utils.js?v=reply-thread-20260802";
+} from "../utils.js?v=reply-thread-v2-20260802";
 import { createTweetActionItem } from "./action-item.js";
 import { populateTweetMedia } from "./media.js";
 import { resolveSourceMeta } from "./source-meta.js";
