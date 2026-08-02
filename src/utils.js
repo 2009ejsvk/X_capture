@@ -194,7 +194,15 @@ function stripMediaLinks(rawText, stripShortLinks) {
   );
 
   if (stripShortLinks) {
-    text = text.replace(/https?:\/\/t\.co\/[^\s]+/gi, "");
+    const textWithoutShortLinks = text
+      .replace(/https?:\/\/t\.co\/[^\s]+/gi, "")
+      .trim();
+
+    // A media-only post often consists solely of a t.co placeholder. Embedded
+    // links are part of the written post and must remain visible.
+    if (!textWithoutShortLinks) {
+      text = "";
+    }
   }
 
   return text

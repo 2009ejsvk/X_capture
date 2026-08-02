@@ -11,11 +11,13 @@ test("normalizeCaptureSettings keeps supported values", () => {
   assert.deepEqual(
     normalizeCaptureSettings({
       stylePreset: "media",
+      captureFontSize: "large",
       exportFormat: "webp",
       exportScale: "3",
     }),
     {
       stylePreset: "media",
+      captureFontSize: "large",
       exportFormat: "webp",
       exportScale: "3",
     },
@@ -26,11 +28,13 @@ test("normalizeCaptureSettings falls back to defaults", () => {
   assert.deepEqual(
     normalizeCaptureSettings({
       stylePreset: "unknown",
+      captureFontSize: "giant",
       exportFormat: "gif",
       exportScale: "8",
     }),
     {
       stylePreset: "classic",
+      captureFontSize: "default",
       exportFormat: "png",
       exportScale: "auto",
     },

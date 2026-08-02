@@ -34,7 +34,13 @@ test("sanitizeFetchedTweetText preserves links and strips media noise", () => {
     sanitizeFetchedTweetText("hello https://t.co/abc\npic.twitter.com/xyz", {
       stripShortLinks: true,
     }),
-    "hello",
+    "hello https://t.co/abc",
+  );
+  assert.equal(
+    sanitizeFetchedTweetText("https://t.co/media", {
+      stripShortLinks: true,
+    }),
+    "",
   );
   assert.equal(
     sanitizeFetchedTweetText("https://x.com/example/status/1"),

@@ -78,7 +78,7 @@ test("loadTweetFromUrl merges oEmbed author info with vx enrichment", async (t) 
   // vx values win over oEmbed when present
   assert.equal(result.patch.authorName, "Vx Author");
   assert.equal(result.patch.authorHandle, "@vx_handle");
-  assert.equal(result.patch.tweetText, "enriched body");
+  assert.equal(result.patch.tweetText, "enriched body https://t.co/x");
   assert.equal(result.patch.likeCount, "1.2천");
   assert.deepEqual(result.patch.imageDataUrls, [
     { src: photoUrl, visible: true },

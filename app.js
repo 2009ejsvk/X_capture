@@ -32,6 +32,7 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
   function syncFromEditors() {
     const captureSettings = normalizeCaptureSettings({
       stylePreset: elements.stylePreset.value,
+      captureFontSize: elements.captureFontSize.value,
       exportFormat: elements.exportFormat.value,
       exportScale: elements.exportScale.value,
     });
@@ -276,6 +277,7 @@ import { createRenderer } from "./src/render.js?v=flag-emoji-20260630";
     elements.quoteAuthorHandle.addEventListener("input", syncFromEditors);
     elements.quoteText.addEventListener("input", syncFromEditors);
     elements.stylePreset.addEventListener("change", syncFromEditors);
+    elements.captureFontSize.addEventListener("change", syncFromEditors);
     elements.exportFormat.addEventListener("change", syncFromEditors);
     elements.exportScale.addEventListener("change", syncFromEditors);
     elements.previewAvatarImage.addEventListener("error", () => {

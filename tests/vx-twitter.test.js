@@ -71,7 +71,7 @@ test("fetchTweetFromVx keeps media-only reply images without leaking t.co text",
   const result = await fetchTweetFromVx(mainTweetId, { timeoutMs: 0 });
 
   assert.equal(result.tweetText, "answer https://t.co/main");
-  assert.equal(result.quote.text, "quoted");
+  assert.equal(result.quote.text, "quoted https://t.co/quote");
   assert.equal(result.replyParents.length, 1);
   assert.equal(result.replyParents[0].text, "");
   assert.deepEqual(result.replyParents[0].imageUrls, [

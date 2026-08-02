@@ -6,6 +6,7 @@ export function getElements() {
     autoCaptureToggle: document.getElementById("autoCaptureToggle"),
     statusText: document.getElementById("statusText"),
     stylePreset: document.getElementById("stylePreset"),
+    captureFontSize: document.getElementById("captureFontSize"),
     exportFormat: document.getElementById("exportFormat"),
     exportScale: document.getElementById("exportScale"),
     previewFocusBtn: document.getElementById("previewFocusBtn"),
