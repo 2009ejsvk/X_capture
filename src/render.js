@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=reply-thread-20260802";
+} from "./utils.js?v=reply-thread-v2-20260802";
 import {
   normalizeCaptureFontSize,
   normalizeExportFormat,
@@ -17,7 +17,7 @@ import {
 } from "./domain/tweet-model.js";
 import { createMediaSelector } from "./render/media-selector.js";
 import { populateTweetMedia } from "./render/media.js";
-import { createReplyTweetCard } from "./render/reply-card.js?v=reply-thread-20260802";
+import { createReplyTweetCard } from "./render/reply-card.js?v=reply-thread-v2-20260802";
 import { resolveSourceMeta } from "./render/source-meta.js";
 import { renderTextWithLinks } from "./render/text.js";
 

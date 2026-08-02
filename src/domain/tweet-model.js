@@ -2,7 +2,7 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   stripLeadingReplyMentions,
-} from "../utils.js";
+} from "../utils.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "../media.js";
 import { createDefaultCaptureSettings } from "./capture-settings.js";
 

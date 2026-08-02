@@ -6,7 +6,7 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=reply-thread-20260802";
+} from "../utils.js?v=reply-thread-v2-20260802";
 import { normalizeMediaItems } from "../media.js";
 import { fetchWithTimeout } from "./http.js";
 
