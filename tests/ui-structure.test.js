@@ -18,7 +18,9 @@ test("responsive UX controls and editor sections are present", () => {
   [
     "jumpEditorBtn",
     "jumpPreviewBtn",
+    "jumpSettingsBtn",
     "quickCaptureBtn",
+    "captureSettingsSection",
     "captureFontSize",
     "captureFontFamily",
     "captureOutlineWidth",
@@ -34,6 +36,8 @@ test("responsive UX controls and editor sections are present", () => {
 
   assert.match(css, /@media \(min-width: 980px\)/);
   assert.match(css, /"fetch preview"/);
+  assert.match(css, /"settings preview"\s+"editor preview"/);
+  assert.match(css, /\.settings-panel\s*{\s*order: 4;/);
   assert.match(css, /position: sticky/);
   assert.match(css, /data-font-family="dnf-bitbit"/);
   assert.match(css, /--capture-outline-width/);
