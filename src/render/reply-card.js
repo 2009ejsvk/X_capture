@@ -1,8 +1,9 @@
 import { getVisibleMediaSrcs } from "../media.js";
 import {
   normalizeHandle,
+  stripLeadingReplyMentions,
   toDisplayText,
-} from "../utils.js?v=flag-emoji-20260630";
+} from "../utils.js?v=reply-thread-20260802";
 import { createTweetActionItem } from "./action-item.js";
 import { populateTweetMedia } from "./media.js";
 import { resolveSourceMeta } from "./source-meta.js";
@@ -12,9 +13,9 @@ import { tweetActionIconPaths } from "./tweet-action-icons.js";
 export function createReplyTweetCard(item, options) {
   const authorName = String((item && item.authorName) || "").trim();
   const authorHandle = normalizeHandle(item && item.authorHandle, "");
-  const text = String((item && item.text) || "")
-    .replace(/\r\n/g, "\n")
-    .trim();
+  const text = stripLeadingReplyMentions(
+    String((item && item.text) || "").replace(/\r\n/g, "\n"),
+  ).trim();
   const translation = String((item && item.translationText) || "")
     .replace(/\r\n/g, "\n")
     .trim();

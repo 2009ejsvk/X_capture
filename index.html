@@ -11,7 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=text-size-20260802" />
+    <link rel="stylesheet" href="./styles.css?v=reply-thread-20260802" />
   </head>
   <body>
     <main class="app-shell">
@@ -77,10 +77,10 @@
           </div>
         </div>
         <div class="editor-stack">
-          <details class="editor-section" open>
+          <details id="mainEditorSection" class="editor-section" open>
             <summary>
-              <span>기본 정보</span>
-              <small>작성자 · 본문 · 반응 수</small>
+              <span id="mainEditorTitle">기본 정보</span>
+              <small id="mainEditorSummary">작성자 · 본문 · 반응 수</small>
             </summary>
             <div class="editor-grid editor-section-content">
               <div class="field-group">
@@ -189,8 +189,8 @@
 
           <details id="replyEditorSection" class="editor-section">
             <summary>
-              <span>답글</span>
-              <small>표시 여부 · 본문 · 이미지</small>
+              <span>이전 글</span>
+              <small>원글부터 시간순으로 수정</small>
             </summary>
             <div class="editor-section-content">
               <div class="option-row option-row-inline">
@@ -206,12 +206,7 @@
               <div
                 id="replyEditorList"
                 class="reply-editor-list hidden"
-                aria-label="답글 편집 목록"
-              ></div>
-              <div
-                id="replyImageSelectorList"
-                class="reply-editor-list hidden"
-                aria-label="답글 이미지 선택 목록"
+                aria-label="이전 글 편집 목록"
               ></div>
             </div>
           </details>
@@ -488,6 +483,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=text-size-20260802"></script>
+    <script type="module" src="./app.js?v=reply-thread-20260802"></script>
   </body>
 </html>

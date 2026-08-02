@@ -5,6 +5,7 @@ import {
   formatCountLabel,
   normalizeUrl,
   sanitizeFetchedTweetText,
+  stripLeadingReplyMentions,
   toDisplayText,
 } from "../src/utils.js";
 
@@ -51,6 +52,21 @@ test("sanitizeFetchedTweetText preserves links and strips media noise", () => {
 test("formatCountLabel compacts large numbers", () => {
   assert.equal(formatCountLabel("999"), "999");
   assert.equal(formatCountLabel("1,200"), "1.2천");
+});
+
+test("stripLeadingReplyMentions removes only reply targets at the start", () => {
+  assert.equal(
+    stripLeadingReplyMentions("@0mislice @thatdayin1992 🥺 moronic take"),
+    "🥺 moronic take",
+  );
+  assert.equal(
+    stripLeadingReplyMentions("@thatdayin1992\nShiiiiiiid"),
+    "Shiiiiiiid",
+  );
+  assert.equal(
+    stripLeadingReplyMentions("mention later @0mislice"),
+    "mention later @0mislice",
+  );
 });
 
 test("toDisplayText preserves flag emoji", () => {

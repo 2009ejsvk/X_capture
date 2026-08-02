@@ -3,4 +3,4 @@ export {
   formatOembedError,
   parseOembedHtml,
 } from "./services/twitter-oembed.js";
-export { fetchTweetFromVx } from "./services/vx-twitter.js";
+export { fetchTweetFromVx } from "./services/vx-twitter.js?v=reply-thread-20260802";

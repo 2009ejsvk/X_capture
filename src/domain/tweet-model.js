@@ -1,4 +1,8 @@
-import { currentDateTimeLabel, normalizeHandle } from "../utils.js";
+import {
+  currentDateTimeLabel,
+  normalizeHandle,
+  stripLeadingReplyMentions,
+} from "../utils.js";
 import { normalizeMediaItems } from "../media.js";
 import { createDefaultCaptureSettings } from "./capture-settings.js";
 
@@ -38,9 +42,9 @@ export function createReplyParentState(meta = {}) {
     visible: meta.visible !== false,
     authorName: String(meta.authorName || "").trim(),
     authorHandle: normalizeHandle(meta.authorHandle, ""),
-    text: String(meta.text || "")
-      .replace(/\r\n/g, "\n")
-      .trim(),
+    text: stripLeadingReplyMentions(
+      String(meta.text || "").replace(/\r\n/g, "\n"),
+    ).trim(),
     translationText: String(meta.translationText || "")
       .replace(/\r\n/g, "\n")
       .trim(),
@@ -50,6 +54,7 @@ export function createReplyParentState(meta = {}) {
     retweetCount: String(meta.retweetCount || "").trim() || "0",
     likeCount: String(meta.likeCount || "").trim() || "0",
     bookmarkCount: String(meta.bookmarkCount || "").trim() || "0",
+    mediaLayout: meta.mediaLayout === "grid" ? "grid" : "vertical",
     authorProfileImageSrc: String(meta.authorProfileImageSrc || "").trim(),
     dataUrls: normalizeMediaItems(meta.dataUrls),
   };
