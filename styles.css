@@ -474,7 +474,10 @@ textarea:focus-visible {
   --capture-card-border: #2f3336;
   --capture-card-radius: 0;
   --capture-card-padding: 12px 16px;
-  --capture-text-size: 15px;
+  --capture-text-size: 18px;
+  --capture-meta-size: 16px;
+  --capture-secondary-size: 14px;
+  --capture-quote-size: 16px;
   --capture-text-line: 1.34;
   --capture-media-gap: 2px;
   --capture-translation-bg: var(--card-raised);
@@ -501,7 +504,6 @@ textarea:focus-visible {
 .capture-area[data-style-preset="media"] {
   --capture-card-padding: 12px;
   --capture-media-gap: 6px;
-  --capture-text-size: 15px;
   --capture-text-line: 1.46;
 }
 
@@ -509,9 +511,36 @@ textarea:focus-visible {
   --profile-avatar-size: 24px;
   --capture-card-radius: 14px;
   --capture-card-padding: 10px;
-  --capture-text-size: 15px;
   --capture-text-line: 1.42;
   --capture-media-gap: 6px;
+}
+
+.capture-area[data-font-size="small"] {
+  --capture-text-size: 16px;
+  --capture-meta-size: 15px;
+  --capture-secondary-size: 13px;
+  --capture-quote-size: 15px;
+}
+
+.capture-area[data-font-size="default"] {
+  --capture-text-size: 18px;
+  --capture-meta-size: 16px;
+  --capture-secondary-size: 14px;
+  --capture-quote-size: 16px;
+}
+
+.capture-area[data-font-size="large"] {
+  --capture-text-size: 20px;
+  --capture-meta-size: 17px;
+  --capture-secondary-size: 15px;
+  --capture-quote-size: 18px;
+}
+
+.capture-area[data-font-size="xlarge"] {
+  --capture-text-size: 22px;
+  --capture-meta-size: 18px;
+  --capture-secondary-size: 16px;
+  --capture-quote-size: 20px;
 }
 
 .tweet-card {
@@ -572,12 +601,12 @@ textarea:focus-visible {
 
 .name {
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--capture-meta-size);
   color: #e7e9ea;
 }
 
 .handle {
-  font-size: 15px;
+  font-size: var(--capture-meta-size);
   color: var(--ink-soft);
 }
 
@@ -621,7 +650,7 @@ textarea:focus-visible {
 
 .tweet-translation-text {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--capture-secondary-size);
   line-height: 1.45;
   color: var(--capture-translation-color);
   white-space: pre-wrap;
@@ -738,19 +767,19 @@ textarea:focus-visible {
 }
 
 .reply-item-name {
-  font-size: 13px;
+  font-size: var(--capture-secondary-size);
   font-weight: 700;
   color: var(--ink);
 }
 
 .reply-item-handle {
-  font-size: 12px;
+  font-size: var(--capture-secondary-size);
   color: var(--ink-soft);
 }
 
 .reply-item-text {
   margin: 6px 0 0;
-  font-size: 14px;
+  font-size: var(--capture-quote-size);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -773,7 +802,7 @@ textarea:focus-visible {
 
 .reply-item-translation-text {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--capture-secondary-size);
   line-height: 1.45;
   color: var(--capture-translation-color);
   white-space: pre-wrap;
@@ -805,7 +834,7 @@ textarea:focus-visible {
 
 .quote-name,
 .quote-handle {
-  font-size: 14px;
+  font-size: var(--capture-secondary-size);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -821,7 +850,7 @@ textarea:focus-visible {
 
 .quote-text {
   margin: 6px 0 0;
-  font-size: 15px;
+  font-size: var(--capture-quote-size);
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
@@ -887,7 +916,7 @@ textarea:focus-visible {
   gap: 8px;
   min-width: 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: var(--capture-secondary-size);
 }
 
 .tweet-action-icon {
@@ -908,7 +937,7 @@ textarea:focus-visible {
   gap: 4px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
-  font-size: 14px;
+  font-size: var(--capture-secondary-size);
   color: var(--ink-soft);
   order: 1;
 }
@@ -920,8 +949,8 @@ textarea:focus-visible {
 
 .tweet-original-url {
   word-break: break-all;
-  color: #1d9bf0;
-  font-size: 12px;
+  color: var(--ink-soft);
+  font-size: var(--capture-secondary-size);
 }
 
 .actions {

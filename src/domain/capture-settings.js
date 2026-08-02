@@ -1,4 +1,5 @@
 const STYLE_PRESETS = new Set(["classic", "translation", "media", "compact"]);
+const CAPTURE_FONT_SIZES = new Set(["small", "default", "large", "xlarge"]);
 const EXPORT_SCALES = new Set(["auto", "2", "3", "4"]);
 
 const EXPORT_FORMATS = {
@@ -31,6 +32,11 @@ const EXPORT_FORMATS = {
 export function normalizeStylePreset(value) {
   const preset = String(value || "").trim();
   return STYLE_PRESETS.has(preset) ? preset : "classic";
+}
+
+export function normalizeCaptureFontSize(value) {
+  const size = String(value || "").trim();
+  return CAPTURE_FONT_SIZES.has(size) ? size : "default";
 }
 
 export function normalizeExportFormat(value) {
@@ -69,6 +75,7 @@ export function resolveCaptureScale({
 export function createDefaultCaptureSettings() {
   return {
     stylePreset: "classic",
+    captureFontSize: "default",
     exportFormat: "png",
     exportScale: "auto",
   };
@@ -77,6 +84,7 @@ export function createDefaultCaptureSettings() {
 export function normalizeCaptureSettings(settings = {}) {
   return {
     stylePreset: normalizeStylePreset(settings.stylePreset),
+    captureFontSize: normalizeCaptureFontSize(settings.captureFontSize),
     exportFormat: normalizeExportFormat(settings.exportFormat),
     exportScale: normalizeExportScale(settings.exportScale),
   };

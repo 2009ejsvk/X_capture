@@ -17,6 +17,7 @@ test("createInitialState exposes the expected defaults", () => {
   assert.equal(state.showReply, true);
   assert.equal(state.quoteTextMode, "full");
   assert.equal(state.stylePreset, "classic");
+  assert.equal(state.captureFontSize, "default");
   assert.equal(state.exportFormat, "png");
   assert.equal(state.exportScale, "auto");
   assert.deepEqual(state.imageDataUrls, []);

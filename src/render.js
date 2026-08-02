@@ -4,6 +4,7 @@ import {
   toDisplayText,
 } from "./utils.js?v=flag-emoji-20260630";
 import {
+  normalizeCaptureFontSize,
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
@@ -269,6 +270,9 @@ export function createRenderer(elements, state, options = {}) {
     elements.quoteAuthorHandle.value = toDisplayText(state.quoteAuthorHandle);
     elements.quoteText.value = toDisplayText(state.quoteText);
     elements.stylePreset.value = normalizeStylePreset(state.stylePreset);
+    elements.captureFontSize.value = normalizeCaptureFontSize(
+      state.captureFontSize,
+    );
     elements.exportFormat.value = normalizeExportFormat(state.exportFormat);
     elements.exportScale.value = normalizeExportScale(state.exportScale);
     const hasQuoteEditorContent = Boolean(
@@ -439,6 +443,9 @@ export function createRenderer(elements, state, options = {}) {
   function renderPreview() {
     elements.captureArea.dataset.stylePreset = normalizeStylePreset(
       state.stylePreset,
+    );
+    elements.captureArea.dataset.fontSize = normalizeCaptureFontSize(
+      state.captureFontSize,
     );
 
     const trimmedName = state.authorName.trim() || "X User";
