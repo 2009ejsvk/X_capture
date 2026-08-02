@@ -4,31 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0d10" />
-    <title>X Capture Mobile</title>
+    <title>X / Threads Capture</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css?v=reply-images-20260802" />
+    <link rel="stylesheet" href="./styles.css?v=threads-api-20260802" />
   </head>
   <body>
     <main class="app-shell">
       <header class="hero">
         <p class="eyebrow">MOBILE WEB TOOL</p>
-        <h1>X 콘텐츠 캡처</h1>
-        <p class="hero-text">트윗 URL을 붙여넣고 카드 형태로 저장하세요.</p>
+        <h1>X / Threads 캡처</h1>
+        <p class="hero-text">게시물 URL을 붙여넣고 카드 형태로 저장하세요.</p>
       </header>
 
       <section class="panel fetch-panel">
-        <label for="tweetUrl">트윗 URL</label>
+        <label for="tweetUrl">게시물 URL</label>
         <div class="url-row">
           <input
             id="tweetUrl"
             type="url"
             inputmode="url"
-            placeholder="https://x.com/.../status/..."
+            placeholder="X 또는 Threads 게시물 링크"
             autocomplete="off"
           />
           <button id="clearUrlBtn" class="btn btn-ghost" type="button">
@@ -41,6 +41,52 @@
             <input id="autoCaptureToggle" type="checkbox" />
             불러온 뒤 자동 저장
           </label>
+          <details id="threadsApiSettings" class="threads-api-settings">
+            <summary>Threads API 설정</summary>
+            <div class="threads-api-settings-body">
+              <label for="threadsAccessToken">사용자 액세스 토큰</label>
+              <div class="token-row">
+                <input
+                  id="threadsAccessToken"
+                  type="password"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Threads 사용자 액세스 토큰"
+                />
+                <button
+                  id="toggleThreadsTokenBtn"
+                  class="btn btn-ghost"
+                  type="button"
+                  aria-pressed="false"
+                >
+                  보기
+                </button>
+                <button
+                  id="clearThreadsTokenBtn"
+                  class="btn btn-ghost"
+                  type="button"
+                >
+                  지우기
+                </button>
+              </div>
+              <p class="settings-help">
+                토큰은 현재 브라우저 탭에만 보관되며 이 프로젝트의
+                저장소·서버에는 저장하지 않습니다. 조회할 때 Meta 공식 API에만
+                전송됩니다.
+                <a
+                  href="https://www.postman.com/meta/threads/documentation/dht3nzz/threads-api"
+                  target="_blank"
+                  rel="noreferrer"
+                  >공식 Threads API 안내</a
+                >
+              </p>
+              <p class="settings-help">
+                필요 권한: <code>threads_basic</code>,
+                <code>threads_profile_discovery</code>. 타인 계정의 오래된
+                글·답글은 Meta가 허용한 범위에서만 조회됩니다.
+              </p>
+            </div>
+          </details>
         </div>
         <p id="statusText" class="status" aria-live="polite"></p>
       </section>
@@ -483,6 +529,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=reply-images-20260802"></script>
+    <script type="module" src="./app.js?v=threads-api-20260802"></script>
   </body>
 </html>

@@ -104,7 +104,7 @@ export function extractTweetId(value) {
 export function normalizeUrl(input) {
   const urlText = (input || "").trim();
   if (!urlText) {
-    throw new Error("트윗 URL을 입력해 주세요.");
+    throw new Error("게시물 URL을 입력해 주세요.");
   }
 
   let url;
@@ -115,10 +115,33 @@ export function normalizeUrl(input) {
   }
 
   const host = url.hostname.replace(/^www\./i, "");
+  const isThreadsHost = host === "threads.net" || host === "threads.com";
+
+  if (isThreadsHost) {
+    const threadsMatch = url.pathname.match(
+      /^\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i,
+    );
+    if (!threadsMatch) {
+      throw new Error("Threads 게시물 URL(@계정/post/코드) 형식만 지원합니다.");
+    }
+
+    const username = threadsMatch[1];
+    const shortcode = threadsMatch[2];
+    const canonicalUrl = `https://www.threads.com/@${username}/post/${shortcode}`;
+
+    return {
+      platform: "threads",
+      username,
+      shortcode,
+      preferredUrl: canonicalUrl,
+      canonicalUrl,
+    };
+  }
+
   const isXHost =
     host === "x.com" || host === "twitter.com" || host === "mobile.twitter.com";
   if (!isXHost) {
-    throw new Error("x.com 또는 twitter.com URL만 지원합니다.");
+    throw new Error("x.com, twitter.com 또는 threads.com URL만 지원합니다.");
   }
 
   const idMatch = url.pathname.match(/\/status\/(\d+)/i);
@@ -142,6 +165,7 @@ export function normalizeUrl(input) {
     : `https://x.com/i/status/${tweetId}`;
 
   return {
+    platform: "x",
     tweetId,
     preferredUrl,
     canonicalUrl: `https://x.com/i/status/${tweetId}`,

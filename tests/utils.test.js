@@ -17,12 +17,27 @@ test("normalizeUrl extracts and canonicalizes status URLs", () => {
   assert.equal(result.tweetId, "1234567890");
   assert.equal(result.preferredUrl, "https://x.com/example/status/1234567890");
   assert.equal(result.canonicalUrl, "https://x.com/i/status/1234567890");
+  assert.equal(result.platform, "x");
+});
+
+test("normalizeUrl accepts Threads post URLs", () => {
+  const result = normalizeUrl(
+    "https://www.threads.net/@example.user/post/AbC_123?xmt=abc",
+  );
+
+  assert.equal(result.platform, "threads");
+  assert.equal(result.username, "example.user");
+  assert.equal(result.shortcode, "AbC_123");
+  assert.equal(
+    result.canonicalUrl,
+    "https://www.threads.com/@example.user/post/AbC_123",
+  );
 });
 
 test("normalizeUrl rejects unsupported hosts", () => {
   assert.throws(
     () => normalizeUrl("https://example.com/example/status/1234567890"),
-    /x\.com 또는 twitter\.com/,
+    /threads\.com/,
   );
 });
 

@@ -154,6 +154,7 @@ button {
 
 input[type="text"],
 input[type="url"],
+input[type="password"],
 select,
 textarea {
   width: 100%;
@@ -166,12 +167,14 @@ textarea {
 
 input[type="text"]::placeholder,
 input[type="url"]::placeholder,
+input[type="password"]::placeholder,
 textarea::placeholder {
   color: var(--ink-faint);
 }
 
 input[type="text"]:hover,
 input[type="url"]:hover,
+input[type="password"]:hover,
 select:hover,
 textarea:hover {
   background: var(--field-hover);
@@ -209,6 +212,58 @@ textarea:focus-visible {
 
 .fetch-options {
   margin-top: 8px;
+}
+
+.threads-api-settings {
+  margin-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--field);
+}
+
+.threads-api-settings.is-recommended {
+  border-color: color-mix(in oklab, var(--accent), var(--line) 40%);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.threads-api-settings summary {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.threads-api-settings.is-recommended summary {
+  color: var(--accent-strong);
+}
+
+.threads-api-settings-body {
+  padding: 0 12px 12px;
+}
+
+.threads-api-settings-body label {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.token-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 7px;
+}
+
+.settings-help {
+  margin: 8px 0 0;
+  color: var(--ink-soft);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.settings-help a {
+  color: var(--accent-strong);
 }
 
 .quick-bar {
@@ -1068,6 +1123,16 @@ textarea:focus-visible {
 
 .hidden {
   display: none;
+}
+
+@media (max-width: 440px) {
+  .token-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .token-row input {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 740px) {
