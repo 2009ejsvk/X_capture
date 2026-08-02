@@ -60,8 +60,8 @@ test("normalizeCaptureSettings falls back to defaults", () => {
     }),
     {
       stylePreset: "classic",
-      captureFontSize: "default",
-      captureFontFamily: "system",
+      captureFontSize: "xlarge",
+      captureFontFamily: "suit-heavy",
       captureGameFontScope: "emphasis",
       captureOutlineWidth: "0",
       captureOutlineColor: "#000000",

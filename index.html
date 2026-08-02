@@ -333,15 +333,15 @@
             <label for="captureFontSize">글자 크기</label>
             <select id="captureFontSize">
               <option value="small">작게</option>
-              <option value="default" selected>기본 (크게)</option>
+              <option value="default">기본 (크게)</option>
               <option value="large">더 크게</option>
-              <option value="xlarge">매우 크게</option>
+              <option value="xlarge" selected>매우 크게</option>
             </select>
 
             <label for="captureFontFamily">폰트</label>
             <select id="captureFontFamily">
               <optgroup label="기본 본문 폰트">
-                <option value="system" selected>기본 · X 시스템</option>
+                <option value="system">기본 · X 시스템</option>
                 <option value="pretendard">Pretendard</option>
                 <option value="noto-sans">Noto Sans KR</option>
                 <option value="noto-serif">Noto Serif KR</option>
@@ -350,7 +350,7 @@
                 <option value="wanted-heavy">
                   Wanted Sans ExtraBold · 선명한 게임 UI
                 </option>
-                <option value="suit-heavy">
+                <option value="suit-heavy" selected>
                   SUIT ExtraBold · 굵은 게임 UI
                 </option>
                 <option value="neo-dgm">Neo둥근모 · 레트로 본문</option>
@@ -366,7 +366,7 @@
             <p
               id="captureFontSample"
               class="font-sample"
-              data-font-family="system"
+              data-font-family="suit-heavy"
               aria-live="polite"
             >
               가나다 게임 UI · ABC 123
@@ -585,6 +585,9 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=body-game-fonts-20260802"></script>
+    <script
+      type="module"
+      src="./app.js?v=default-suit-xlarge-20260802"
+    ></script>
   </body>
 </html>
