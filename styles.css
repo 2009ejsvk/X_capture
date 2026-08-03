@@ -1347,9 +1347,14 @@ textarea:focus-visible {
 }
 
 .tweet-original-url {
-  word-break: break-all;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  word-break: normal;
   color: var(--ink-soft);
-  font-size: var(--capture-secondary-size);
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .actions {

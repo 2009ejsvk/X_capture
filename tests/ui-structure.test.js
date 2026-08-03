@@ -97,3 +97,12 @@ test("translations use the same text scale as their corresponding body", () => {
     /\.reply-item-translation-text\s*{[^}]*font-size:\s*var\(--capture-quote-size\)/s,
   );
 });
+
+test("the source URL always stays on one line", () => {
+  assert.match(css, /\.tweet-original-url\s*{[^}]*white-space:\s*nowrap/s);
+  assert.match(css, /\.tweet-original-url\s*{[^}]*font-size:\s*11px/s);
+  assert.doesNotMatch(
+    css,
+    /\.tweet-original-url\s*{[^}]*text-overflow:\s*ellipsis/s,
+  );
+});
