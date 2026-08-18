@@ -735,6 +735,25 @@ textarea:focus-visible {
   margin: 0;
 }
 
+.media-selector-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.media-selector-action {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  border-radius: 8px;
+}
+
+.media-selector-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .reply-editor-label {
   margin: 0;
   font-size: 12px;

@@ -3,6 +3,7 @@ import {
   hasRenderableReply,
 } from "../domain/tweet-model.js?v=reply-thread-v2-20260802";
 import {
+  clearImageSourceCache,
   normalizeMediaItems,
   toDisplayImageSrc,
   toDisplayImageSrcs,
@@ -52,6 +53,8 @@ async function normalizeReplyParents(replyParentMetas, options = {}) {
 
 export async function loadTweetFromUrl(tweetUrl, options = {}) {
   const normalized = normalizeUrl(tweetUrl);
+  // 새로 불러올 때는 이전 트윗의 이미지 캐시를 재사용하지 않는다.
+  clearImageSourceCache();
   let imageUrls = [];
   let profileImageUrl = "";
   let quoteMeta = null;

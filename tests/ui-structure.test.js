@@ -106,3 +106,43 @@ test("the source URL always stays on one line", () => {
     /\.tweet-original-url\s*{[^}]*text-overflow:\s*ellipsis/s,
   );
 });
+
+test("every media area can add, replace and clear its own images", () => {
+  // 본문 · 리트윗 원문은 마크업의 파일 입력을, 이전 글은 렌더러가 만든
+  // 입력을 쓴다. 세 곳 모두 추가/전체 삭제 경로가 있어야 한다.
+  [
+    "imageInput",
+    "removeImageBtn",
+    "quoteImageInput",
+    "removeQuoteImageBtn",
+  ].forEach((id) => {
+    assert.ok(html.includes(`id="${id}"`), `${id} is missing from index.html`);
+  });
+  assert.match(renderer, /reply-image-input-\$\{stateIndex\}/);
+
+  const elementsSource = readFileSync(
+    new URL("../src/app/elements.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(elementsSource, /quoteImageInput/);
+  assert.match(elementsSource, /removeQuoteImageBtn/);
+
+  assert.match(app, /elements\.quoteImageInput\.addEventListener/);
+  assert.match(app, /elements\.removeQuoteImageBtn\.addEventListener/);
+});
+
+test("media selectors expose per-image remove and reorder actions", () => {
+  const selector = readFileSync(
+    new URL("../src/render/media-selector.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(selector, /actions\.onMove/);
+  assert.match(selector, /actions\.onRemove/);
+
+  // 본문 · 리트윗 원문 · 이전 글 세 호출부 모두 액션을 넘겨야 한다.
+  assert.equal((renderer.match(/onRemove: \(index\) =>/g) || []).length, 3);
+  assert.equal(
+    (renderer.match(/onMove: \(fromIndex, toIndex\) =>/g) || []).length,
+    3,
+  );
+});

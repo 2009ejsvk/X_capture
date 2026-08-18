@@ -56,6 +56,8 @@ export function getElements() {
     quoteAuthorHandle: document.getElementById("quoteAuthorHandle"),
     quoteText: document.getElementById("quoteText"),
     quoteImageSelector: document.getElementById("quoteImageSelector"),
+    quoteImageInput: document.getElementById("quoteImageInput"),
+    removeQuoteImageBtn: document.getElementById("removeQuoteImageBtn"),
     removeImageBtn: document.getElementById("removeImageBtn"),
     resetBtn: document.getElementById("resetBtn"),
     captureBtn: document.getElementById("captureBtn"),

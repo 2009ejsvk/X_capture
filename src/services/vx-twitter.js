@@ -1,4 +1,5 @@
 import {
+  decodeHtmlEntities,
   extractTweetId,
   formatCountLabel,
   formatDateLabel,
@@ -10,11 +11,26 @@ import {
 import { normalizeMediaItems } from "../media.js";
 import { fetchWithTimeout } from "./http.js";
 
+function pickVxRawDate(payload) {
+  if (!payload || typeof payload !== "object") {
+    return "";
+  }
+
+  const epoch = payload.date_epoch || payload.created_timestamp;
+  if (Number.isFinite(Number(epoch)) && Number(epoch) > 0) {
+    return new Date(Number(epoch) * 1000).toISOString();
+  }
+
+  return pickFirstNonEmpty([
+    payload.created_at,
+    payload.createdAt,
+    payload.date,
+  ]);
+}
+
 function extractTweetMetrics(payload) {
   return {
-    tweetDate: formatDateLabel(
-      payload && (payload.created_at || payload.createdAt || payload.date),
-    ),
+    tweetDate: formatDateLabel(pickVxRawDate(payload)),
     replyCount: formatCountLabel(
       pickVxCount(payload, ["replies", "reply_count", "replyCount"]),
     ),
@@ -91,7 +107,7 @@ function pickVxName(payload, fallbackName) {
     payload && payload.user && payload.user.name,
     payload && payload.author && payload.author.name,
   ]);
-  return value || fallbackName || "X User";
+  return decodeHtmlEntities(value) || fallbackName || "X User";
 }
 
 function pickVxHandle(payload, fallbackHandle) {
@@ -118,6 +134,10 @@ function pickVxProfileImage(payload) {
 }
 
 function pickVxArticleTitle(payload) {
+  return decodeHtmlEntities(pickVxArticleTitleRaw(payload));
+}
+
+function pickVxArticleTitleRaw(payload) {
   return pickFirstNonEmpty([
     payload && payload.article && payload.article.title,
     payload && payload.article_title,
@@ -475,7 +495,7 @@ function pickReplyContextHandle(payload) {
 
 async function fetchRawTweetPayload(tweetId, options = {}) {
   const idText = String(tweetId || "").trim();
-  const matched = idText.match(/\d{5,}/);
+  const matched = idText.match(/\d+/);
   if (!matched) {
     throw new Error("유효한 트윗 ID가 아닙니다.");
   }
@@ -501,7 +521,17 @@ async function fetchRawTweetPayload(tweetId, options = {}) {
         continue;
       }
 
-      const body = await response.json();
+      let body = null;
+      try {
+        body = await response.json();
+      } catch (parseError) {
+        // 레이트 리밋/차단 시 HTML 안내 페이지가 200으로 돌아오는 경우가 있다.
+        lastError = new Error(
+          "보조 API가 올바른 응답을 주지 않았습니다. 잠시 후 다시 시도해 주세요.",
+        );
+        continue;
+      }
+
       const candidate =
         body && typeof body === "object" && body.tweet ? body.tweet : body;
       if (
@@ -953,8 +983,9 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
     sourceUrl,
     authorName: pickVxName(contentPayload, retweeterName),
     authorHandle: pickVxHandle(contentPayload, retweeterHandle),
+    // 리트윗이면 원문 작성 시각을 우선한다. RT 시각은 원문이 없을 때만 쓴다.
     tweetDate: formatDateLabel(
-      payload.created_at || payload.createdAt || payload.date,
+      pickVxRawDate(contentPayload) || pickVxRawDate(payload),
     ),
     tweetText: resolvedTweetText,
     profileImageUrl:

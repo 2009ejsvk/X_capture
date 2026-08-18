@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  decodeHtmlEntities,
   formatCountLabel,
   normalizeUrl,
   sanitizeFetchedTweetText,
@@ -71,4 +72,22 @@ test("stripLeadingReplyMentions removes only reply targets at the start", () => 
 
 test("toDisplayText preserves flag emoji", () => {
   assert.equal(toDisplayText("Korea 🇰🇷 Japan 🇯🇵"), "Korea 🇰🇷 Japan 🇯🇵");
+});
+
+test("decodeHtmlEntities restores escaped characters exactly once", () => {
+  assert.equal(decodeHtmlEntities("a -&gt; b"), "a -> b");
+  assert.equal(decodeHtmlEntities("Tom &amp; Jerry"), "Tom & Jerry");
+  assert.equal(decodeHtmlEntities("&lt;3"), "<3");
+  assert.equal(decodeHtmlEntities("it&#39;s"), "it's");
+  assert.equal(decodeHtmlEntities("&#x1F600;"), "\u{1F600}");
+  // 이중 디코딩 금지: 사용자가 실제로 "&lt;" 문자열을 쓴 경우
+  assert.equal(decodeHtmlEntities("&amp;lt;"), "&lt;");
+  assert.equal(decodeHtmlEntities("&unknown; stays"), "&unknown; stays");
+});
+
+test("sanitizeFetchedTweetText decodes entities from the raw API text", () => {
+  assert.equal(
+    sanitizeFetchedTweetText("if (a &lt; b) return a -&gt; b &amp; c;"),
+    "if (a < b) return a -> b & c;",
+  );
 });

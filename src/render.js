@@ -37,6 +37,32 @@ export function createRenderer(elements, state, options = {}) {
     });
   }
 
+  function reorderMediaItems(items, fromIndex, toIndex) {
+    const next = normalizeMediaItems(items);
+    if (
+      !next[fromIndex] ||
+      toIndex < 0 ||
+      toIndex >= next.length ||
+      fromIndex === toIndex
+    ) {
+      return null;
+    }
+
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    return next;
+  }
+
+  function removeMediaItem(items, index) {
+    const next = normalizeMediaItems(items);
+    if (!next[index]) {
+      return null;
+    }
+
+    next.splice(index, 1);
+    return next;
+  }
+
   function notifyStateChange() {
     if (typeof options.onStateChange === "function") {
       options.onStateChange();
@@ -335,6 +361,41 @@ export function createRenderer(elements, state, options = {}) {
           renderPreview();
           notifyStateChange();
         },
+        {
+          onMove: (fromIndex, toIndex) => {
+            if (!state.replyParents[stateIndex]) {
+              return;
+            }
+            const next = reorderMediaItems(
+              state.replyParents[stateIndex].dataUrls,
+              fromIndex,
+              toIndex,
+            );
+            if (!next) {
+              return;
+            }
+            state.replyParents[stateIndex].dataUrls = next;
+            renderPreview();
+            renderReplyEditors();
+            notifyStateChange();
+          },
+          onRemove: (index) => {
+            if (!state.replyParents[stateIndex]) {
+              return;
+            }
+            const next = removeMediaItem(
+              state.replyParents[stateIndex].dataUrls,
+              index,
+            );
+            if (!next) {
+              return;
+            }
+            state.replyParents[stateIndex].dataUrls = next;
+            renderPreview();
+            renderReplyEditors();
+            notifyStateChange();
+          },
+        },
       );
       if (mediaSelector) {
         mediaSelector.classList.add("reply-inline-media");
@@ -364,6 +425,32 @@ export function createRenderer(elements, state, options = {}) {
           renderMediaSelectors();
           notifyStateChange();
         },
+        {
+          onMove: (fromIndex, toIndex) => {
+            const next = reorderMediaItems(
+              state.imageDataUrls,
+              fromIndex,
+              toIndex,
+            );
+            if (!next) {
+              return;
+            }
+            state.imageDataUrls = next;
+            renderPreview();
+            renderMediaSelectors();
+            notifyStateChange();
+          },
+          onRemove: (index) => {
+            const next = removeMediaItem(state.imageDataUrls, index);
+            if (!next) {
+              return;
+            }
+            state.imageDataUrls = next;
+            renderPreview();
+            applyStateToInputs();
+            notifyStateChange();
+          },
+        },
       );
       if (selector) {
         elements.mainImageSelector.appendChild(selector);
@@ -388,6 +475,32 @@ export function createRenderer(elements, state, options = {}) {
           renderPreview();
           renderMediaSelectors();
           notifyStateChange();
+        },
+        {
+          onMove: (fromIndex, toIndex) => {
+            const next = reorderMediaItems(
+              state.quoteDataUrls,
+              fromIndex,
+              toIndex,
+            );
+            if (!next) {
+              return;
+            }
+            state.quoteDataUrls = next;
+            renderPreview();
+            renderMediaSelectors();
+            notifyStateChange();
+          },
+          onRemove: (index) => {
+            const next = removeMediaItem(state.quoteDataUrls, index);
+            if (!next) {
+              return;
+            }
+            state.quoteDataUrls = next;
+            renderPreview();
+            renderMediaSelectors();
+            notifyStateChange();
+          },
         },
       );
       if (selector) {

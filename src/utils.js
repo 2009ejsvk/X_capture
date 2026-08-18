@@ -46,6 +46,57 @@ export function formatCountLabel(rawValue) {
   return text;
 }
 
+const NAMED_HTML_ENTITIES = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+  hellip: "…",
+  mdash: "—",
+  ndash: "–",
+  lsquo: "‘",
+  rsquo: "’",
+  ldquo: "“",
+  rdquo: "”",
+};
+
+const HTML_ENTITY_PATTERN = /&(#x[0-9a-f]+|#\d+|[a-z][a-z0-9]*);/gi;
+
+// X/Twitter 원본 텍스트는 <, >, & 를 한 번 이스케이프해서 내려준다.
+// 이중 디코딩(&amp;lt; -> <)을 피하려고 한 번만 치환한다.
+export function decodeHtmlEntities(value) {
+  const text = String(value || "");
+  if (!text.includes("&")) {
+    return text;
+  }
+
+  return text.replace(HTML_ENTITY_PATTERN, (match, entity) => {
+    const token = String(entity);
+
+    if (token[0] === "#") {
+      const isHex = token[1] === "x" || token[1] === "X";
+      const codePoint = Number.parseInt(
+        isHex ? token.slice(2) : token.slice(1),
+        isHex ? 16 : 10,
+      );
+      if (
+        !Number.isFinite(codePoint) ||
+        codePoint <= 0 ||
+        codePoint > 0x10ffff ||
+        (codePoint >= 0xd800 && codePoint <= 0xdfff)
+      ) {
+        return match;
+      }
+      return String.fromCodePoint(codePoint);
+    }
+
+    const named = NAMED_HTML_ENTITIES[token.toLowerCase()];
+    return named === undefined ? match : named;
+  });
+}
+
 export function toDisplayText(value) {
   if (value === null || value === undefined || value === false) {
     return "";
@@ -213,9 +264,7 @@ function stripMediaLinks(rawText, stripShortLinks) {
 }
 
 export function sanitizeFetchedTweetText(rawText, options = {}) {
-  const normalized = String(rawText || "")
-    .replace(/\r\n/g, "\n")
-    .trim();
+  const normalized = decodeHtmlEntities(rawText).replace(/\r\n/g, "\n").trim();
   if (!normalized) {
     return "";
   }

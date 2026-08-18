@@ -14,3 +14,17 @@ test("tokenizeTextLinks separates links without swallowing punctuation", () => {
     ],
   );
 });
+
+test("tokenizeTextLinks trims quotes and brackets stuck to a link", () => {
+  assert.deepEqual(tokenizeTextLinks('보기 "https://example.com/a"'), [
+    { type: "text", value: '보기 "' },
+    { type: "link", value: "https://example.com/a" },
+    { type: "text", value: '"' },
+  ]);
+
+  assert.deepEqual(tokenizeTextLinks("[https://example.com/b]"), [
+    { type: "text", value: "[" },
+    { type: "link", value: "https://example.com/b" },
+    { type: "text", value: "]" },
+  ]);
+});

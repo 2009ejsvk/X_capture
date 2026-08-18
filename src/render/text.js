@@ -1,5 +1,5 @@
 const URL_PATTERN = /https?:\/\/[^\s]+/gi;
-const TRAILING_PUNCTUATION = /[),.!?:;]+$/;
+const TRAILING_PUNCTUATION = /[),.!?:;'"\]}>»”’…、。」』]+$/;
 
 export function tokenizeTextLinks(value) {
   const text = String(value || "");
