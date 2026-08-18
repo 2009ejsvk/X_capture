@@ -251,6 +251,25 @@ function getCaptureViewport(captureArea) {
   };
 }
 
+export function describeCaptureError(error) {
+  const name = error && error.name ? String(error.name) : "";
+  const message = error && error.message ? String(error.message) : "";
+
+  if (name === "SecurityError" || /tainted|cross-origin/i.test(message)) {
+    return "이미지 저장 실패: 외부 이미지의 보안 정책(CORS) 때문에 캔버스를 읽을 수 없습니다. 이미지를 직접 업로드해 보세요.";
+  }
+
+  if (/allocation|memory|size|too large/i.test(message)) {
+    return "이미지 저장 실패: 캡처 크기가 너무 큽니다. 내보내기 배율을 낮춰 보세요.";
+  }
+
+  if (message) {
+    return `이미지 저장 실패: ${message}`;
+  }
+
+  return "이미지 저장에 실패했습니다.";
+}
+
 export async function captureElementAsImage({
   captureArea,
   captureButton,
@@ -298,7 +317,7 @@ export async function captureElementAsImage({
     await downloadBlob(blob, filename, { downloadFallbackLink, setStatus });
     setStatus(`${extension.toUpperCase()} 파일을 저장했습니다.`, "success");
   } catch (error) {
-    setStatus("이미지 저장에 실패했습니다.", "error");
+    setStatus(describeCaptureError(error), "error");
   } finally {
     captureButton.disabled = false;
   }

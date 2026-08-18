@@ -246,6 +246,30 @@
                         />
                         원문 이미지 표시
                       </label>
+                      <div class="field-group">
+                        <label for="quoteImageInput"
+                          >원문 이미지 수정 · 추가</label
+                        >
+                        <div class="image-row">
+                          <input
+                            id="quoteImageInput"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                          />
+                          <button
+                            id="removeQuoteImageBtn"
+                            class="btn btn-ghost"
+                            type="button"
+                          >
+                            전체 삭제
+                          </button>
+                        </div>
+                        <small class="reply-media-hint">
+                          이미지가 없어도 추가할 수 있으며 최대 4장까지
+                          가능합니다.
+                        </small>
+                      </div>
                       <div
                         id="quoteImageSelector"
                         class="media-selector-list hidden"

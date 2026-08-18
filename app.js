@@ -8,14 +8,23 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
+  const DRAFT_KEY = "x-capture:draft:v2";
+  const DRAFT_SAVE_DELAY_MS = 400;
   const elements = getElements();
 
   const state = createInitialState();
-  const { applyStateToInputs, renderPreview } = createRenderer(elements, state);
+  const { applyStateToInputs, renderPreview } = createRenderer(
+    elements,
+    state,
+    { onStateChange: scheduleDraftSave },
+  );
   let activeFetchController = null;
   let fetchRequestId = 0;
   let previewExpanded = false;
   let activeEditorTab = "post";
+  let isCapturing = false;
+  let draftSaveTimer = 0;
+  let draftRestored = false;
 
   function setEditorTab(nextTab) {
     const tabs = {
@@ -86,6 +95,103 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     state.quoteText = elements.quoteText.value;
     Object.assign(state, captureSettings);
     renderPreview();
+    scheduleDraftSave();
+  }
+
+  function readStoredDraft() {
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) {
+        return null;
+      }
+
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeDraft() {
+    draftSaveTimer = 0;
+    const snapshot = { ...state, sourceUrlInput: elements.tweetUrl.value };
+
+    try {
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot));
+      return;
+    } catch (error) {
+      // Image data URLs are the only realistic way to blow the storage quota.
+    }
+
+    try {
+      window.localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({
+          ...snapshot,
+          profileImageSrc: "",
+          imageDataUrls: [],
+          quoteDataUrls: [],
+          quoteAuthorProfileImageSrc: "",
+          replyParents: (Array.isArray(snapshot.replyParents)
+            ? snapshot.replyParents
+            : []
+          ).map((item) => ({
+            ...item,
+            dataUrls: [],
+            authorProfileImageSrc: "",
+          })),
+          imagesOmitted: true,
+        }),
+      );
+    } catch (error) {
+      // Draft persistence is best-effort.
+    }
+  }
+
+  function scheduleDraftSave() {
+    if (!draftRestored) {
+      return;
+    }
+
+    if (draftSaveTimer) {
+      window.clearTimeout(draftSaveTimer);
+    }
+    draftSaveTimer = window.setTimeout(writeDraft, DRAFT_SAVE_DELAY_MS);
+  }
+
+  function clearDraft() {
+    if (draftSaveTimer) {
+      window.clearTimeout(draftSaveTimer);
+      draftSaveTimer = 0;
+    }
+
+    try {
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch (error) {
+      // Storage cleanup is best-effort.
+    }
+  }
+
+  function restoreDraft() {
+    const draft = readStoredDraft();
+    draftRestored = true;
+    if (!draft) {
+      return;
+    }
+
+    const { sourceUrlInput, imagesOmitted, ...draftState } = draft;
+    Object.assign(state, createInitialState(), draftState);
+    if (typeof sourceUrlInput === "string") {
+      elements.tweetUrl.value = sourceUrlInput;
+    }
+
+    applyStateToInputs();
+    renderPreview();
+    setStatus(
+      imagesOmitted
+        ? "이전 작업을 복구했습니다. 용량 때문에 이미지는 복구하지 못했습니다."
+        : "이전 작업을 복구했습니다.",
+    );
   }
 
   async function onFetchClick() {
@@ -116,9 +222,12 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
       Object.assign(state, result.patch);
       applyStateToInputs();
       renderPreview();
+      scheduleDraftSave();
       if (result.usedFallback) {
         setStatus(
-          "불러오기 완료(보조 경로). 필요하면 내용을 수정하고 저장하세요.",
+          result.fallbackStatusMessage
+            ? `${result.fallbackStatusMessage} 필요하면 내용을 수정하고 저장하세요.`
+            : "불러오기 완료(보조 경로). 필요하면 내용을 수정하고 저장하세요.",
           "success",
         );
       } else {
@@ -160,29 +269,33 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     });
   }
 
-  async function onImageSelected(event) {
-    const files = Array.from(event.target.files || []).slice(0, 4);
+  async function addImagesFromInput(event, target) {
+    const input = event.target;
+    const files = Array.from(input.files || []).slice(0, 4);
     if (!files.length) {
       return;
     }
 
     try {
       const loaded = await Promise.all(files.map(readFileAsDataUrl));
-      const previousCount = normalizeMediaItems(state.imageDataUrls).length;
+      const previousCount = normalizeMediaItems(state[target.stateKey]).length;
       const nextImages = normalizeMediaItems([
-        ...normalizeMediaItems(state.imageDataUrls),
+        ...normalizeMediaItems(state[target.stateKey]),
         ...loaded.filter(Boolean),
       ]);
-      state.imageDataUrls = nextImages;
-      elements.mediaEditorSection.open = true;
-      elements.imageInput.value = "";
+      state[target.stateKey] = nextImages;
+      if (target.section && target.section.tagName === "DETAILS") {
+        target.section.open = true;
+      }
+      input.value = "";
       applyStateToInputs();
       renderPreview();
+      scheduleDraftSave();
       const addedCount = Math.max(nextImages.length - previousCount, 0);
       setStatus(
         addedCount
-          ? `${addedCount}장 추가 완료. 현재 ${nextImages.length}장입니다.`
-          : "이미지는 최대 4장까지 추가할 수 있습니다.",
+          ? `${target.label} ${addedCount}장 추가 완료. 현재 ${nextImages.length}장입니다.`
+          : `${target.label}는 최대 4장까지 추가할 수 있습니다.`,
         addedCount ? "success" : "error",
       );
     } catch (error) {
@@ -190,15 +303,23 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     }
   }
 
-  function onRemoveImage() {
-    state.imageDataUrls = [];
-    elements.imageInput.value = "";
+  function removeAllImages(target) {
+    state[target.stateKey] = [];
+    if (target.input) {
+      target.input.value = "";
+    }
     applyStateToInputs();
     renderPreview();
-    setStatus("이미지를 제거했습니다.");
+    scheduleDraftSave();
+    setStatus(`${target.label}를 모두 제거했습니다.`);
   }
 
   async function onCapture() {
+    if (isCapturing) {
+      return;
+    }
+
+    isCapturing = true;
     elements.quickCaptureBtn.disabled = true;
     try {
       await captureElementAsImage({
@@ -217,6 +338,7 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
         html2canvasImpl: window.html2canvas,
       });
     } finally {
+      isCapturing = false;
       elements.quickCaptureBtn.disabled = false;
     }
   }
@@ -225,6 +347,7 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
+    clearDraft();
     setEditorTab("post");
     applyStateToInputs();
     renderPreview();
@@ -277,7 +400,7 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     elements.fetchBtn.addEventListener("click", onFetchClick);
     elements.clearUrlBtn.addEventListener("click", onClearTweetUrl);
     elements.tweetUrl.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
+      if (event.key === "Enter" && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
         onFetchClick();
       }
@@ -319,8 +442,31 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
       state.quoteAuthorProfileImageSrc = "";
       renderPreview();
     });
-    elements.imageInput.addEventListener("change", onImageSelected);
-    elements.removeImageBtn.addEventListener("click", onRemoveImage);
+    const mainImageTarget = {
+      stateKey: "imageDataUrls",
+      label: "첨부 이미지",
+      input: elements.imageInput,
+      section: elements.mediaEditorSection,
+    };
+    const quoteImageTarget = {
+      stateKey: "quoteDataUrls",
+      label: "리트윗 원문 이미지",
+      input: elements.quoteImageInput,
+      section: elements.quoteEditorSection,
+    };
+
+    elements.imageInput.addEventListener("change", (event) => {
+      addImagesFromInput(event, mainImageTarget);
+    });
+    elements.removeImageBtn.addEventListener("click", () => {
+      removeAllImages(mainImageTarget);
+    });
+    elements.quoteImageInput.addEventListener("change", (event) => {
+      addImagesFromInput(event, quoteImageTarget);
+    });
+    elements.removeQuoteImageBtn.addEventListener("click", () => {
+      removeAllImages(quoteImageTarget);
+    });
     elements.captureBtn.addEventListener("click", onCapture);
     elements.quickCaptureBtn.addEventListener("click", onCapture);
     elements.resetBtn.addEventListener("click", resetEditors);
@@ -347,6 +493,26 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
     elements.previewFocusBtn.addEventListener("click", () => {
       setPreviewExpanded(!previewExpanded);
     });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && previewExpanded) {
+        event.preventDefault();
+        setPreviewExpanded(false);
+        return;
+      }
+
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        onCapture();
+      }
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (draftSaveTimer) {
+        window.clearTimeout(draftSaveTimer);
+        writeDraft();
+      }
+    });
   }
 
   clearLegacyDraft();
@@ -354,4 +520,5 @@ import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
   applyStateToInputs();
   setEditorTab(activeEditorTab);
   renderPreview();
+  restoreDraft();
 })();

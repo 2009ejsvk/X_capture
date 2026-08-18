@@ -345,3 +345,56 @@ test("fetchTweetFromVx backfills bookmark count when the richer payload omits it
 
   assert.equal(result.bookmarkCount, "6.4천");
 });
+
+test("fetchTweetFromVx decodes HTML entities in text and author name", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    jsonResponse({
+      tweet: {
+        id: "555555555",
+        user_name: "Ben &amp; Co",
+        user_screen_name: "benco",
+        text: "map: a -&gt; b, and a &lt; b &amp;&amp; c",
+        url: "https://x.com/benco/status/555555555",
+      },
+    });
+
+  const result = await fetchTweetFromVx("555555555");
+  assert.equal(result.tweetText, "map: a -> b, and a < b && c");
+  assert.equal(result.authorName, "Ben & Co");
+});
+
+test("fetchTweetFromVx prefers the original post time for a retweet", async (t) => {
+  const originalFetch = globalThis.fetch;
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async () =>
+    jsonResponse({
+      tweet: {
+        id: "666666666",
+        user_name: "Retweeter",
+        user_screen_name: "retweeter",
+        created_at: "Wed Aug 13 10:00:00 +0000 2025",
+        text: "RT @original: hello",
+        url: "https://x.com/retweeter/status/666666666",
+        retweeted_status: {
+          id: "111111111",
+          user_name: "Original",
+          user_screen_name: "original",
+          created_at: "Mon Aug 04 09:30:00 +0000 2025",
+          text: "hello",
+          url: "https://x.com/original/status/111111111",
+        },
+      },
+    });
+
+  const result = await fetchTweetFromVx("666666666");
+  assert.match(result.tweetDate, /^2025-08-04/);
+  assert.equal(result.authorName, "Original");
+});

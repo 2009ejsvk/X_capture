@@ -1,6 +1,11 @@
 import { normalizeMediaItems } from "../media.js";
 
-export function createMediaSelector(titleText, mediaItems, onToggle) {
+export function createMediaSelector(
+  titleText,
+  mediaItems,
+  onToggle,
+  actions = {},
+) {
   const normalizedMedia = normalizeMediaItems(mediaItems);
   if (!normalizedMedia.length) {
     return null;
@@ -16,6 +21,18 @@ export function createMediaSelector(titleText, mediaItems, onToggle) {
 
   const grid = document.createElement("div");
   grid.className = "media-selector-grid";
+
+  const createIconButton = (label, symbol, disabled, handler) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "btn btn-ghost media-selector-action";
+    button.textContent = symbol;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    button.disabled = disabled;
+    button.addEventListener("click", handler);
+    return button;
+  };
 
   normalizedMedia.forEach((item, index) => {
     const entry = document.createElement("div");
@@ -46,6 +63,40 @@ export function createMediaSelector(titleText, mediaItems, onToggle) {
     label.appendChild(text);
     entry.appendChild(thumb);
     entry.appendChild(label);
+
+    if (actions.onMove || actions.onRemove) {
+      const actionRow = document.createElement("div");
+      actionRow.className = "media-selector-actions";
+
+      if (actions.onMove) {
+        actionRow.appendChild(
+          createIconButton("앞으로 이동", "←", index === 0, () => {
+            actions.onMove(index, index - 1);
+          }),
+        );
+        actionRow.appendChild(
+          createIconButton(
+            "뒤로 이동",
+            "→",
+            index === normalizedMedia.length - 1,
+            () => {
+              actions.onMove(index, index + 1);
+            },
+          ),
+        );
+      }
+
+      if (actions.onRemove) {
+        actionRow.appendChild(
+          createIconButton("이 이미지 삭제", "✕", false, () => {
+            actions.onRemove(index);
+          }),
+        );
+      }
+
+      entry.appendChild(actionRow);
+    }
+
     grid.appendChild(entry);
   });
 

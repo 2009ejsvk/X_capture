@@ -85,7 +85,13 @@ export async function toDisplayImageSrc(imageUrl, options = {}) {
 
   const loader = dataUrlFromRemoteImage(normalizedUrl, options).then(
     (dataUrl) => {
-      return dataUrl || normalizedUrl;
+      // 변환 실패(원본 URL 그대로)는 캐시하지 않는다. 일시적 네트워크 오류가
+      // 세션 내내 고정되는 것을 막기 위함이다.
+      if (!dataUrl) {
+        imageSourceCache.delete(normalizedUrl);
+        return normalizedUrl;
+      }
+      return dataUrl;
     },
   );
 
