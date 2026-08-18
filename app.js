@@ -1,10 +1,10 @@
-import { captureElementAsImage } from "./src/capture.js?v=font-effects-20260802";
-import { getElements } from "./src/app/elements.js?v=editor-tabs-v3-20260802";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media-links-20260802";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=default-suit-xlarge-20260802";
-import { createInitialState } from "./src/domain/tweet-model.js?v=default-suit-xlarge-20260802";
-import { normalizeMediaItems } from "./src/media.js";
-import { createRenderer } from "./src/render.js?v=editor-tabs-v3-20260802";
+import { captureElementAsImage } from "./src/capture.js?v=entity-decode-20260818";
+import { getElements } from "./src/app/elements.js?v=entity-decode-20260818";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=entity-decode-20260818";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=entity-decode-20260818";
+import { createInitialState } from "./src/domain/tweet-model.js?v=entity-decode-20260818";
+import { normalizeMediaItems } from "./src/media.js?v=entity-decode-20260818";
+import { createRenderer } from "./src/render.js?v=entity-decode-20260818";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";

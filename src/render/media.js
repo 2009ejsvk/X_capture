@@ -1,4 +1,4 @@
-import { getVisibleMediaSrcs } from "../media.js";
+import { getVisibleMediaSrcs } from "../media.js?v=entity-decode-20260818";
 
 export function populateTweetMedia(container, mediaItems, altPrefix, layout) {
   container.innerHTML = "";

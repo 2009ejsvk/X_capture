@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { globSync, readFileSync } from "node:fs";
 import test from "node:test";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
@@ -145,4 +145,40 @@ test("media selectors expose per-image remove and reorder actions", () => {
     (renderer.match(/onMove: \(fromIndex, toIndex\) =>/g) || []).length,
     3,
   );
+});
+
+test("every local module import shares one cache-busting token", () => {
+  // index.html은 갱신되고 모듈은 캐시에서 오는 조합을 막는다.
+  // 토큰이 어긋나면 옛 elements.js가 새 app.js와 섞여 앱이 죽는다.
+  const root = new URL("../", import.meta.url);
+  const sources = [
+    "app.js",
+    ...globSync("src/**/*.js", { cwd: root }).map((path) =>
+      path.split("\\").join("/"),
+    ),
+  ];
+
+  const tokens = new Set();
+  const unversioned = [];
+
+  sources.forEach((relativePath) => {
+    const source = readFileSync(new URL(relativePath, root), "utf8");
+    [...source.matchAll(/from\s+"(\.\.?\/[^"]+\.js)([^"]*)"/g)].forEach(
+      ([, path, query]) => {
+        const matchedToken = query.match(/^\?v=(.+)$/);
+        if (matchedToken) {
+          tokens.add(matchedToken[1]);
+        } else {
+          unversioned.push(`${relativePath} -> ${path}`);
+        }
+      },
+    );
+  });
+
+  assert.deepEqual(unversioned, []);
+  assert.equal(tokens.size, 1, `mixed tokens: ${[...tokens].join(", ")}`);
+
+  const [token] = [...tokens];
+  assert.ok(html.includes(`./app.js?v=${token}`));
+  assert.ok(html.includes(`./styles.css?v=${token}`));
 });

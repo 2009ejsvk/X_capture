@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=reply-thread-v2-20260802";
+} from "./utils.js?v=entity-decode-20260818";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,17 +14,20 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=default-suit-xlarge-20260802";
-import { getVisibleMediaSrcs, normalizeMediaItems } from "./media.js";
+} from "./domain/capture-settings.js?v=entity-decode-20260818";
+import {
+  getVisibleMediaSrcs,
+  normalizeMediaItems,
+} from "./media.js?v=entity-decode-20260818";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js";
-import { createMediaSelector } from "./render/media-selector.js";
-import { populateTweetMedia } from "./render/media.js";
-import { createReplyTweetCard } from "./render/reply-card.js?v=reply-thread-v2-20260802";
-import { resolveSourceMeta } from "./render/source-meta.js";
-import { renderTextWithLinks } from "./render/text.js";
+} from "./domain/tweet-model.js?v=entity-decode-20260818";
+import { createMediaSelector } from "./render/media-selector.js?v=entity-decode-20260818";
+import { populateTweetMedia } from "./render/media.js?v=entity-decode-20260818";
+import { createReplyTweetCard } from "./render/reply-card.js?v=entity-decode-20260818";
+import { resolveSourceMeta } from "./render/source-meta.js?v=entity-decode-20260818";
+import { renderTextWithLinks } from "./render/text.js?v=entity-decode-20260818";
 
 export function createRenderer(elements, state, options = {}) {
   function readImageFileAsDataUrl(file) {
