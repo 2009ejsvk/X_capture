@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./http.js";
+import { fetchWithTimeout } from "./http.js?v=entity-decode-20260818";
 
 export function parseOembedHtml(html) {
   const parser = new DOMParser();

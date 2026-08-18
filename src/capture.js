@@ -1,8 +1,8 @@
 import {
   resolveCaptureScale,
   resolveExportFormat,
-} from "./domain/capture-settings.js";
-import { createCaptureFilename } from "./capture/filename.js";
+} from "./domain/capture-settings.js?v=entity-decode-20260818";
+import { createCaptureFilename } from "./capture/filename.js?v=entity-decode-20260818";
 
 let activeDownloadHref = "";
 

@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./services/http.js";
+import { fetchWithTimeout } from "./services/http.js?v=entity-decode-20260818";
 
 const imageSourceCache = new Map();
 

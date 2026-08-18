@@ -7,9 +7,9 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=reply-thread-v2-20260802";
-import { normalizeMediaItems } from "../media.js";
-import { fetchWithTimeout } from "./http.js";
+} from "../utils.js?v=entity-decode-20260818";
+import { normalizeMediaItems } from "../media.js?v=entity-decode-20260818";
+import { fetchWithTimeout } from "./http.js?v=entity-decode-20260818";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {

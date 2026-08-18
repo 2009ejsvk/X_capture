@@ -2,9 +2,9 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   stripLeadingReplyMentions,
-} from "../utils.js?v=reply-thread-v2-20260802";
-import { normalizeMediaItems } from "../media.js";
-import { createDefaultCaptureSettings } from "./capture-settings.js?v=default-suit-xlarge-20260802";
+} from "../utils.js?v=entity-decode-20260818";
+import { normalizeMediaItems } from "../media.js?v=entity-decode-20260818";
+import { createDefaultCaptureSettings } from "./capture-settings.js?v=entity-decode-20260818";
 
 export function createInitialState() {
   return {
