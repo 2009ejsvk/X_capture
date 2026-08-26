@@ -1,10 +1,10 @@
-import { captureElementAsImage } from "./src/capture.js?v=entity-decode-20260818";
-import { getElements } from "./src/app/elements.js?v=entity-decode-20260818";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=entity-decode-20260818";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=entity-decode-20260818";
-import { createInitialState } from "./src/domain/tweet-model.js?v=entity-decode-20260818";
-import { normalizeMediaItems } from "./src/media.js?v=entity-decode-20260818";
-import { createRenderer } from "./src/render.js?v=entity-decode-20260818";
+import { captureElementAsImage } from "./src/capture.js?v=engagement-counts-20260826";
+import { getElements } from "./src/app/elements.js?v=engagement-counts-20260826";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=engagement-counts-20260826";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=engagement-counts-20260826";
+import { createInitialState } from "./src/domain/tweet-model.js?v=engagement-counts-20260826";
+import { normalizeMediaItems } from "./src/media.js?v=engagement-counts-20260826";
+import { createRenderer } from "./src/render.js?v=engagement-counts-20260826";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";

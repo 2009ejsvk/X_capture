@@ -1,4 +1,4 @@
-import { normalizeMediaItems } from "../media.js?v=entity-decode-20260818";
+import { normalizeMediaItems } from "../media.js?v=engagement-counts-20260826";
 
 export function createMediaSelector(
   titleText,
