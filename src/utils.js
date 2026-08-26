@@ -11,10 +11,19 @@ export function currentDateTimeLabel() {
   return formatNumericDateTime(new Date());
 }
 
-const compactCountFormatter = new Intl.NumberFormat("ko-KR", {
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
+function formatCompactCount(value) {
+  const units = [
+    [100_000_000, "억"],
+    [10_000, "만"],
+    [1_000, "천"],
+  ];
+  const [divisor, suffix] =
+    units.find(([threshold]) => value >= threshold) || units[2];
+  const truncated = Math.floor((value / divisor) * 10) / 10;
+  return `${truncated.toLocaleString("ko-KR", {
+    maximumFractionDigits: 1,
+  })}${suffix}`;
+}
 
 export function formatCountLabel(rawValue) {
   if (rawValue == null) {
@@ -25,7 +34,7 @@ export function formatCountLabel(rawValue) {
     if (rawValue < 1000) {
       return Math.round(rawValue).toLocaleString("ko-KR");
     }
-    return compactCountFormatter.format(rawValue);
+    return formatCompactCount(rawValue);
   }
 
   const text = String(rawValue).trim();
@@ -39,7 +48,7 @@ export function formatCountLabel(rawValue) {
       if (parsed < 1000) {
         return parsed.toLocaleString("ko-KR");
       }
-      return compactCountFormatter.format(parsed);
+      return formatCompactCount(parsed);
     }
   }
 

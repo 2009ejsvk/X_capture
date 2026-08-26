@@ -1,8 +1,8 @@
 import {
   resolveCaptureScale,
   resolveExportFormat,
-} from "./domain/capture-settings.js?v=engagement-counts-20260826";
-import { createCaptureFilename } from "./capture/filename.js?v=engagement-counts-20260826";
+} from "./domain/capture-settings.js?v=repost-total-20260826";
+import { createCaptureFilename } from "./capture/filename.js?v=repost-total-20260826";
 
 let activeDownloadHref = "";
 

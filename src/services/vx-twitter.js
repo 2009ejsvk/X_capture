@@ -7,9 +7,9 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=engagement-counts-20260826";
-import { normalizeMediaItems } from "../media.js?v=engagement-counts-20260826";
-import { fetchWithTimeout } from "./http.js?v=engagement-counts-20260826";
+} from "../utils.js?v=repost-total-20260826";
+import { normalizeMediaItems } from "../media.js?v=repost-total-20260826";
+import { fetchWithTimeout } from "./http.js?v=repost-total-20260826";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {
@@ -29,13 +29,24 @@ function pickVxRawDate(payload) {
 }
 
 function extractTweetMetrics(payload) {
+  const retweetCount = pickVxCount(payload, [
+    "retweets",
+    "retweet_count",
+    "retweetCount",
+  ]);
+  const quoteCount = pickVxCount(payload, [
+    "quotes",
+    "quote_count",
+    "quoteCount",
+  ]);
+
   return {
     tweetDate: formatDateLabel(pickVxRawDate(payload)),
     replyCount: formatCountLabel(
       pickVxCount(payload, ["replies", "reply_count", "replyCount"]),
     ),
     retweetCount: formatCountLabel(
-      pickVxCount(payload, ["retweets", "retweet_count", "retweetCount"]),
+      combineRepostCounts(retweetCount, quoteCount),
     ),
     likeCount: formatCountLabel(
       pickVxCount(payload, [
@@ -49,6 +60,15 @@ function extractTweetMetrics(payload) {
       pickVxCount(payload, ["bookmarks", "bookmark_count", "bookmarkCount"]),
     ),
   };
+}
+
+function combineRepostCounts(retweetCount, quoteCount) {
+  const retweets = parseComparableCount(retweetCount);
+  const quotes = parseComparableCount(quoteCount);
+  if (retweets == null || quotes == null) {
+    return retweetCount;
+  }
+  return retweets + quotes;
 }
 
 function pickVxCount(payload, variants) {
@@ -989,6 +1009,9 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
       "retweet_count",
       "retweetCount",
     ]) || pickVxCount(payload, ["retweets", "retweet_count", "retweetCount"]);
+  const quoteCountRaw =
+    pickVxCount(contentPayload, ["quotes", "quote_count", "quoteCount"]) ||
+    pickVxCount(payload, ["quotes", "quote_count", "quoteCount"]);
   const likeCountRaw =
     pickVxCount(contentPayload, [
       "likes",
@@ -1059,7 +1082,9 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
       pickVxProfileImage(contentPayload) || retweeterProfileImageUrl,
     imageUrls: resolvedImageUrls,
     replyCount: formatCountLabel(replyCountRaw),
-    retweetCount: formatCountLabel(retweetCountRaw),
+    retweetCount: formatCountLabel(
+      combineRepostCounts(retweetCountRaw, quoteCountRaw),
+    ),
     likeCount: formatCountLabel(likeCountRaw),
     bookmarkCount: formatCountLabel(bookmarkCountRaw),
     quote: normalizeQuoteMeta(quotePayload),
