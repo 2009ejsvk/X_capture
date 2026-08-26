@@ -7,9 +7,9 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=entity-decode-20260818";
-import { normalizeMediaItems } from "../media.js?v=entity-decode-20260818";
-import { fetchWithTimeout } from "./http.js?v=entity-decode-20260818";
+} from "../utils.js?v=engagement-counts-20260826";
+import { normalizeMediaItems } from "../media.js?v=engagement-counts-20260826";
+import { fetchWithTimeout } from "./http.js?v=engagement-counts-20260826";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {
@@ -76,7 +76,18 @@ function pickVxCount(payload, variants) {
     }
   });
 
-  return pickFirstNonEmpty(candidates);
+  const fallback = pickFirstNonEmpty(candidates);
+  let largest = "";
+  let largestNumber = -1;
+  for (const candidate of candidates) {
+    const comparable = parseComparableCount(candidate);
+    if (comparable != null && comparable > largestNumber) {
+      largest = candidate;
+      largestNumber = comparable;
+    }
+  }
+
+  return largest !== "" ? largest : fallback;
 }
 
 function pickVxRetweetedPayload(payload) {
@@ -569,15 +580,58 @@ async function fetchRawTweetPayload(tweetId, options = {}) {
   return backfillEngagementCounts(best, rest);
 }
 
-const BACKFILL_COUNT_KEYS = [
-  "bookmarks",
-  "bookmark_count",
-  "bookmarkCount",
-  "views",
-  "view_count",
-  "quotes",
-  "quote_count",
+const ENGAGEMENT_COUNT_VARIANTS = [
+  ["replies", "reply_count", "replyCount"],
+  ["retweets", "retweet_count", "retweetCount"],
+  ["likes", "favorite_count", "favoriteCount", "favourites"],
+  ["bookmarks", "bookmark_count", "bookmarkCount"],
+  ["views", "view_count", "viewCount"],
+  ["quotes", "quote_count", "quoteCount"],
 ];
+
+function parseComparableCount(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+
+  const text = String(value || "")
+    .trim()
+    .replace(/\s+/g, "");
+  const matched = text.match(/^([\d,.]+)([kmb]|천|만|억)?$/i);
+  if (!matched) {
+    return null;
+  }
+
+  const amount = Number(matched[1].replace(/,/g, ""));
+  const unit = (matched[2] || "").toLowerCase();
+  const multiplier =
+    {
+      k: 1_000,
+      천: 1_000,
+      만: 10_000,
+      m: 1_000_000,
+      억: 100_000_000,
+      b: 1_000_000_000,
+    }[unit] || 1;
+
+  return Number.isFinite(amount) && amount >= 0 ? amount * multiplier : null;
+}
+
+function pickLargestCount(payloads, variants) {
+  let selected = "";
+  let selectedNumber = -1;
+
+  for (const payload of payloads) {
+    const value = pickVxCount(payload, variants);
+    const comparable = parseComparableCount(value);
+    if (comparable != null && comparable > selectedNumber) {
+      selected = value;
+      selectedNumber = comparable;
+    }
+  }
+
+  return selected;
+}
 
 function backfillEngagementCounts(best, others) {
   if (!best || !others.length) {
@@ -606,13 +660,26 @@ function backfillEngagementCounts(best, others) {
     }
   }
 
-  for (const key of BACKFILL_COUNT_KEYS) {
-    if (merged[key] != null) {
+  // The APIs are refreshed independently, so a media-rich response can carry
+  // stale engagement numbers. Counts should never jump backwards while we are
+  // fetching the same post; keep the largest comparable value from all
+  // successful responses and expose it under a canonical top-level key.
+  const payloads = [best, ...others];
+  for (const variants of ENGAGEMENT_COUNT_VARIANTS) {
+    const largest = pickLargestCount(payloads, variants);
+    if (largest !== "") {
+      merged[variants[0]] = largest;
       continue;
     }
-    const donor = others.find((other) => other && other[key] != null);
-    if (donor) {
-      merged[key] = donor[key];
+
+    if (pickVxCount(merged, variants)) {
+      continue;
+    }
+    const donorValue = others
+      .map((other) => pickVxCount(other, variants))
+      .find(Boolean);
+    if (donorValue) {
+      merged[variants[0]] = donorValue;
     }
   }
   return merged;

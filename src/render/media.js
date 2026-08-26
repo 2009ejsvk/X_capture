@@ -1,4 +1,4 @@
-import { getVisibleMediaSrcs } from "../media.js?v=entity-decode-20260818";
+import { getVisibleMediaSrcs } from "../media.js?v=engagement-counts-20260826";
 
 export function populateTweetMedia(container, mediaItems, altPrefix, layout) {
   container.innerHTML = "";

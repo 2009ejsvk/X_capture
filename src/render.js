@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=entity-decode-20260818";
+} from "./utils.js?v=engagement-counts-20260826";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,20 +14,20 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=entity-decode-20260818";
+} from "./domain/capture-settings.js?v=engagement-counts-20260826";
 import {
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=entity-decode-20260818";
+} from "./media.js?v=engagement-counts-20260826";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=entity-decode-20260818";
-import { createMediaSelector } from "./render/media-selector.js?v=entity-decode-20260818";
-import { populateTweetMedia } from "./render/media.js?v=entity-decode-20260818";
-import { createReplyTweetCard } from "./render/reply-card.js?v=entity-decode-20260818";
-import { resolveSourceMeta } from "./render/source-meta.js?v=entity-decode-20260818";
-import { renderTextWithLinks } from "./render/text.js?v=entity-decode-20260818";
+} from "./domain/tweet-model.js?v=engagement-counts-20260826";
+import { createMediaSelector } from "./render/media-selector.js?v=engagement-counts-20260826";
+import { populateTweetMedia } from "./render/media.js?v=engagement-counts-20260826";
+import { createReplyTweetCard } from "./render/reply-card.js?v=engagement-counts-20260826";
+import { resolveSourceMeta } from "./render/source-meta.js?v=engagement-counts-20260826";
+import { renderTextWithLinks } from "./render/text.js?v=engagement-counts-20260826";
 
 export function createRenderer(elements, state, options = {}) {
   function readImageFileAsDataUrl(file) {

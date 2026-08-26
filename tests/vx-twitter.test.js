@@ -346,6 +346,87 @@ test("fetchTweetFromVx backfills bookmark count when the richer payload omits it
   assert.equal(result.bookmarkCount, "6.4천");
 });
 
+test("fetchTweetFromVx keeps the largest engagement counts across endpoints", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "7777777777";
+  const photoUrl = "https://pbs.twimg.com/media/COUNTS.jpg";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    const url = String(resource);
+
+    if (url.includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "Fresh Counts",
+          user_screen_name: "fresh_counts",
+          text: "hello",
+          replies: 40,
+          retweets: 1500,
+          likes: 2400,
+        },
+      });
+    }
+
+    return jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "Rich Media",
+        user_screen_name: "rich_media",
+        text: "hello",
+        replies: 4,
+        retweets: 150,
+        likes: 240,
+        media_extended: [
+          { type: "image", url: photoUrl, thumbnail_url: photoUrl },
+        ],
+        mediaURLs: [photoUrl],
+      },
+    });
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.replyCount, "40");
+  assert.equal(result.retweetCount, "1.5천");
+  assert.equal(result.likeCount, "2.4천");
+  assert.deepEqual(result.imageUrls, [photoUrl]);
+});
+
+test("fetchTweetFromVx keeps the largest count across nested metric shapes", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "8888888888";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    if (String(resource).includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          tweetID: tweetId,
+          user_name: "Nested Metrics",
+          user_screen_name: "nested_metrics",
+          text: "hello",
+          retweets: 150,
+          metrics: { retweet_count: 1500 },
+        },
+      });
+    }
+
+    return jsonResponse({}, 404);
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.retweetCount, "1.5천");
+});
+
 test("fetchTweetFromVx decodes HTML entities in text and author name", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
