@@ -53,6 +53,8 @@ test("sanitizeFetchedTweetText preserves links and strips media noise", () => {
 test("formatCountLabel compacts large numbers", () => {
   assert.equal(formatCountLabel("999"), "999");
   assert.equal(formatCountLabel("1,200"), "1.2천");
+  assert.equal(formatCountLabel("1,555"), "1.5천");
+  assert.equal(formatCountLabel("1,999"), "1.9천");
 });
 
 test("stripLeadingReplyMentions removes only reply targets at the start", () => {

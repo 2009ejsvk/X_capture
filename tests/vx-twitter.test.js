@@ -427,6 +427,48 @@ test("fetchTweetFromVx keeps the largest count across nested metric shapes", asy
   assert.equal(result.retweetCount, "1.5천");
 });
 
+test("fetchTweetFromVx includes quote reposts in the displayed repost count", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const tweetId = "2092087132785684983";
+
+  t.after(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  globalThis.fetch = async (resource) => {
+    if (String(resource).includes("api.fxtwitter.com")) {
+      return jsonResponse({
+        tweet: {
+          id: tweetId,
+          author: { name: "람쥐", screen_name: "rxmzi09" },
+          text: "부모님 몰래 방에서 강아지 키운지 벌써 2주째..",
+          replies: 13,
+          retweets: 150,
+          likes: 2940,
+          bookmarks: 463,
+          quotes: 1405,
+        },
+      });
+    }
+
+    return jsonResponse({
+      tweet: {
+        tweetID: tweetId,
+        user_name: "람쥐",
+        user_screen_name: "rxmzi09",
+        text: "부모님 몰래 방에서 강아지 키운지 벌써 2주째..",
+        replies: 13,
+        retweets: 150,
+        likes: 2940,
+      },
+    });
+  };
+
+  const result = await fetchTweetFromVx(tweetId, { timeoutMs: 0 });
+
+  assert.equal(result.retweetCount, "1.5천");
+});
+
 test("fetchTweetFromVx decodes HTML entities in text and author name", async (t) => {
   const originalFetch = globalThis.fetch;
   t.after(() => {
