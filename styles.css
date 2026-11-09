@@ -27,6 +27,20 @@
   --radius-md: 12px;
 }
 
+/*
+ * Windows ships no flag glyphs in Segoe UI Emoji, so 🇰🇷 renders as "KR".
+ * This font only covers flag code points (unicode-range) and is listed first
+ * in every font stack so flags look the same in the preview and the export.
+ */
+@font-face {
+  font-family: "Twemoji Country Flags";
+  src: url("./vendor/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+  unicode-range:
+    U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E,
+    U+E0073-E0074, U+E0077, U+E007F;
+}
+
 @font-face {
   font-family: "DNF BitBit";
   src: url("https://cdn.df.nexon.com/img/common/font/DNFBitBit-Regular.woff2")
@@ -42,7 +56,7 @@
 
 body {
   margin: 0;
-  font-family: "Noto Sans KR", sans-serif;
+  font-family: "Twemoji Country Flags", "Noto Sans KR", sans-serif;
   color: var(--ink);
   background:
     linear-gradient(180deg, rgba(29, 155, 240, 0.09), transparent 280px),
@@ -102,7 +116,8 @@ body {
 
 h1 {
   margin: 4px 0 6px;
-  font-family: "Space Grotesk", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Space Grotesk", "Noto Sans KR", sans-serif;
   font-size: clamp(28px, 8vw, 36px);
   line-height: 1.04;
 }
@@ -805,8 +820,15 @@ textarea:focus-visible {
   padding: 0;
   background: #000000;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    "Noto Sans KR", sans-serif;
+    "Twemoji Country Flags",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-scope="all"] {
@@ -823,75 +845,99 @@ textarea:focus-visible {
 .capture-area[data-font-family="system"],
 .font-sample[data-font-family="system"] {
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    "Noto Sans KR", sans-serif;
+    "Twemoji Country Flags",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="pretendard"],
 .font-sample[data-font-family="pretendard"] {
-  font-family: "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Pretendard", "Noto Sans KR", sans-serif;
 }
 
 .capture-area[data-font-family="noto-sans"],
 .font-sample[data-font-family="noto-sans"] {
-  font-family: "Noto Sans KR", sans-serif;
+  font-family: "Twemoji Country Flags", "Noto Sans KR", sans-serif;
 }
 
 .capture-area[data-font-family="noto-serif"],
 .font-sample[data-font-family="noto-serif"] {
-  font-family: "Noto Serif KR", serif;
+  font-family: "Twemoji Country Flags", "Noto Serif KR", serif;
 }
 
 .capture-area[data-font-family="galmuri"],
 .font-sample[data-font-family="galmuri"] {
   --capture-text-line: 1.5;
-  font-family: "Galmuri11", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Galmuri11", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="neo-dgm"],
 .font-sample[data-font-family="neo-dgm"] {
   --capture-text-line: 1.5;
-  font-family: "NeoDunggeunmo", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "NeoDunggeunmo", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="suit-heavy"],
 .font-sample[data-font-family="suit-heavy"] {
   --capture-body-weight: 800;
-  font-family: "SUIT Variable", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "SUIT Variable", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="wanted-heavy"],
 .font-sample[data-font-family="wanted-heavy"] {
   --capture-body-weight: 800;
-  font-family: "Wanted Sans Variable", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Wanted Sans Variable", "Pretendard",
+    "Noto Sans KR", sans-serif;
 }
 
 .capture-area[data-font-family="dnf-bitbit"][data-font-scope="all"],
 .capture-area[data-font-family="dnf-bitbit"][data-font-scope="emphasis"]
   :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="dnf-bitbit"] {
-  font-family: "DNF BitBit", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "DNF BitBit", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="gasoek"][data-font-scope="all"],
 .capture-area[data-font-family="gasoek"][data-font-scope="emphasis"]
   :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="gasoek"] {
-  font-family: "Gasoek One", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Gasoek One", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="black-han"][data-font-scope="all"],
 .capture-area[data-font-family="black-han"][data-font-scope="emphasis"]
   :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="black-han"] {
-  font-family: "Black Han Sans", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Black Han Sans", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-font-family="bagel-fat"][data-font-scope="all"],
 .capture-area[data-font-family="bagel-fat"][data-font-scope="emphasis"]
   :is(.name, .reply-item-name, .quote-name),
 .font-sample[data-font-family="bagel-fat"] {
-  font-family: "Bagel Fat One", "Pretendard", "Noto Sans KR", sans-serif;
+  font-family:
+    "Twemoji Country Flags", "Bagel Fat One", "Pretendard", "Noto Sans KR",
+    sans-serif;
 }
 
 .capture-area[data-text-shadow="on"][data-font-scope="all"] {
@@ -988,7 +1034,7 @@ textarea:focus-visible {
   flex: 0 0 auto;
   color: var(--accent-ink);
   font-size: 14px;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Twemoji Country Flags", "Space Grotesk", sans-serif;
   background: linear-gradient(135deg, #1d9bf0, #7856ff);
 }
 
@@ -1029,7 +1075,7 @@ textarea:focus-visible {
 
 .platform-mark {
   margin-left: auto;
-  font-family: Arial, sans-serif;
+  font-family: "Twemoji Country Flags", Arial, sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: -2px;

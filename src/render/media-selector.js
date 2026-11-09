@@ -1,4 +1,4 @@
-import { normalizeMediaItems } from "../media.js?v=repost-total-20260826";
+import { normalizeMediaItems } from "../media.js?v=flag-font-20261109";
 
 export function createMediaSelector(
   titleText,
