@@ -2,9 +2,9 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   stripLeadingReplyMentions,
-} from "../utils.js?v=repost-total-20260826";
-import { normalizeMediaItems } from "../media.js?v=repost-total-20260826";
-import { createDefaultCaptureSettings } from "./capture-settings.js?v=repost-total-20260826";
+} from "../utils.js?v=flag-font-20261109";
+import { normalizeMediaItems } from "../media.js?v=flag-font-20261109";
+import { createDefaultCaptureSettings } from "./capture-settings.js?v=flag-font-20261109";
 
 export function createInitialState() {
   return {

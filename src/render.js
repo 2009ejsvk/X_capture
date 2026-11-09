@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=repost-total-20260826";
+} from "./utils.js?v=flag-font-20261109";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,20 +14,20 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=repost-total-20260826";
+} from "./domain/capture-settings.js?v=flag-font-20261109";
 import {
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=repost-total-20260826";
+} from "./media.js?v=flag-font-20261109";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=repost-total-20260826";
-import { createMediaSelector } from "./render/media-selector.js?v=repost-total-20260826";
-import { populateTweetMedia } from "./render/media.js?v=repost-total-20260826";
-import { createReplyTweetCard } from "./render/reply-card.js?v=repost-total-20260826";
-import { resolveSourceMeta } from "./render/source-meta.js?v=repost-total-20260826";
-import { renderTextWithLinks } from "./render/text.js?v=repost-total-20260826";
+} from "./domain/tweet-model.js?v=flag-font-20261109";
+import { createMediaSelector } from "./render/media-selector.js?v=flag-font-20261109";
+import { populateTweetMedia } from "./render/media.js?v=flag-font-20261109";
+import { createReplyTweetCard } from "./render/reply-card.js?v=flag-font-20261109";
+import { resolveSourceMeta } from "./render/source-meta.js?v=flag-font-20261109";
+import { renderTextWithLinks } from "./render/text.js?v=flag-font-20261109";
 
 export function createRenderer(elements, state, options = {}) {
   function readImageFileAsDataUrl(file) {

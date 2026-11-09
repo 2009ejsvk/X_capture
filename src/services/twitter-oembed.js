@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./http.js?v=repost-total-20260826";
+import { fetchWithTimeout } from "./http.js?v=flag-font-20261109";
 
 export function parseOembedHtml(html) {
   const parser = new DOMParser();
