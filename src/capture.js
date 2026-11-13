@@ -1,8 +1,8 @@
 import {
   resolveCaptureScale,
   resolveExportFormat,
-} from "./domain/capture-settings.js?v=preview-first-20261113";
-import { createCaptureFilename } from "./capture/filename.js?v=preview-first-20261113";
+} from "./domain/capture-settings.js?v=kbd-source-20261113";
+import { createCaptureFilename } from "./capture/filename.js?v=kbd-source-20261113";
 
 let activeDownloadHref = "";
 
@@ -312,6 +312,11 @@ async function renderElementToBlob(
     windowHeight: viewport.windowHeight + target.scrollHeight,
     onclone: (clonedDocument) => {
       clonedDocument.body.classList.add("is-capturing");
+      // 카드 한 장만 찍을 때는 그 글의 출처 주소를 함께 보여 준다.
+      clonedDocument.body.classList.toggle(
+        "is-capturing-card",
+        target.classList.contains("tweet-card"),
+      );
       clonedDocument.body.removeAttribute("data-sheet");
     },
   });

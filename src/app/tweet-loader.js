@@ -2,26 +2,26 @@ import {
   MAX_REPLY_PARENTS,
   createReplyParentState,
   hasRenderableReply,
-} from "../domain/tweet-model.js?v=preview-first-20261113";
+} from "../domain/tweet-model.js?v=kbd-source-20261113";
 import {
   clearImageSourceCache,
   normalizeMediaItems,
   toDisplayImageSrc,
   toDisplayImageSrcs,
-} from "../media.js?v=preview-first-20261113";
+} from "../media.js?v=kbd-source-20261113";
 import {
   formatDateLabel,
   normalizeHandle,
   normalizeUrl,
   parseHandle,
   sanitizeFetchedTweetText,
-} from "../utils.js?v=preview-first-20261113";
+} from "../utils.js?v=kbd-source-20261113";
 import {
   fetchTweetFromOembed,
   fetchTweetFromVx,
   formatOembedError,
   parseOembedHtml,
-} from "../twitter-api.js?v=preview-first-20261113";
+} from "../twitter-api.js?v=kbd-source-20261113";
 
 async function normalizeReplyParents(replyParentMetas, options = {}) {
   return await Promise.all(

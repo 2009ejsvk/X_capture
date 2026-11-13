@@ -1,14 +1,14 @@
-import { getVisibleMediaSrcs } from "../media.js?v=preview-first-20261113";
+import { getVisibleMediaSrcs } from "../media.js?v=kbd-source-20261113";
 import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "../utils.js?v=preview-first-20261113";
-import { createTweetActionItem } from "./action-item.js?v=preview-first-20261113";
-import { populateTweetMedia } from "./media.js?v=preview-first-20261113";
-import { resolveSourceMeta } from "./source-meta.js?v=preview-first-20261113";
-import { renderTextWithLinks } from "./text.js?v=preview-first-20261113";
-import { tweetActionIconPaths } from "./tweet-action-icons.js?v=preview-first-20261113";
+} from "../utils.js?v=kbd-source-20261113";
+import { createTweetActionItem } from "./action-item.js?v=kbd-source-20261113";
+import { populateTweetMedia } from "./media.js?v=kbd-source-20261113";
+import { resolveSourceMeta } from "./source-meta.js?v=kbd-source-20261113";
+import { renderTextWithLinks } from "./text.js?v=kbd-source-20261113";
+import { tweetActionIconPaths } from "./tweet-action-icons.js?v=kbd-source-20261113";
 
 export function createReplyTweetCard(item, options) {
   const authorName = String((item && item.authorName) || "").trim();
@@ -154,6 +154,15 @@ export function createReplyTweetCard(item, options) {
   footMeta.appendChild(dotNode);
   footMeta.appendChild(sourceNode);
   footer.appendChild(footMeta);
+
+  // 글마다 따로 저장할 때 각 장에 출처가 남도록 원문 주소를 함께 둔다.
+  const sourceUrl = String((item && item.sourceUrl) || "").trim();
+  if (sourceUrl) {
+    const urlNode = document.createElement("span");
+    urlNode.className = "tweet-original-url";
+    urlNode.textContent = sourceUrl;
+    footer.appendChild(urlNode);
+  }
 
   article.appendChild(footer);
   return article;
