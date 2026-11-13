@@ -1,31 +1,32 @@
 import {
+  MAX_REPLY_PARENTS,
   createReplyParentState,
   hasRenderableReply,
-} from "../domain/tweet-model.js?v=flag-font-20261109";
+} from "../domain/tweet-model.js?v=preview-first-20261113";
 import {
   clearImageSourceCache,
   normalizeMediaItems,
   toDisplayImageSrc,
   toDisplayImageSrcs,
-} from "../media.js?v=flag-font-20261109";
+} from "../media.js?v=preview-first-20261113";
 import {
   formatDateLabel,
   normalizeHandle,
   normalizeUrl,
   parseHandle,
   sanitizeFetchedTweetText,
-} from "../utils.js?v=flag-font-20261109";
+} from "../utils.js?v=preview-first-20261113";
 import {
   fetchTweetFromOembed,
   fetchTweetFromVx,
   formatOembedError,
   parseOembedHtml,
-} from "../twitter-api.js?v=flag-font-20261109";
+} from "../twitter-api.js?v=preview-first-20261113";
 
 async function normalizeReplyParents(replyParentMetas, options = {}) {
   return await Promise.all(
     (Array.isArray(replyParentMetas) ? replyParentMetas : [])
-      .slice(0, 6)
+      .slice(0, MAX_REPLY_PARENTS)
       .map(async (meta) => {
         const normalizedMeta = meta && typeof meta === "object" ? meta : {};
         const [authorProfileImageSrc, dataUrls] = await Promise.all([

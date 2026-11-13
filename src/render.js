@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=flag-font-20261109";
+} from "./utils.js?v=preview-first-20261113";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,22 +14,33 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=flag-font-20261109";
+} from "./domain/capture-settings.js?v=preview-first-20261113";
 import {
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=flag-font-20261109";
+} from "./media.js?v=preview-first-20261113";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=flag-font-20261109";
-import { createMediaSelector } from "./render/media-selector.js?v=flag-font-20261109";
-import { populateTweetMedia } from "./render/media.js?v=flag-font-20261109";
-import { createReplyTweetCard } from "./render/reply-card.js?v=flag-font-20261109";
-import { resolveSourceMeta } from "./render/source-meta.js?v=flag-font-20261109";
-import { renderTextWithLinks } from "./render/text.js?v=flag-font-20261109";
+} from "./domain/tweet-model.js?v=preview-first-20261113";
+import { createMediaSelector } from "./render/media-selector.js?v=preview-first-20261113";
+import { populateTweetMedia } from "./render/media.js?v=preview-first-20261113";
+import { createReplyTweetCard } from "./render/reply-card.js?v=preview-first-20261113";
+import { resolveSourceMeta } from "./render/source-meta.js?v=preview-first-20261113";
+import { renderTextWithLinks } from "./render/text.js?v=preview-first-20261113";
 
 export function createRenderer(elements, state, options = {}) {
+  // 편집 시트가 가리키는 글: "main", 이전 글의 stateIndex, 또는 null.
+  let editingTarget = null;
+  let openReplyIndex = null;
+
+  function normalizeThreadLayout(value) {
+    return value === "merged" ? "merged" : "separate";
+  }
+
+  function handleKey(value) {
+    return normalizeHandle(value, "").replace(/^@/, "").toLowerCase();
+  }
   function readImageFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -101,8 +112,12 @@ export function createRenderer(elements, state, options = {}) {
     }
 
     orderedReplies.forEach(({ item, stateIndex }, orderIndex) => {
+      const isOpen = openReplyIndex === stateIndex;
       const editorItem = document.createElement("section");
       editorItem.className = "reply-editor-item thread-editor-card";
+      editorItem.classList.toggle("is-open", isOpen);
+      editorItem.classList.toggle("is-muted", item.visible === false);
+      editorItem.dataset.replyIndex = String(stateIndex);
 
       const header = document.createElement("header");
       header.className = "reply-editor-header";
@@ -111,8 +126,25 @@ export function createRenderer(elements, state, options = {}) {
       sequence.className = "thread-editor-sequence";
       sequence.textContent = String(orderIndex + 1);
 
-      const title = document.createElement("p");
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "reply-editor-toggle";
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      const title = document.createElement("span");
       title.className = "reply-editor-title";
+      const snippet = document.createElement("span");
+      snippet.className = "reply-editor-snippet";
+      toggle.appendChild(title);
+      toggle.appendChild(snippet);
+      toggle.addEventListener("click", () => {
+        openReplyIndex = isOpen ? null : stateIndex;
+        editingTarget = openReplyIndex;
+        renderReplyEditors();
+        renderPreview();
+        if (!isOpen && typeof options.onEditTargetChange === "function") {
+          options.onEditTargetChange();
+        }
+      });
       const updateTitle = () => {
         const currentItem = state.replyParents[stateIndex] || item;
         const authorName = String(currentItem.authorName || "").trim();
@@ -120,6 +152,12 @@ export function createRenderer(elements, state, options = {}) {
         title.textContent = toDisplayText(
           [authorName, authorHandle].filter(Boolean).join(" ") ||
             `이전 글 ${orderIndex + 1}`,
+        );
+        const firstLine = String(currentItem.text || "")
+          .split("\n")
+          .find((line) => line.trim());
+        snippet.textContent = toDisplayText(
+          firstLine ? firstLine.trim() : "본문 없음",
         );
       };
       updateTitle();
@@ -134,6 +172,7 @@ export function createRenderer(elements, state, options = {}) {
           return;
         }
         state.replyParents[stateIndex].visible = Boolean(event.target.checked);
+        editorItem.classList.toggle("is-muted", !event.target.checked);
         renderPreview();
         notifyStateChange();
       });
@@ -143,12 +182,32 @@ export function createRenderer(elements, state, options = {}) {
       visibilityRow.appendChild(visibilityText);
 
       header.appendChild(sequence);
-      header.appendChild(title);
+      header.appendChild(toggle);
       header.appendChild(visibilityRow);
       editorItem.appendChild(header);
 
+      // 접힌 글은 한 줄 요약만 그린다. 스레드가 길어도 화면이 늘어나지 않는다.
+      if (!isOpen) {
+        elements.replyEditorList.appendChild(editorItem);
+        return;
+      }
+
       const fields = document.createElement("div");
-      fields.className = "editor-grid reply-editor-grid";
+      fields.className = "reply-editor-grid reply-editor-body";
+
+      const metaSection = document.createElement("details");
+      metaSection.className = "editor-subsection";
+      const metaSummary = document.createElement("summary");
+      const metaSummaryTitle = document.createElement("span");
+      metaSummaryTitle.textContent = "작성자 · 날짜 · 반응 수";
+      const metaSummaryHint = document.createElement("small");
+      metaSummaryHint.textContent = "필요할 때만 수정";
+      metaSummary.appendChild(metaSummaryTitle);
+      metaSummary.appendChild(metaSummaryHint);
+      metaSection.appendChild(metaSummary);
+      const metaFields = document.createElement("div");
+      metaFields.className = "editor-grid editor-subsection-content";
+      metaSection.appendChild(metaFields);
 
       const appendField = (property, labelText, fieldOptions = {}) => {
         const group = document.createElement("div");
@@ -195,7 +254,11 @@ export function createRenderer(elements, state, options = {}) {
               return;
             }
             state.replyParents[stateIndex][property] = event.target.value;
-            if (property === "authorName" || property === "authorHandle") {
+            if (
+              property === "authorName" ||
+              property === "authorHandle" ||
+              property === "text"
+            ) {
               updateTitle();
             }
             renderPreview();
@@ -205,12 +268,22 @@ export function createRenderer(elements, state, options = {}) {
 
         group.appendChild(label);
         group.appendChild(input);
-        fields.appendChild(group);
+        (fieldOptions.container || fields).appendChild(group);
       };
 
-      appendField("authorName", "작성자명", { maxLength: 40 });
-      appendField("authorHandle", "핸들", { maxLength: 40 });
-      appendField("tweetDate", "날짜", { full: true, maxLength: 40 });
+      appendField("authorName", "작성자명", {
+        maxLength: 40,
+        container: metaFields,
+      });
+      appendField("authorHandle", "핸들", {
+        maxLength: 40,
+        container: metaFields,
+      });
+      appendField("tweetDate", "날짜", {
+        full: true,
+        maxLength: 40,
+        container: metaFields,
+      });
       appendField("text", "본문", {
         type: "textarea",
         rows: 5,
@@ -256,7 +329,8 @@ export function createRenderer(elements, state, options = {}) {
         group.appendChild(input);
         metrics.appendChild(group);
       });
-      fields.appendChild(metrics);
+      metaFields.appendChild(metrics);
+      fields.appendChild(metaSection);
 
       appendField("mediaLayout", "이미지 배치", {
         type: "select",
@@ -405,6 +479,18 @@ export function createRenderer(elements, state, options = {}) {
         editorItem.appendChild(mediaSelector);
       }
 
+      if (typeof options.onSaveCard === "function") {
+        const saveOne = document.createElement("button");
+        saveOne.type = "button";
+        saveOne.className = "btn btn-ghost reply-save-one";
+        saveOne.textContent = "이 글만 이미지로 저장";
+        saveOne.disabled = item.visible === false;
+        saveOne.addEventListener("click", () => {
+          options.onSaveCard(stateIndex);
+        });
+        editorItem.appendChild(saveOne);
+      }
+
       elements.replyEditorList.appendChild(editorItem);
     });
 
@@ -545,6 +631,9 @@ export function createRenderer(elements, state, options = {}) {
     elements.likeCount.value = state.likeCount;
     elements.bookmarkCount.value = state.bookmarkCount;
     elements.mediaLayout.value = state.mediaLayout;
+    if (elements.threadLayout) {
+      elements.threadLayout.value = normalizeThreadLayout(state.threadLayout);
+    }
     elements.showReplyToggle.checked = Boolean(state.showReply);
     elements.showReplyMediaToggle.checked = Boolean(state.showReplyMedia);
     elements.showQuoteToggle.checked = Boolean(state.showQuote);
@@ -607,9 +696,12 @@ export function createRenderer(elements, state, options = {}) {
     const showReplyMedia = Boolean(state.showReplyMedia);
     const replyItems = getReplyParentsInDisplayOrder();
 
+    const merged = normalizeThreadLayout(state.threadLayout) === "merged";
+    let previousHandle = null;
+
     elements.previewReplyList.innerHTML = "";
     if (showReply && replyItems.length) {
-      replyItems.forEach(({ item }) => {
+      replyItems.forEach(({ item, stateIndex }) => {
         if (item && item.visible === false) {
           return;
         }
@@ -626,19 +718,77 @@ export function createRenderer(elements, state, options = {}) {
           return;
         }
 
-        elements.previewReplyList.appendChild(
-          createReplyTweetCard(item, {
-            showReplyMedia,
-            mediaLayout: item.mediaLayout === "grid" ? "grid" : "vertical",
-          }),
+        const card = createReplyTweetCard(item, {
+          showReplyMedia,
+          mediaLayout: item.mediaLayout === "grid" ? "grid" : "vertical",
+        });
+        const currentHandle = handleKey(item.authorHandle);
+        card.dataset.replyIndex = String(stateIndex);
+        card.classList.toggle("is-editing", editingTarget === stateIndex);
+        // 합치기 모드에서는 같은 작성자가 이어 쓴 글의 머리말을 숨긴다.
+        card.classList.toggle(
+          "is-merge-continuation",
+          merged && previousHandle !== null && previousHandle === currentHandle,
         );
+        previousHandle = currentHandle;
+        elements.previewReplyList.appendChild(card);
       });
     }
+
+    const mainCard = getMainCard();
+    if (mainCard) {
+      mainCard.classList.toggle("is-editing", editingTarget === "main");
+      mainCard.classList.toggle(
+        "is-merge-continuation",
+        merged &&
+          previousHandle !== null &&
+          previousHandle === handleKey(state.authorHandle),
+      );
+    }
+    elements.captureArea.dataset.threadLayout =
+      merged && elements.previewReplyList.childElementCount
+        ? "merged"
+        : "separate";
 
     elements.previewReplyList.classList.toggle(
       "hidden",
       !elements.previewReplyList.childElementCount,
     );
+  }
+
+  function getMainCard() {
+    return elements.captureArea.querySelector(":scope > .tweet-card");
+  }
+
+  // 저장 대상이 되는 카드 목록(화면에 보이는 순서).
+  function getCaptureCards() {
+    const cards = Array.from(elements.previewReplyList.children);
+    const mainCard = getMainCard();
+    if (mainCard) {
+      cards.push(mainCard);
+    }
+    return cards;
+  }
+
+  function setEditingTarget(target) {
+    editingTarget =
+      target === "main" || Number.isInteger(target) ? target : null;
+    const nextOpenReply = Number.isInteger(editingTarget)
+      ? editingTarget
+      : null;
+    if (nextOpenReply !== openReplyIndex) {
+      openReplyIndex = nextOpenReply;
+      renderReplyEditors();
+    }
+    renderPreview();
+  }
+
+  function getOpenReplyEditor() {
+    return openReplyIndex === null
+      ? null
+      : elements.replyEditorList.querySelector(
+          `[data-reply-index="${openReplyIndex}"]`,
+        );
   }
 
   function renderQuote() {
@@ -835,6 +985,9 @@ export function createRenderer(elements, state, options = {}) {
 
   return {
     applyStateToInputs,
+    getCaptureCards,
+    getOpenReplyEditor,
     renderPreview,
+    setEditingTarget,
   };
 }

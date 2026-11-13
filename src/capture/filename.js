@@ -35,7 +35,7 @@ function datePartFromLabel(tweetDate, timestamp) {
 }
 
 export function createCaptureFilename(
-  { authorHandle, authorName, tweetDate, sourceUrl } = {},
+  { authorHandle, authorName, tweetDate, sourceUrl, sequence } = {},
   extension = "png",
   timestamp = Date.now(),
 ) {
@@ -43,7 +43,11 @@ export function createCaptureFilename(
   const datePart = safeFilenamePart(datePartFromLabel(tweetDate, timestamp));
   const tweetId = safeFilenamePart(extractTweetId(sourceUrl));
   const extensionPart = safeFilenamePart(extension, "png").toLowerCase();
-  const parts = [authorPart, datePart, tweetId].filter(Boolean);
+  // 글마다 따로 저장할 때 파일이 순서대로 정렬되도록 번호를 붙인다.
+  const sequencePart = Number.isInteger(sequence)
+    ? String(sequence).padStart(2, "0")
+    : "";
+  const parts = [authorPart, datePart, tweetId, sequencePart].filter(Boolean);
 
   return `${parts.join("-")}.${extensionPart}`;
 }

@@ -2,5 +2,5 @@ export {
   fetchTweetFromOembed,
   formatOembedError,
   parseOembedHtml,
-} from "./services/twitter-oembed.js?v=flag-font-20261109";
-export { fetchTweetFromVx } from "./services/vx-twitter.js?v=flag-font-20261109";
+} from "./services/twitter-oembed.js?v=preview-first-20261113";
+export { fetchTweetFromVx } from "./services/vx-twitter.js?v=preview-first-20261113";
