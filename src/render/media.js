@@ -1,4 +1,4 @@
-import { getVisibleMediaSrcs } from "../media.js?v=preview-first-20261113";
+import { getVisibleMediaSrcs } from "../media.js?v=kbd-source-20261113";
 
 export function populateTweetMedia(container, mediaItems, altPrefix, layout) {
   container.innerHTML = "";

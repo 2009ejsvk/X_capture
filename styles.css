@@ -2258,3 +2258,27 @@ body[data-sheet] .toast {
     bottom: 24px;
   }
 }
+
+/* 이전 글의 출처 주소는 그 글만 따로 저장할 때만 보인다. 한 장으로 저장할
+ * 때는 지금처럼 맨 아래 글에만 출처가 남는다. */
+.capture-reply-list .tweet-original-url {
+  display: none;
+}
+
+body.is-capturing-card .capture-reply-list .tweet-original-url {
+  display: block;
+}
+
+@media (max-width: 979px) {
+  body.has-keyboard .editor-panel,
+  body.has-keyboard .settings-panel {
+    bottom: var(--kb-inset, 0px);
+    height: min(var(--sheet-height), calc(var(--vv-height, 100dvh) - 64px));
+    padding-bottom: 14px;
+    transition: none;
+  }
+
+  body.has-keyboard .toast {
+    display: none;
+  }
+}

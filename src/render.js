@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=preview-first-20261113";
+} from "./utils.js?v=kbd-source-20261113";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,20 +14,20 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=preview-first-20261113";
+} from "./domain/capture-settings.js?v=kbd-source-20261113";
 import {
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=preview-first-20261113";
+} from "./media.js?v=kbd-source-20261113";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=preview-first-20261113";
-import { createMediaSelector } from "./render/media-selector.js?v=preview-first-20261113";
-import { populateTweetMedia } from "./render/media.js?v=preview-first-20261113";
-import { createReplyTweetCard } from "./render/reply-card.js?v=preview-first-20261113";
-import { resolveSourceMeta } from "./render/source-meta.js?v=preview-first-20261113";
-import { renderTextWithLinks } from "./render/text.js?v=preview-first-20261113";
+} from "./domain/tweet-model.js?v=kbd-source-20261113";
+import { createMediaSelector } from "./render/media-selector.js?v=kbd-source-20261113";
+import { populateTweetMedia } from "./render/media.js?v=kbd-source-20261113";
+import { createReplyTweetCard } from "./render/reply-card.js?v=kbd-source-20261113";
+import { resolveSourceMeta } from "./render/source-meta.js?v=kbd-source-20261113";
+import { renderTextWithLinks } from "./render/text.js?v=kbd-source-20261113";
 
 export function createRenderer(elements, state, options = {}) {
   // 편집 시트가 가리키는 글: "main", 이전 글의 stateIndex, 또는 null.

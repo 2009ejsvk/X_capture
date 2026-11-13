@@ -1,14 +1,14 @@
-import { captureElementsAsImages } from "./src/capture.js?v=preview-first-20261113";
+import { captureElementsAsImages } from "./src/capture.js?v=kbd-source-20261113";
 import {
   enhanceSelectAsChips,
   syncChips,
-} from "./src/app/chips.js?v=preview-first-20261113";
-import { getElements } from "./src/app/elements.js?v=preview-first-20261113";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=preview-first-20261113";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=preview-first-20261113";
-import { createInitialState } from "./src/domain/tweet-model.js?v=preview-first-20261113";
-import { normalizeMediaItems } from "./src/media.js?v=preview-first-20261113";
-import { createRenderer } from "./src/render.js?v=preview-first-20261113";
+} from "./src/app/chips.js?v=kbd-source-20261113";
+import { getElements } from "./src/app/elements.js?v=kbd-source-20261113";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=kbd-source-20261113";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=kbd-source-20261113";
+import { createInitialState } from "./src/domain/tweet-model.js?v=kbd-source-20261113";
+import { normalizeMediaItems } from "./src/media.js?v=kbd-source-20261113";
+import { createRenderer } from "./src/render.js?v=kbd-source-20261113";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -718,6 +718,38 @@ import { createRenderer } from "./src/render.js?v=preview-first-20261113";
         onCapture();
       }
     });
+
+    // 화면 키보드가 올라오면 시트를 키보드 바로 위로 올리고 높이를 줄인다.
+    // 고정 배치 요소는 키보드를 모르기 때문에 visualViewport 로 직접 맞춘다.
+    const viewport = window.visualViewport;
+    if (viewport) {
+      const syncKeyboardInset = () => {
+        const inset = Math.max(
+          0,
+          document.documentElement.clientHeight -
+            viewport.offsetTop -
+            viewport.height,
+        );
+        const keyboardOpen = inset > 120;
+        const rootStyle = document.documentElement.style;
+        document.body.classList.toggle("has-keyboard", keyboardOpen);
+        rootStyle.setProperty("--kb-inset", `${keyboardOpen ? inset : 0}px`);
+        rootStyle.setProperty("--vv-height", `${viewport.height}px`);
+
+        const focused = document.activeElement;
+        if (
+          keyboardOpen &&
+          focused &&
+          focused.closest(".editor-panel, .settings-panel")
+        ) {
+          window.requestAnimationFrame(() => {
+            focused.scrollIntoView({ block: "center" });
+          });
+        }
+      };
+      viewport.addEventListener("resize", syncKeyboardInset);
+      viewport.addEventListener("scroll", syncKeyboardInset);
+    }
 
     enhanceSelectAsChips(elements.threadLayout);
     enhanceSelectAsChips(elements.mediaLayout);

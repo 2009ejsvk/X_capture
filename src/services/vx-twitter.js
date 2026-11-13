@@ -7,10 +7,10 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=preview-first-20261113";
-import { MAX_REPLY_PARENTS } from "../domain/tweet-model.js?v=preview-first-20261113";
-import { normalizeMediaItems } from "../media.js?v=preview-first-20261113";
-import { fetchWithTimeout } from "./http.js?v=preview-first-20261113";
+} from "../utils.js?v=kbd-source-20261113";
+import { MAX_REPLY_PARENTS } from "../domain/tweet-model.js?v=kbd-source-20261113";
+import { normalizeMediaItems } from "../media.js?v=kbd-source-20261113";
+import { fetchWithTimeout } from "./http.js?v=kbd-source-20261113";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {
