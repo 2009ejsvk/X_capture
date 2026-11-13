@@ -2282,3 +2282,19 @@ body.is-capturing-card .capture-reply-list .tweet-original-url {
     display: none;
   }
 }
+
+/* 미리보기 머리말: 안내 글은 남는 폭만 쓰고 버튼은 줄지 않는다. */
+.preview-panel .panel-heading > div {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.preview-panel .panel-heading .panel-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-panel .panel-heading .btn {
+  flex: 0 0 auto;
+}

@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./services/http.js?v=kbd-source-20261113";
+import { fetchWithTimeout } from "./services/http.js?v=copy-text-20261113";
 
 const imageSourceCache = new Map();
 

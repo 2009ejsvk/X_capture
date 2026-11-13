@@ -31,7 +31,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=kbd-source-20261113" />
+    <link rel="stylesheet" href="./styles.css?v=copy-text-20261113" />
   </head>
   <body>
     <main class="app-shell">
@@ -556,6 +556,13 @@
             <p class="panel-description">글을 누르면 바로 편집됩니다.</p>
           </div>
           <button
+            id="copyTextBtn"
+            class="btn btn-ghost btn-small"
+            type="button"
+          >
+            글 복사
+          </button>
+          <button
             id="openThreadBtn"
             class="btn btn-ghost btn-small hidden"
             type="button"
@@ -750,6 +757,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=kbd-source-20261113"></script>
+    <script type="module" src="./app.js?v=copy-text-20261113"></script>
   </body>
 </html>

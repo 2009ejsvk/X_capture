@@ -1,14 +1,14 @@
-import { captureElementsAsImages } from "./src/capture.js?v=kbd-source-20261113";
+import { captureElementsAsImages } from "./src/capture.js?v=copy-text-20261113";
 import {
   enhanceSelectAsChips,
   syncChips,
-} from "./src/app/chips.js?v=kbd-source-20261113";
-import { getElements } from "./src/app/elements.js?v=kbd-source-20261113";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=kbd-source-20261113";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=kbd-source-20261113";
-import { createInitialState } from "./src/domain/tweet-model.js?v=kbd-source-20261113";
-import { normalizeMediaItems } from "./src/media.js?v=kbd-source-20261113";
-import { createRenderer } from "./src/render.js?v=kbd-source-20261113";
+} from "./src/app/chips.js?v=copy-text-20261113";
+import { getElements } from "./src/app/elements.js?v=copy-text-20261113";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=copy-text-20261113";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=copy-text-20261113";
+import { createInitialState } from "./src/domain/tweet-model.js?v=copy-text-20261113";
+import { normalizeMediaItems } from "./src/media.js?v=copy-text-20261113";
+import { createRenderer } from "./src/render.js?v=copy-text-20261113";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -442,6 +442,38 @@ import { createRenderer } from "./src/render.js?v=kbd-source-20261113";
     }
   }
 
+  async function copyThreadText() {
+    const text = renderer.getThreadText();
+    if (!text) {
+      setStatus("복사할 본문이 없습니다.", "error");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      // 클립보드 API 가 막힌 브라우저에서는 임시 입력칸을 선택해 복사한다.
+      const helper = document.createElement("textarea");
+      helper.value = text;
+      helper.setAttribute("readonly", "");
+      helper.style.position = "fixed";
+      helper.style.opacity = "0";
+      document.body.appendChild(helper);
+      helper.select();
+      const copied = document.execCommand("copy");
+      helper.remove();
+      if (!copied) {
+        setStatus(
+          "복사하지 못했습니다. 브라우저의 복사 권한을 확인하세요.",
+          "error",
+        );
+        return;
+      }
+    }
+
+    setStatus(`본문을 복사했습니다. (${Array.from(text).length}자)`, "success");
+  }
+
   function closeSaveChoice() {
     elements.saveChoice.classList.add("hidden");
   }
@@ -662,6 +694,7 @@ import { createRenderer } from "./src/render.js?v=kbd-source-20261113";
       const replyIndex = card.dataset.replyIndex;
       editCard(replyIndex === undefined ? "main" : Number(replyIndex));
     });
+    elements.copyTextBtn.addEventListener("click", copyThreadText);
     elements.openThreadBtn.addEventListener("click", () => {
       setEditorTab("reply");
       renderer.setEditingTarget(null);

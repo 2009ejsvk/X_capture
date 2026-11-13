@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=kbd-source-20261113";
+} from "./utils.js?v=copy-text-20261113";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,20 +14,20 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=kbd-source-20261113";
+} from "./domain/capture-settings.js?v=copy-text-20261113";
 import {
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=kbd-source-20261113";
+} from "./media.js?v=copy-text-20261113";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=kbd-source-20261113";
-import { createMediaSelector } from "./render/media-selector.js?v=kbd-source-20261113";
-import { populateTweetMedia } from "./render/media.js?v=kbd-source-20261113";
-import { createReplyTweetCard } from "./render/reply-card.js?v=kbd-source-20261113";
-import { resolveSourceMeta } from "./render/source-meta.js?v=kbd-source-20261113";
-import { renderTextWithLinks } from "./render/text.js?v=kbd-source-20261113";
+} from "./domain/tweet-model.js?v=copy-text-20261113";
+import { createMediaSelector } from "./render/media-selector.js?v=copy-text-20261113";
+import { populateTweetMedia } from "./render/media.js?v=copy-text-20261113";
+import { createReplyTweetCard } from "./render/reply-card.js?v=copy-text-20261113";
+import { resolveSourceMeta } from "./render/source-meta.js?v=copy-text-20261113";
+import { renderTextWithLinks } from "./render/text.js?v=copy-text-20261113";
 
 export function createRenderer(elements, state, options = {}) {
   // 편집 시트가 가리키는 글: "main", 이전 글의 stateIndex, 또는 null.
@@ -770,6 +770,34 @@ export function createRenderer(elements, state, options = {}) {
     return cards;
   }
 
+  // 미리보기에 보이는 글의 본문을 위에서부터 순서대로 이어 붙인다.
+  function getThreadText() {
+    const normalize = (value) =>
+      toDisplayText(
+        stripLeadingReplyMentions(String(value || "").replace(/\r\n/g, "\n")),
+      ).trim();
+    const hasReplies =
+      Array.isArray(state.replyParents) && state.replyParents.length > 0;
+    const parts = [];
+
+    if (state.showReply) {
+      getReplyParentsInDisplayOrder().forEach(({ item }) => {
+        if (item && item.visible !== false) {
+          parts.push(normalize(item.text));
+        }
+      });
+    }
+    parts.push(
+      hasReplies
+        ? normalize(state.tweetText)
+        : toDisplayText(
+            String(state.tweetText || "").replace(/\r\n/g, "\n"),
+          ).trim(),
+    );
+
+    return parts.filter(Boolean).join("\n\n");
+  }
+
   function setEditingTarget(target) {
     editingTarget =
       target === "main" || Number.isInteger(target) ? target : null;
@@ -987,6 +1015,7 @@ export function createRenderer(elements, state, options = {}) {
     applyStateToInputs,
     getCaptureCards,
     getOpenReplyEditor,
+    getThreadText,
     renderPreview,
     setEditingTarget,
   };
