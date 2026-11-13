@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./http.js?v=kbd-source-20261113";
+import { fetchWithTimeout } from "./http.js?v=copy-text-20261113";
 
 export function parseOembedHtml(html) {
   const parser = new DOMParser();

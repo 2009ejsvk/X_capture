@@ -1,8 +1,8 @@
 import {
   resolveCaptureScale,
   resolveExportFormat,
-} from "./domain/capture-settings.js?v=kbd-source-20261113";
-import { createCaptureFilename } from "./capture/filename.js?v=kbd-source-20261113";
+} from "./domain/capture-settings.js?v=copy-text-20261113";
+import { createCaptureFilename } from "./capture/filename.js?v=copy-text-20261113";
 
 let activeDownloadHref = "";
 

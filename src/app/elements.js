@@ -16,6 +16,7 @@ export function getElements() {
     exportFormat: document.getElementById("exportFormat"),
     exportScale: document.getElementById("exportScale"),
     previewFocusBtn: document.getElementById("previewFocusBtn"),
+    copyTextBtn: document.getElementById("copyTextBtn"),
     openThreadBtn: document.getElementById("openThreadBtn"),
     openStyleBtn: document.getElementById("openStyleBtn"),
     closeEditorSheetBtn: document.getElementById("closeEditorSheetBtn"),
