@@ -7,9 +7,10 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=flag-font-20261109";
-import { normalizeMediaItems } from "../media.js?v=flag-font-20261109";
-import { fetchWithTimeout } from "./http.js?v=flag-font-20261109";
+} from "../utils.js?v=preview-first-20261113";
+import { MAX_REPLY_PARENTS } from "../domain/tweet-model.js?v=preview-first-20261113";
+import { normalizeMediaItems } from "../media.js?v=preview-first-20261113";
+import { fetchWithTimeout } from "./http.js?v=preview-first-20261113";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {
@@ -767,6 +768,9 @@ async function resolveReplyParentPayloads(
       }
 
       payloads.push(currentPayload);
+      if (typeof options.onProgress === "function") {
+        options.onProgress(payloads.length);
+      }
       currentReference = pickReplyParentReference(currentPayload);
       depth += 1;
     }
@@ -980,7 +984,7 @@ export async function fetchTweetFromVx(tweetId, options = {}) {
   const replyParentPayloads = await resolveReplyParentPayloads(
     contentPayload,
     payload,
-    5,
+    MAX_REPLY_PARENTS,
     options,
   );
   const retweeterName = pickVxName(payload, "X User");

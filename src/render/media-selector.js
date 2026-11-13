@@ -1,4 +1,4 @@
-import { normalizeMediaItems } from "../media.js?v=flag-font-20261109";
+import { normalizeMediaItems } from "../media.js?v=preview-first-20261113";
 
 export function createMediaSelector(
   titleText,

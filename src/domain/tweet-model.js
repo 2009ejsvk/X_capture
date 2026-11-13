@@ -2,9 +2,12 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   stripLeadingReplyMentions,
-} from "../utils.js?v=flag-font-20261109";
-import { normalizeMediaItems } from "../media.js?v=flag-font-20261109";
-import { createDefaultCaptureSettings } from "./capture-settings.js?v=flag-font-20261109";
+} from "../utils.js?v=preview-first-20261113";
+import { normalizeMediaItems } from "../media.js?v=preview-first-20261113";
+import { createDefaultCaptureSettings } from "./capture-settings.js?v=preview-first-20261113";
+
+// 한 번에 거슬러 올라가는 이전 글의 최대 개수. 글 하나당 요청이 하나씩 나간다.
+export const MAX_REPLY_PARENTS = 20;
 
 export function createInitialState() {
   return {
@@ -23,6 +26,7 @@ export function createInitialState() {
     bookmarkCount: "0",
     showReply: true,
     showReplyMedia: true,
+    threadLayout: "separate",
     showQuote: true,
     showQuoteMedia: true,
     quoteTextMode: "full",

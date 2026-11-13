@@ -1,10 +1,14 @@
-import { captureElementAsImage } from "./src/capture.js?v=flag-font-20261109";
-import { getElements } from "./src/app/elements.js?v=flag-font-20261109";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=flag-font-20261109";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=flag-font-20261109";
-import { createInitialState } from "./src/domain/tweet-model.js?v=flag-font-20261109";
-import { normalizeMediaItems } from "./src/media.js?v=flag-font-20261109";
-import { createRenderer } from "./src/render.js?v=flag-font-20261109";
+import { captureElementsAsImages } from "./src/capture.js?v=preview-first-20261113";
+import {
+  enhanceSelectAsChips,
+  syncChips,
+} from "./src/app/chips.js?v=preview-first-20261113";
+import { getElements } from "./src/app/elements.js?v=preview-first-20261113";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=preview-first-20261113";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=preview-first-20261113";
+import { createInitialState } from "./src/domain/tweet-model.js?v=preview-first-20261113";
+import { normalizeMediaItems } from "./src/media.js?v=preview-first-20261113";
+import { createRenderer } from "./src/render.js?v=preview-first-20261113";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -13,11 +17,34 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
   const elements = getElements();
 
   const state = createInitialState();
-  const { applyStateToInputs, renderPreview } = createRenderer(
-    elements,
-    state,
-    { onStateChange: scheduleDraftSave },
-  );
+  const renderer = createRenderer(elements, state, {
+    onStateChange: scheduleDraftSave,
+    onSaveCard: (stateIndex) => saveSingleCard(stateIndex),
+    onEditTargetChange: scrollEditedCardIntoView,
+  });
+  const desktopQuery = window.matchMedia("(min-width: 980px)");
+  let toastTimer = 0;
+  let toastAction = null;
+
+  function applyStateToInputs() {
+    renderer.applyStateToInputs();
+    syncChips();
+    refreshThreadControls();
+  }
+
+  function renderPreview() {
+    renderer.renderPreview();
+    syncChips();
+  }
+
+  function refreshThreadControls() {
+    const replyCount = Array.isArray(state.replyParents)
+      ? state.replyParents.length
+      : 0;
+    elements.openThreadBtn.classList.toggle("hidden", !replyCount);
+    elements.openThreadBtn.textContent = `글 목록 ${replyCount + 1}`;
+    elements.saveMainOnlyBtn.classList.toggle("hidden", !replyCount);
+  }
   let activeFetchController = null;
   let fetchRequestId = 0;
   let previewExpanded = false;
@@ -45,17 +72,82 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
     });
   }
 
-  function setStatus(message, type) {
+  // 상태 안내는 누른 자리와 상관없이 화면 아래 토스트로 보여 준다.
+  function setStatus(message, type, action) {
+    if (toastTimer) {
+      window.clearTimeout(toastTimer);
+      toastTimer = 0;
+    }
+
     elements.statusText.textContent = message || "";
-    elements.statusText.classList.remove("is-error", "is-success");
+    elements.statusText.classList.toggle("is-error", type === "error");
+    elements.statusText.classList.toggle("is-success", type === "success");
+    toastAction = action && action.onAction ? action.onAction : null;
+    elements.toastActionBtn.textContent = action ? action.label : "";
+    elements.toastActionBtn.classList.toggle("hidden", !toastAction);
+    elements.toast.classList.toggle("hidden", !message);
 
-    if (type === "error") {
-      elements.statusText.classList.add("is-error");
+    if (!message) {
+      return;
     }
 
-    if (type === "success") {
-      elements.statusText.classList.add("is-success");
+    const duration =
+      type === "progress"
+        ? 60000
+        : type === "error" || toastAction
+          ? 8000
+          : 4000;
+    toastTimer = window.setTimeout(() => setStatus(""), duration);
+  }
+
+  function openSheet(name) {
+    if (name === "settings") {
+      elements.captureSettingsSection.open = true;
     }
+
+    if (desktopQuery.matches) {
+      scrollToElement(
+        name === "settings" ? elements.settingsPanel : elements.editorPanel,
+      );
+      return;
+    }
+
+    document.body.dataset.sheet = name;
+  }
+
+  function closeSheet() {
+    delete document.body.dataset.sheet;
+    renderer.setEditingTarget(null);
+  }
+
+  function scrollEditedCardIntoView() {
+    window.requestAnimationFrame(() => {
+      const card = elements.captureArea.querySelector(".tweet-card.is-editing");
+      if (card) {
+        card.scrollIntoView({ block: "start", behavior: "smooth" });
+      }
+    });
+  }
+
+  // target: "main" 또는 이전 글의 stateIndex.
+  function editCard(target) {
+    setEditorTab(target === "main" ? "post" : "reply");
+    renderer.setEditingTarget(target);
+    openSheet("editor");
+    scrollEditedCardIntoView();
+
+    if (desktopQuery.matches) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      const openEditor =
+        target === "main" ? null : renderer.getOpenReplyEditor();
+      if (openEditor) {
+        openEditor.scrollIntoView({ block: "start" });
+      } else {
+        elements.editorPanel.scrollTop = 0;
+      }
+    });
   }
 
   function syncFromEditors() {
@@ -82,6 +174,8 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
     state.bookmarkCount = elements.bookmarkCount.value;
     state.mediaLayout =
       elements.mediaLayout.value === "vertical" ? "vertical" : "grid";
+    state.threadLayout =
+      elements.threadLayout.value === "merged" ? "merged" : "separate";
     state.showReply = Boolean(elements.showReplyToggle.checked);
     state.showReplyMedia = Boolean(elements.showReplyMediaToggle.checked);
     state.showQuote = Boolean(elements.showQuoteToggle.checked);
@@ -206,13 +300,18 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
 
     try {
       elements.fetchBtn.disabled = true;
-      setStatus("트윗 정보를 가져오는 중...");
+      setStatus("트윗 정보를 가져오는 중...", "progress");
       const shouldAutoCapture = Boolean(
         elements.autoCaptureToggle && elements.autoCaptureToggle.checked,
       );
 
       const result = await loadTweetFromUrl(elements.tweetUrl.value, {
         signal: fetchController.signal,
+        onProgress: (count) => {
+          if (requestId === fetchRequestId) {
+            setStatus(`이전 글 ${count}개째 불러오는 중...`, "progress");
+          }
+        },
       });
 
       if (fetchController.signal.aborted || requestId !== fetchRequestId) {
@@ -220,6 +319,8 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
       }
 
       Object.assign(state, result.patch);
+      elements.tweetUrl.blur();
+      renderer.setEditingTarget(null);
       applyStateToInputs();
       renderPreview();
       scheduleDraftSave();
@@ -238,7 +339,7 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
       }
 
       if (shouldAutoCapture) {
-        await onCapture();
+        await runCapture([elements.captureArea]);
       }
     } catch (error) {
       if (fetchController.signal.aborted) {
@@ -314,16 +415,15 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
     setStatus(`${target.label}를 모두 제거했습니다.`);
   }
 
-  async function onCapture() {
+  async function runCapture(targets) {
     if (isCapturing) {
       return;
     }
 
     isCapturing = true;
-    elements.quickCaptureBtn.disabled = true;
     try {
-      await captureElementAsImage({
-        captureArea: elements.captureArea,
+      await captureElementsAsImages({
+        targets,
         captureButton: elements.captureBtn,
         downloadFallbackLink: elements.downloadFallbackLink,
         exportFormat: state.exportFormat,
@@ -339,25 +439,73 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
       });
     } finally {
       isCapturing = false;
-      elements.quickCaptureBtn.disabled = false;
     }
   }
 
+  function closeSaveChoice() {
+    elements.saveChoice.classList.add("hidden");
+  }
+
+  // 글이 여러 장이면 한 장으로 받을지 글마다 받을지 먼저 묻는다.
+  function onCapture() {
+    const cards = renderer.getCaptureCards();
+    if (state.threadLayout !== "merged" && cards.length > 1) {
+      elements.saveEachBtn.textContent = `글마다 따로 저장 (${cards.length}장)`;
+      elements.saveChoice.classList.remove("hidden");
+      elements.saveOneBtn.focus();
+      return Promise.resolve();
+    }
+
+    return runCapture([elements.captureArea]);
+  }
+
+  function saveSingleCard(target) {
+    const cards = renderer.getCaptureCards();
+    const card =
+      target === "main"
+        ? cards[cards.length - 1]
+        : elements.captureArea.querySelector(
+            `.tweet-card[data-reply-index="${target}"]`,
+          );
+    if (!card) {
+      setStatus("미리보기에 표시된 글만 저장할 수 있습니다.", "error");
+      return Promise.resolve();
+    }
+
+    return runCapture([card]);
+  }
+
   function resetEditors() {
+    const snapshot = JSON.stringify({
+      ...state,
+      sourceUrlInput: elements.tweetUrl.value,
+    });
+
     Object.assign(state, createInitialState());
     elements.tweetUrl.value = "";
     elements.imageInput.value = "";
     clearDraft();
+    closeSheet();
     setEditorTab("post");
     applyStateToInputs();
     renderPreview();
-    setStatus("입력값을 초기화했습니다.");
+    setStatus("입력값을 초기화했습니다.", undefined, {
+      label: "되돌리기",
+      onAction: () => {
+        const { sourceUrlInput, ...previous } = JSON.parse(snapshot);
+        Object.assign(state, createInitialState(), previous);
+        elements.tweetUrl.value = sourceUrlInput || "";
+        applyStateToInputs();
+        renderPreview();
+        scheduleDraftSave();
+        setStatus("초기화 전 상태로 되돌렸습니다.", "success");
+      },
+    });
   }
 
   function onClearTweetUrl() {
     elements.tweetUrl.value = "";
     elements.tweetUrl.focus();
-    setStatus("트윗 URL 입력값을 지웠습니다.");
   }
 
   function scrollToElement(element) {
@@ -406,6 +554,15 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
       }
     });
 
+    // 붙여넣은 값이 트윗 주소면 버튼을 누르지 않아도 바로 불러온다.
+    elements.tweetUrl.addEventListener("paste", () => {
+      window.setTimeout(() => {
+        if (/\/status\/\d{5,}/.test(elements.tweetUrl.value)) {
+          onFetchClick();
+        }
+      }, 0);
+    });
+
     elements.authorName.addEventListener("input", syncFromEditors);
     elements.authorHandle.addEventListener("input", syncFromEditors);
     elements.tweetDate.addEventListener("input", syncFromEditors);
@@ -416,6 +573,7 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
     elements.likeCount.addEventListener("input", syncFromEditors);
     elements.bookmarkCount.addEventListener("input", syncFromEditors);
     elements.mediaLayout.addEventListener("change", syncFromEditors);
+    elements.threadLayout.addEventListener("change", syncFromEditors);
     elements.showReplyToggle.addEventListener("change", syncFromEditors);
     elements.showReplyMediaToggle.addEventListener("change", syncFromEditors);
     elements.showQuoteToggle.addEventListener("change", syncFromEditors);
@@ -468,37 +626,91 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
       removeAllImages(quoteImageTarget);
     });
     elements.captureBtn.addEventListener("click", onCapture);
-    elements.quickCaptureBtn.addEventListener("click", onCapture);
+    elements.saveOneBtn.addEventListener("click", () => {
+      closeSaveChoice();
+      runCapture([elements.captureArea]);
+    });
+    elements.saveEachBtn.addEventListener("click", () => {
+      closeSaveChoice();
+      runCapture(renderer.getCaptureCards());
+    });
+    elements.saveCancelBtn.addEventListener("click", closeSaveChoice);
+    elements.saveChoice.addEventListener("click", (event) => {
+      if (event.target === elements.saveChoice) {
+        closeSaveChoice();
+      }
+    });
+    elements.saveMainOnlyBtn.addEventListener("click", () => {
+      saveSingleCard("main");
+    });
+    elements.toastActionBtn.addEventListener("click", () => {
+      if (toastAction) {
+        toastAction();
+      }
+    });
     elements.resetBtn.addEventListener("click", resetEditors);
-    elements.jumpEditorBtn.addEventListener("click", () => {
-      setEditorTab("post");
-      scrollToElement(elements.editorPanel);
+
+    // 미리보기의 글을 누르면 그 글의 편집 창이 열린다.
+    elements.captureArea.addEventListener("click", (event) => {
+      if (event.target.closest("a")) {
+        return;
+      }
+      const card = event.target.closest(".tweet-card");
+      if (!card || !elements.captureArea.contains(card)) {
+        return;
+      }
+      const replyIndex = card.dataset.replyIndex;
+      editCard(replyIndex === undefined ? "main" : Number(replyIndex));
     });
-    elements.jumpPreviewBtn.addEventListener("click", () => {
-      scrollToElement(elements.previewPanel);
+    elements.openThreadBtn.addEventListener("click", () => {
+      setEditorTab("reply");
+      renderer.setEditingTarget(null);
+      openSheet("editor");
+      elements.editorPanel.scrollTop = 0;
     });
-    elements.jumpSettingsBtn.addEventListener("click", () => {
-      elements.captureSettingsSection.open = true;
-      scrollToElement(elements.settingsPanel);
+    elements.openStyleBtn.addEventListener("click", () => {
+      renderer.setEditingTarget(null);
+      openSheet("settings");
     });
+    elements.closeEditorSheetBtn.addEventListener("click", closeSheet);
+    elements.closeSettingsSheetBtn.addEventListener("click", closeSheet);
+    desktopQuery.addEventListener("change", () => {
+      delete document.body.dataset.sheet;
+    });
+
     elements.editorPostTab.addEventListener("click", () => {
       setEditorTab("post");
+      renderer.setEditingTarget("main");
     });
     elements.editorMediaTab.addEventListener("click", () => {
       setEditorTab("media");
+      renderer.setEditingTarget("main");
     });
     elements.editorReplyTab.addEventListener("click", () => {
       setEditorTab("reply");
+      renderer.setEditingTarget(null);
     });
     elements.previewFocusBtn.addEventListener("click", () => {
       setPreviewExpanded(!previewExpanded);
     });
 
     document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && previewExpanded) {
-        event.preventDefault();
-        setPreviewExpanded(false);
-        return;
+      if (event.key === "Escape") {
+        if (!elements.saveChoice.classList.contains("hidden")) {
+          event.preventDefault();
+          closeSaveChoice();
+          return;
+        }
+        if (document.body.dataset.sheet) {
+          event.preventDefault();
+          closeSheet();
+          return;
+        }
+        if (previewExpanded) {
+          event.preventDefault();
+          setPreviewExpanded(false);
+          return;
+        }
       }
 
       if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
@@ -506,6 +718,21 @@ import { createRenderer } from "./src/render.js?v=flag-font-20261109";
         onCapture();
       }
     });
+
+    enhanceSelectAsChips(elements.threadLayout);
+    enhanceSelectAsChips(elements.mediaLayout);
+    enhanceSelectAsChips(elements.quoteTextMode);
+    enhanceSelectAsChips(elements.quoteMediaLayout);
+    enhanceSelectAsChips(elements.stylePreset);
+    enhanceSelectAsChips(elements.captureFontSize);
+    enhanceSelectAsChips(elements.captureFontFamily, {
+      scroll: true,
+      fontPreview: true,
+    });
+    enhanceSelectAsChips(elements.captureGameFontScope);
+    enhanceSelectAsChips(elements.captureOutlineWidth, { short: true });
+    enhanceSelectAsChips(elements.exportFormat);
+    enhanceSelectAsChips(elements.exportScale);
 
     window.addEventListener("beforeunload", () => {
       if (draftSaveTimer) {

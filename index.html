@@ -31,77 +31,61 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=flag-font-20261109" />
+    <link rel="stylesheet" href="./styles.css?v=preview-first-20261113" />
   </head>
   <body>
     <main class="app-shell">
       <header class="hero">
-        <p class="eyebrow">MOBILE WEB TOOL</p>
-        <h1>X 콘텐츠 캡처</h1>
-        <p class="hero-text">트윗 URL을 붙여넣고 카드 형태로 저장하세요.</p>
+        <div class="hero-title">
+          <h1>X 콘텐츠 캡처</h1>
+          <p class="hero-text">트윗 URL을 붙여넣고 카드 형태로 저장하세요.</p>
+        </div>
+        <button id="resetBtn" class="btn btn-ghost btn-small" type="button">
+          초기화
+        </button>
       </header>
 
       <section class="panel fetch-panel">
         <label for="tweetUrl">트윗 URL</label>
         <div class="url-row">
-          <input
-            id="tweetUrl"
-            type="url"
-            inputmode="url"
-            placeholder="https://x.com/.../status/..."
-            autocomplete="off"
-          />
-          <button id="clearUrlBtn" class="btn btn-ghost" type="button">
-            삭제
-          </button>
+          <div class="url-field">
+            <input
+              id="tweetUrl"
+              type="url"
+              inputmode="url"
+              placeholder="트윗 URL 붙여넣기"
+              autocomplete="off"
+            />
+            <button
+              id="clearUrlBtn"
+              class="url-clear"
+              type="button"
+              aria-label="URL 지우기"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18"></path>
+              </svg>
+            </button>
+          </div>
           <button id="fetchBtn" class="btn btn-accent">불러오기</button>
         </div>
-        <div class="fetch-options">
-          <label class="check-option" for="autoCaptureToggle">
-            <input id="autoCaptureToggle" type="checkbox" />
-            불러온 뒤 자동 저장
-          </label>
-        </div>
-        <p id="statusText" class="status" aria-live="polite"></p>
       </section>
-
-      <nav class="quick-bar" aria-label="빠른 작업">
-        <button
-          id="jumpEditorBtn"
-          class="btn btn-ghost btn-small"
-          type="button"
-        >
-          편집
-        </button>
-        <button
-          id="jumpPreviewBtn"
-          class="btn btn-ghost btn-small"
-          type="button"
-        >
-          미리보기
-        </button>
-        <button
-          id="jumpSettingsBtn"
-          class="btn btn-ghost btn-small"
-          type="button"
-        >
-          설정
-        </button>
-        <button
-          id="quickCaptureBtn"
-          class="btn btn-accent btn-small"
-          type="button"
-        >
-          바로 저장
-        </button>
-      </nav>
 
       <section class="panel editor-panel">
         <div class="panel-heading editor-heading">
           <div>
             <h2>내용 편집</h2>
-            <p class="panel-description">한 번에 한 종류만 편집하세요.</p>
+            <p class="panel-description">
+              고치는 내용이 미리보기에 바로 반영됩니다.
+            </p>
           </div>
+          <button
+            id="closeEditorSheetBtn"
+            class="btn btn-ghost btn-small sheet-close"
+            type="button"
+          >
+            완료
+          </button>
         </div>
         <div class="editor-tabs" role="tablist" aria-label="편집 항목">
           <button
@@ -277,6 +261,14 @@
                 </div>
               </section>
 
+              <button
+                id="saveMainOnlyBtn"
+                class="btn btn-ghost hidden"
+                type="button"
+              >
+                이 글만 이미지로 저장
+              </button>
+
               <details id="mainMetaSection" class="editor-subsection">
                 <summary>
                   <span>작성자 · 날짜 · 반응 수</span>
@@ -390,9 +382,16 @@
           >
             <div class="editor-pane-heading">
               <h3>대화의 이전 글</h3>
-              <p>원글부터 시간순으로 수정하세요.</p>
+              <p>누른 글만 펼쳐집니다. 미리보기의 글을 눌러도 열립니다.</p>
             </div>
             <div class="editor-pane-content">
+              <div class="field-group">
+                <label for="threadLayout">카드 구성</label>
+                <select id="threadLayout">
+                  <option value="separate" selected>글마다 카드</option>
+                  <option value="merged">하나로 합치기</option>
+                </select>
+              </div>
               <div class="option-row option-row-inline">
                 <label class="check-option" for="showReplyToggle">
                   <input id="showReplyToggle" type="checkbox" checked />
@@ -414,6 +413,16 @@
       </section>
 
       <section class="panel settings-panel">
+        <div class="sheet-header">
+          <h2>스타일</h2>
+          <button
+            id="closeSettingsSheetBtn"
+            class="btn btn-ghost btn-small sheet-close"
+            type="button"
+          >
+            완료
+          </button>
+        </div>
         <details
           id="captureSettingsSection"
           class="editor-section settings-section"
@@ -507,27 +516,52 @@
               게임식 그림자 추가
             </label>
 
-            <label for="exportFormat">파일 형식</label>
-            <select id="exportFormat">
-              <option value="png" selected>PNG</option>
-              <option value="jpg">JPG</option>
-              <option value="webp">WebP</option>
-            </select>
+            <details class="editor-subsection settings-advanced">
+              <summary>
+                <span>고급</span>
+                <small>파일 형식 · 해상도 · 자동 저장</small>
+              </summary>
+              <div class="settings-grid editor-subsection-content">
+                <label for="exportFormat">파일 형식</label>
+                <select id="exportFormat">
+                  <option value="png" selected>PNG</option>
+                  <option value="jpg">JPG</option>
+                  <option value="webp">WebP</option>
+                </select>
 
-            <label for="exportScale">해상도</label>
-            <select id="exportScale">
-              <option value="auto" selected>자동 고해상도</option>
-              <option value="2">2x</option>
-              <option value="3">3x</option>
-              <option value="4">4x</option>
-            </select>
+                <label for="exportScale">해상도</label>
+                <select id="exportScale">
+                  <option value="auto" selected>자동 고해상도</option>
+                  <option value="2">2x</option>
+                  <option value="3">3x</option>
+                  <option value="4">4x</option>
+                </select>
+                <label
+                  class="check-option settings-check"
+                  for="autoCaptureToggle"
+                >
+                  <input id="autoCaptureToggle" type="checkbox" />
+                  불러온 뒤 자동 저장
+                </label>
+              </div>
+            </details>
           </div>
         </details>
       </section>
 
       <section class="panel preview-panel">
         <div class="panel-heading">
-          <h2>미리보기</h2>
+          <div>
+            <h2>미리보기</h2>
+            <p class="panel-description">글을 누르면 바로 편집됩니다.</p>
+          </div>
+          <button
+            id="openThreadBtn"
+            class="btn btn-ghost btn-small hidden"
+            type="button"
+          >
+            글 목록
+          </button>
           <button
             id="previewFocusBtn"
             class="btn btn-ghost btn-small"
@@ -673,8 +707,8 @@
       </section>
 
       <div class="actions">
-        <button id="resetBtn" class="btn btn-ghost" type="button">
-          초기화
+        <button id="openStyleBtn" class="btn btn-ghost" type="button">
+          스타일
         </button>
         <button id="captureBtn" class="btn btn-accent" type="button">
           이미지 저장
@@ -683,9 +717,39 @@
       <a id="downloadFallbackLink" class="download-fallback hidden" href="#">
         다운로드가 시작되지 않으면 다시 저장
       </a>
+
+      <div
+        id="saveChoice"
+        class="save-choice hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="saveChoiceTitle"
+      >
+        <div class="save-choice-card">
+          <h2 id="saveChoiceTitle">어떻게 저장할까요?</h2>
+          <button id="saveOneBtn" class="btn btn-accent" type="button">
+            한 장으로 저장
+          </button>
+          <button id="saveEachBtn" class="btn btn-ghost" type="button">
+            글마다 따로 저장
+          </button>
+          <button id="saveCancelBtn" class="btn btn-ghost" type="button">
+            취소
+          </button>
+        </div>
+      </div>
+
+      <div id="toast" class="toast hidden">
+        <p id="statusText" class="status" role="status" aria-live="polite"></p>
+        <button
+          id="toastActionBtn"
+          class="toast-action hidden"
+          type="button"
+        ></button>
+      </div>
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=flag-font-20261109"></script>
+    <script type="module" src="./app.js?v=preview-first-20261113"></script>
   </body>
 </html>

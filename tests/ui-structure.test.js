@@ -17,10 +17,15 @@ test("editor controls keep unique ids after the UX layout change", () => {
 
 test("responsive UX controls and editor sections are present", () => {
   [
-    "jumpEditorBtn",
-    "jumpPreviewBtn",
-    "jumpSettingsBtn",
-    "quickCaptureBtn",
+    "openThreadBtn",
+    "openStyleBtn",
+    "closeEditorSheetBtn",
+    "closeSettingsSheetBtn",
+    "threadLayout",
+    "saveChoice",
+    "saveOneBtn",
+    "saveEachBtn",
+    "toast",
     "editorPostTab",
     "editorMediaTab",
     "editorReplyTab",
@@ -52,6 +57,24 @@ test("responsive UX controls and editor sections are present", () => {
   assert.match(css, /data-font-family="wanted-heavy"/);
   assert.match(css, /data-font-scope="emphasis"/);
   assert.match(css, /--capture-outline-width/);
+});
+
+test("mobile layout keeps the preview on screen and edits in a sheet", () => {
+  // 빠른 이동 줄과 중복 저장 버튼은 없앴다. 다시 생기면 안 된다.
+  [
+    "jumpEditorBtn",
+    "jumpPreviewBtn",
+    "jumpSettingsBtn",
+    "quickCaptureBtn",
+  ].forEach((id) => {
+    assert.doesNotMatch(html, new RegExp(`id="${id}"`));
+  });
+  assert.match(css, /@media \(max-width: 979px\)/);
+  assert.match(css, /body\[data-sheet="editor"\] \.editor-panel/);
+  assert.match(css, /data-thread-layout="merged"/);
+  assert.match(app, /function editCard\(target\)/);
+  assert.match(app, /captureArea\.addEventListener\("click"/);
+  assert.match(renderer, /is-merge-continuation/);
 });
 
 test("reply editors always expose image add and remove controls", () => {

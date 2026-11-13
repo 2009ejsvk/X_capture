@@ -1628,3 +1628,633 @@ body.is-preview-expanded .capture-area {
   max-width: 598px;
   margin: 0 auto;
 }
+
+/* ==========================================================================
+ * 미리보기 중심 레이아웃
+ * 모바일: 미리보기가 화면을 채우고 편집 · 스타일은 아래에서 올라오는 시트.
+ * 데스크톱(980px 이상): 기존 2단 구성을 유지하고 미리보기 칸만 따로 스크롤.
+ * ========================================================================== */
+
+:root {
+  /* 보조 글씨는 어두운 패널 위에서도 읽히도록 한 단계 밝게 쓴다. */
+  --ink-soft: #8b98a5;
+  --accent-ink: #04131f;
+  --sheet-bg: #12171c;
+  --sheet-height: min(64dvh, 600px);
+}
+
+.capture-area {
+  /* 저장되는 카드의 회색은 X 원래 색을 그대로 둔다. */
+  --ink-soft: #71767b;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hero-title {
+  min-width: 0;
+}
+
+.url-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.url-field {
+  position: relative;
+  min-width: 0;
+}
+
+.url-field input {
+  min-height: 48px;
+  padding-right: 46px;
+}
+
+.url-clear {
+  position: absolute;
+  top: 50%;
+  right: 2px;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.url-clear svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.url-field input:placeholder-shown + .url-clear {
+  display: none;
+}
+
+#fetchBtn {
+  min-height: 48px;
+}
+
+/* 누르는 요소는 44px 이상, 글씨는 13px 이상. 입력칸 16px 은 iOS 확대 방지. */
+.btn {
+  min-height: 44px;
+}
+
+.btn-small {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.editor-tab {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+input[type="text"],
+input[type="url"],
+select,
+textarea {
+  font-size: 16px;
+}
+
+.panel-description,
+.editor-pane-heading p,
+.inline-editor-heading p,
+.reply-media-hint,
+.settings-hint,
+.field-group label {
+  font-size: 13px;
+}
+
+.field-group label small,
+.editor-section > summary small,
+.editor-subsection > summary small {
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.editor-subsection > summary span {
+  font-size: 14px;
+}
+
+.check-option {
+  min-height: 44px;
+  font-size: 14px;
+}
+
+.check-option input[type="checkbox"],
+.media-selector-check input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+.media-selector-action {
+  min-height: 40px;
+}
+
+.sheet-header,
+.sheet-close {
+  display: none;
+}
+
+/* --- 미리보기의 글을 눌러 편집 --- */
+
+.capture-area .tweet-card {
+  cursor: pointer;
+  scroll-margin-top: 60px;
+}
+
+.capture-area .tweet-card.is-editing {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+body.is-capturing .capture-area .tweet-card.is-editing {
+  box-shadow: none;
+}
+
+/* --- 글 하나로 합치기 --- */
+
+.capture-area[data-thread-layout="merged"] .capture-reply-list {
+  gap: 0;
+  margin: 0;
+}
+
+.capture-area[data-thread-layout="merged"] .capture-reply-list .tweet-card {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.capture-area[data-thread-layout="merged"]
+  .capture-reply-list
+  .tweet-card
+  :is(.tweet-actions, .tweet-foot) {
+  display: none;
+}
+
+.capture-area[data-thread-layout="merged"] .tweet-card.is-merge-continuation {
+  border-top: 0;
+}
+
+.capture-area[data-thread-layout="merged"]
+  .tweet-card.is-merge-continuation
+  .tweet-head {
+  display: none;
+}
+
+/* --- 접히는 이전 글 목록 --- */
+
+.reply-editor-list {
+  gap: 8px;
+}
+
+.reply-editor-item {
+  padding: 4px 8px 4px 10px;
+}
+
+.reply-editor-item.is-open {
+  scroll-margin-top: 72px;
+  padding-bottom: 10px;
+  border-color: var(--accent);
+}
+
+.reply-editor-toggle {
+  min-width: 0;
+  min-height: 52px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reply-editor-title {
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reply-editor-snippet {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reply-editor-item.is-muted .reply-editor-snippet {
+  color: var(--ink-soft);
+  text-decoration: line-through;
+}
+
+.reply-editor-body {
+  display: grid;
+  gap: 10px;
+}
+
+.reply-visibility-option {
+  min-height: 44px;
+}
+
+/* --- 드롭다운 대신 칩 --- */
+
+select.is-chipped {
+  display: none;
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chip-group.is-scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+  font-weight: 700;
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.font-chip {
+  flex: 0 0 auto;
+  min-width: 108px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+.font-chip-sample {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 17px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.font-chip-name {
+  color: var(--ink-soft);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+#captureFontSample {
+  display: none;
+}
+
+.settings-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.settings-grid > label:not(.check-option) {
+  margin: 8px 0 0;
+}
+
+.text-effect-row {
+  align-items: start;
+}
+
+/* --- 토스트와 저장 방식 선택 --- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(86px + env(safe-area-inset-bottom));
+  z-index: 60;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: min(92vw, 520px);
+  padding: 2px 6px 2px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #1a2128;
+  box-shadow: var(--shadow);
+}
+
+.toast.hidden,
+.save-choice.hidden {
+  display: none;
+}
+
+.toast .status {
+  min-height: 0;
+  margin: 0;
+  padding: 10px 8px 10px 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-action {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--accent-strong);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+body[data-sheet] .toast {
+  bottom: calc(var(--sheet-height) + 12px);
+}
+
+.save-choice {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.save-choice-card {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--sheet-bg);
+}
+
+.save-choice-card h2 {
+  margin: 0 0 4px;
+}
+
+.save-choice-card .btn {
+  min-height: 52px;
+}
+
+@media (max-width: 979px) {
+  body {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-shell {
+    height: 100dvh;
+    padding: 0;
+  }
+
+  .hero {
+    order: 0;
+    margin: 0;
+    padding: 8px 12px 0 16px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .hero-text {
+    display: none;
+  }
+
+  .fetch-panel {
+    order: 1;
+    margin: 8px 12px 0;
+    padding: 8px;
+    border-radius: 16px;
+    box-shadow: none;
+  }
+
+  .fetch-panel > label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .preview-panel {
+    order: 2;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    margin: 0;
+    padding: 0 12px 12px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .preview-panel .panel-heading {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    min-height: 52px;
+    margin: 0;
+    padding: 4px 4px;
+    background: var(--bg);
+  }
+
+  .preview-panel .panel-heading h2,
+  #previewFocusBtn {
+    display: none;
+  }
+
+  .preview-panel .panel-description {
+    margin: 0;
+  }
+
+  /* 시트가 올라와 있어도 맨 아래 글까지 시트 위로 끌어올릴 수 있게 한다. */
+  body[data-sheet] .preview-panel {
+    padding-bottom: calc(var(--sheet-height) + 12px);
+  }
+
+  .download-fallback {
+    order: 3;
+    margin: 0 12px 8px;
+  }
+
+  .actions {
+    order: 4;
+    position: static;
+    max-width: none;
+    margin: 0;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+    grid-template-columns: auto minmax(0, 1fr);
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+
+  .actions .btn {
+    min-height: 52px;
+    padding-inline: 18px;
+    font-size: 16px;
+  }
+
+  .editor-panel,
+  .settings-panel {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    width: 100%;
+    max-width: 650px;
+    height: var(--sheet-height);
+    margin: 0 auto;
+    padding: 0 14px calc(14px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+    background: var(--sheet-bg);
+    backdrop-filter: none;
+    box-shadow: 0 -18px 44px rgba(0, 0, 0, 0.5);
+    transform: translateY(105%);
+    visibility: hidden;
+    transition:
+      transform 0.2s ease,
+      visibility 0.2s;
+  }
+
+  body[data-sheet="editor"] .editor-panel,
+  body[data-sheet="settings"] .settings-panel {
+    transform: none;
+    visibility: visible;
+  }
+
+  .editor-heading,
+  .sheet-header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 -14px 10px;
+    padding: 10px 14px 8px;
+    border-bottom: 1px solid var(--line-soft);
+    background: var(--sheet-bg);
+  }
+
+  .sheet-header h2 {
+    margin: 0;
+  }
+
+  .sheet-close {
+    display: inline-block;
+  }
+
+  /* 시트에서는 설정을 항상 펼쳐 둔다. 접는 머리말은 데스크톱에서만 쓴다. */
+  .settings-section {
+    overflow: visible;
+    border: 0;
+  }
+
+  .settings-section > summary {
+    display: none;
+  }
+
+  .settings-section > .editor-section-content {
+    padding: 0;
+    border-top: 0;
+  }
+
+  /* 저장할 때 복제본에서는 스크롤 잠금을 풀어 전체가 그려지게 한다. */
+  body.is-capturing,
+  body.is-capturing .app-shell {
+    height: auto;
+    overflow: visible;
+  }
+
+  body.is-capturing .preview-panel {
+    flex: none;
+    overflow: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editor-panel,
+  .settings-panel {
+    transition: none;
+  }
+}
+
+@media (min-width: 980px) {
+  .preview-panel {
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+
+  body.is-preview-expanded .preview-panel {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #openStyleBtn {
+    display: none;
+  }
+
+  .save-choice {
+    align-items: center;
+  }
+
+  .toast {
+    bottom: 24px;
+  }
+}
