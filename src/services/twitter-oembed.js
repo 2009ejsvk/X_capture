@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./http.js?v=copy-text-20261113";
+import { fetchWithTimeout } from "./http.js?v=media20-20261114";
 
 export function parseOembedHtml(html) {
   const parser = new DOMParser();

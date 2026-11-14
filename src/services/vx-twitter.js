@@ -7,10 +7,13 @@ import {
   pickFirstNonEmpty,
   sanitizeFetchedTweetText,
   stripLeadingReplyMentions,
-} from "../utils.js?v=copy-text-20261113";
-import { MAX_REPLY_PARENTS } from "../domain/tweet-model.js?v=copy-text-20261113";
-import { normalizeMediaItems } from "../media.js?v=copy-text-20261113";
-import { fetchWithTimeout } from "./http.js?v=copy-text-20261113";
+} from "../utils.js?v=media20-20261114";
+import { MAX_REPLY_PARENTS } from "../domain/tweet-model.js?v=media20-20261114";
+import {
+  MAX_MEDIA_ITEMS,
+  normalizeMediaItems,
+} from "../media.js?v=media20-20261114";
+import { fetchWithTimeout } from "./http.js?v=media20-20261114";
 
 function pickVxRawDate(payload) {
   if (!payload || typeof payload !== "object") {
@@ -971,7 +974,7 @@ function pickVxImages(payload) {
 
   return [
     ...new Set(images.map((url) => String(url || "").trim()).filter(Boolean)),
-  ].slice(0, 4);
+  ].slice(0, MAX_MEDIA_ITEMS);
 }
 
 export async function fetchTweetFromVx(tweetId, options = {}) {

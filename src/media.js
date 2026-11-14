@@ -1,4 +1,4 @@
-import { fetchWithTimeout } from "./services/http.js?v=copy-text-20261113";
+import { fetchWithTimeout } from "./services/http.js?v=media20-20261114";
 
 const imageSourceCache = new Map();
 
@@ -33,8 +33,11 @@ export function normalizeMediaItems(items) {
       seen.add(item.src);
       return true;
     })
-    .slice(0, 4);
+    .slice(0, MAX_MEDIA_ITEMS);
 }
+
+// X 는 글 하나에 이미지를 최대 20장까지 붙일 수 있다.
+export const MAX_MEDIA_ITEMS = 20;
 
 export function getVisibleMediaSrcs(items) {
   return normalizeMediaItems(items)
@@ -105,7 +108,7 @@ export async function toDisplayImageSrc(imageUrl, options = {}) {
 export async function toDisplayImageSrcs(imageUrls, options = {}) {
   const uniqueUrls = normalizeMediaItems(imageUrls)
     .map((item) => item.src)
-    .slice(0, 4);
+    .slice(0, MAX_MEDIA_ITEMS);
 
   if (!uniqueUrls.length) {
     return [];

@@ -2,26 +2,26 @@ import {
   MAX_REPLY_PARENTS,
   createReplyParentState,
   hasRenderableReply,
-} from "../domain/tweet-model.js?v=copy-text-20261113";
+} from "../domain/tweet-model.js?v=media20-20261114";
 import {
   clearImageSourceCache,
   normalizeMediaItems,
   toDisplayImageSrc,
   toDisplayImageSrcs,
-} from "../media.js?v=copy-text-20261113";
+} from "../media.js?v=media20-20261114";
 import {
   formatDateLabel,
   normalizeHandle,
   normalizeUrl,
   parseHandle,
   sanitizeFetchedTweetText,
-} from "../utils.js?v=copy-text-20261113";
+} from "../utils.js?v=media20-20261114";
 import {
   fetchTweetFromOembed,
   fetchTweetFromVx,
   formatOembedError,
   parseOembedHtml,
-} from "../twitter-api.js?v=copy-text-20261113";
+} from "../twitter-api.js?v=media20-20261114";
 
 async function normalizeReplyParents(replyParentMetas, options = {}) {
   return await Promise.all(

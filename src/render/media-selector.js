@@ -1,4 +1,4 @@
-import { normalizeMediaItems } from "../media.js?v=copy-text-20261113";
+import { normalizeMediaItems } from "../media.js?v=media20-20261114";
 
 export function createMediaSelector(
   titleText,

@@ -1,14 +1,14 @@
-import { getVisibleMediaSrcs } from "../media.js?v=copy-text-20261113";
+import { getVisibleMediaSrcs } from "../media.js?v=media20-20261114";
 import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "../utils.js?v=copy-text-20261113";
-import { createTweetActionItem } from "./action-item.js?v=copy-text-20261113";
-import { populateTweetMedia } from "./media.js?v=copy-text-20261113";
-import { resolveSourceMeta } from "./source-meta.js?v=copy-text-20261113";
-import { renderTextWithLinks } from "./text.js?v=copy-text-20261113";
-import { tweetActionIconPaths } from "./tweet-action-icons.js?v=copy-text-20261113";
+} from "../utils.js?v=media20-20261114";
+import { createTweetActionItem } from "./action-item.js?v=media20-20261114";
+import { populateTweetMedia } from "./media.js?v=media20-20261114";
+import { resolveSourceMeta } from "./source-meta.js?v=media20-20261114";
+import { renderTextWithLinks } from "./text.js?v=media20-20261114";
+import { tweetActionIconPaths } from "./tweet-action-icons.js?v=media20-20261114";
 
 export function createReplyTweetCard(item, options) {
   const authorName = String((item && item.authorName) || "").trim();

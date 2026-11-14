@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=copy-text-20261113";
+} from "./utils.js?v=media20-20261114";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,20 +14,21 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=copy-text-20261113";
+} from "./domain/capture-settings.js?v=media20-20261114";
 import {
+  MAX_MEDIA_ITEMS,
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=copy-text-20261113";
+} from "./media.js?v=media20-20261114";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=copy-text-20261113";
-import { createMediaSelector } from "./render/media-selector.js?v=copy-text-20261113";
-import { populateTweetMedia } from "./render/media.js?v=copy-text-20261113";
-import { createReplyTweetCard } from "./render/reply-card.js?v=copy-text-20261113";
-import { resolveSourceMeta } from "./render/source-meta.js?v=copy-text-20261113";
-import { renderTextWithLinks } from "./render/text.js?v=copy-text-20261113";
+} from "./domain/tweet-model.js?v=media20-20261114";
+import { createMediaSelector } from "./render/media-selector.js?v=media20-20261114";
+import { populateTweetMedia } from "./render/media.js?v=media20-20261114";
+import { createReplyTweetCard } from "./render/reply-card.js?v=media20-20261114";
+import { resolveSourceMeta } from "./render/source-meta.js?v=media20-20261114";
+import { renderTextWithLinks } from "./render/text.js?v=media20-20261114";
 
 export function createRenderer(elements, state, options = {}) {
   // 편집 시트가 가리키는 글: "main", 이전 글의 stateIndex, 또는 null.
@@ -363,7 +364,10 @@ export function createRenderer(elements, state, options = {}) {
         const currentItems = normalizeMediaItems(
           state.replyParents[stateIndex].dataUrls,
         );
-        const remainingSlots = Math.max(4 - currentItems.length, 0);
+        const remainingSlots = Math.max(
+          MAX_MEDIA_ITEMS - currentItems.length,
+          0,
+        );
         const files = Array.from(event.target.files || []).slice(
           0,
           remainingSlots,
@@ -415,8 +419,7 @@ export function createRenderer(elements, state, options = {}) {
       mediaEdit.appendChild(mediaRow);
       const mediaHint = document.createElement("small");
       mediaHint.className = "reply-media-hint";
-      mediaHint.textContent =
-        "이미지가 없어도 추가할 수 있으며 최대 4장까지 가능합니다.";
+      mediaHint.textContent = `이미지가 없어도 추가할 수 있으며 최대 ${MAX_MEDIA_ITEMS}장까지 가능합니다.`;
       mediaEdit.appendChild(mediaHint);
       editorItem.appendChild(mediaEdit);
 
