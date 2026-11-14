@@ -2298,3 +2298,64 @@ body.is-capturing-card .capture-reply-list .tweet-original-url {
 .preview-panel .panel-heading .btn {
   flex: 0 0 auto;
 }
+
+/* --- 이미지 5장 이상(최대 20장) ---
+ * 1~4장 규칙은 그대로 두고, 나란히 배치일 때는 장수와 상관없이 두 칸
+ * 정사각형으로 깔고 홀수면 첫 장을 한 줄 전체로 쓴다. */
+:is(.tweet-media, .quote-media)[data-layout="grid"] {
+  grid-template-columns: 1fr 1fr;
+}
+
+.tweet-media[data-layout="grid"] .tweet-image,
+.quote-media[data-layout="grid"] .quote-image {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.tweet-media[data-layout="grid"][data-odd="true"] .tweet-image:first-child,
+.quote-media[data-layout="grid"][data-odd="true"] .quote-image:first-child {
+  grid-column: 1 / -1;
+  aspect-ratio: 2 / 1;
+}
+
+/* --- 긴 닉네임 · 아이디 ---
+ * 이전 글 목록은 grid 라서 기본 열(auto)이 줄바꿈 없는 이름 길이만큼
+ * 늘어나 카드가 프레임 밖으로 밀려났다. 열을 틀 너비로 묶고 카드가
+ * 줄어들 수 있게 한다. */
+.capture-reply-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.capture-area .tweet-card,
+.quote-card {
+  min-width: 0;
+}
+
+/* 이름과 아이디가 같이 길면 아이디를 먼저 줄이고, 이름은 그다음에 줄인다. */
+.author-meta .name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.author-meta .handle {
+  flex: 0 1000 auto;
+  min-width: 4em;
+}
+
+.quote-meta {
+  flex: 1 1 auto;
+}
+
+.quote-meta .quote-name {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.quote-meta .quote-handle {
+  flex: 0 1000 auto;
+  min-width: 4em;
+}
+
+.platform-mark {
+  flex: 0 0 auto;
+}

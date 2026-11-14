@@ -1,14 +1,17 @@
-import { captureElementsAsImages } from "./src/capture.js?v=copy-text-20261113";
+import { captureElementsAsImages } from "./src/capture.js?v=media20-20261114";
 import {
   enhanceSelectAsChips,
   syncChips,
-} from "./src/app/chips.js?v=copy-text-20261113";
-import { getElements } from "./src/app/elements.js?v=copy-text-20261113";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=copy-text-20261113";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=copy-text-20261113";
-import { createInitialState } from "./src/domain/tweet-model.js?v=copy-text-20261113";
-import { normalizeMediaItems } from "./src/media.js?v=copy-text-20261113";
-import { createRenderer } from "./src/render.js?v=copy-text-20261113";
+} from "./src/app/chips.js?v=media20-20261114";
+import { getElements } from "./src/app/elements.js?v=media20-20261114";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media20-20261114";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=media20-20261114";
+import { createInitialState } from "./src/domain/tweet-model.js?v=media20-20261114";
+import {
+  MAX_MEDIA_ITEMS,
+  normalizeMediaItems,
+} from "./src/media.js?v=media20-20261114";
+import { createRenderer } from "./src/render.js?v=media20-20261114";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -372,7 +375,7 @@ import { createRenderer } from "./src/render.js?v=copy-text-20261113";
 
   async function addImagesFromInput(event, target) {
     const input = event.target;
-    const files = Array.from(input.files || []).slice(0, 4);
+    const files = Array.from(input.files || []).slice(0, MAX_MEDIA_ITEMS);
     if (!files.length) {
       return;
     }
@@ -396,7 +399,7 @@ import { createRenderer } from "./src/render.js?v=copy-text-20261113";
       setStatus(
         addedCount
           ? `${target.label} ${addedCount}장 추가 완료. 현재 ${nextImages.length}장입니다.`
-          : `${target.label}는 최대 4장까지 추가할 수 있습니다.`,
+          : `${target.label}는 최대 ${MAX_MEDIA_ITEMS}장까지 추가할 수 있습니다.`,
         addedCount ? "success" : "error",
       );
     } catch (error) {

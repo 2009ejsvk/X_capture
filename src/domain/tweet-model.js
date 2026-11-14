@@ -2,9 +2,9 @@ import {
   currentDateTimeLabel,
   normalizeHandle,
   stripLeadingReplyMentions,
-} from "../utils.js?v=copy-text-20261113";
-import { normalizeMediaItems } from "../media.js?v=copy-text-20261113";
-import { createDefaultCaptureSettings } from "./capture-settings.js?v=copy-text-20261113";
+} from "../utils.js?v=media20-20261114";
+import { normalizeMediaItems } from "../media.js?v=media20-20261114";
+import { createDefaultCaptureSettings } from "./capture-settings.js?v=media20-20261114";
 
 // 한 번에 거슬러 올라가는 이전 글의 최대 개수. 글 하나당 요청이 하나씩 나간다.
 export const MAX_REPLY_PARENTS = 20;

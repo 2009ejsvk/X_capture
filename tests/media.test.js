@@ -27,3 +27,11 @@ test("getVisibleMediaSrcs returns visible sources only", () => {
 
   assert.deepEqual(result, ["a", "c"]);
 });
+
+test("normalizeMediaItems keeps up to 20 images, the X maximum", () => {
+  const urls = Array.from(
+    { length: 25 },
+    (_, index) => `https://pbs.twimg.com/media/${index}.jpg`,
+  );
+  assert.equal(normalizeMediaItems(urls).length, 20);
+});
