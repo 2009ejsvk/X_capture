@@ -1,17 +1,21 @@
-import { captureElementsAsImages } from "./src/capture.js?v=media20-20261114";
+import {
+  captureElementsAsImages,
+  waitForCaptureImages,
+} from "./src/capture.js?v=split-save-20261115";
+import { planTargetPages } from "./src/capture/pages.js?v=split-save-20261115";
 import {
   enhanceSelectAsChips,
   syncChips,
-} from "./src/app/chips.js?v=media20-20261114";
-import { getElements } from "./src/app/elements.js?v=media20-20261114";
-import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=media20-20261114";
-import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=media20-20261114";
-import { createInitialState } from "./src/domain/tweet-model.js?v=media20-20261114";
+} from "./src/app/chips.js?v=split-save-20261115";
+import { getElements } from "./src/app/elements.js?v=split-save-20261115";
+import { loadTweetFromUrl } from "./src/app/tweet-loader.js?v=split-save-20261115";
+import { normalizeCaptureSettings } from "./src/domain/capture-settings.js?v=split-save-20261115";
+import { createInitialState } from "./src/domain/tweet-model.js?v=split-save-20261115";
 import {
   MAX_MEDIA_ITEMS,
   normalizeMediaItems,
-} from "./src/media.js?v=media20-20261114";
-import { createRenderer } from "./src/render.js?v=media20-20261114";
+} from "./src/media.js?v=split-save-20261115";
+import { createRenderer } from "./src/render.js?v=split-save-20261115";
 
 (function () {
   const LEGACY_DRAFT_KEY = "x-capture:draft:v1";
@@ -481,17 +485,43 @@ import { createRenderer } from "./src/render.js?v=media20-20261114";
     elements.saveChoice.classList.add("hidden");
   }
 
-  // 글이 여러 장이면 한 장으로 받을지 글마다 받을지 먼저 묻는다.
-  function onCapture() {
-    const cards = renderer.getCaptureCards();
-    if (state.threadLayout !== "merged" && cards.length > 1) {
-      elements.saveEachBtn.textContent = `글마다 따로 저장 (${cards.length}장)`;
-      elements.saveChoice.classList.remove("hidden");
-      elements.saveOneBtn.focus();
-      return Promise.resolve();
+  function getSplitPages() {
+    return planTargetPages(elements.captureArea).map((page) => ({
+      element: elements.captureArea,
+      ...page,
+    }));
+  }
+
+  // 글이 여러 개이거나 너무 길면 어떻게 나눠 받을지 먼저 묻는다.
+  async function onCapture() {
+    if (isCapturing) {
+      return;
+    }
+    // 미리보기 이미지는 늦게 불러오므로, 다 불러온 뒤에 길이를 재야 한다.
+    // 그렇지 않으면 아직 높이가 0인 이미지 때문에 짧다고 잘못 판단한다.
+    elements.captureBtn.disabled = true;
+    try {
+      await waitForCaptureImages(elements.captureArea);
+    } finally {
+      elements.captureBtn.disabled = false;
     }
 
-    return runCapture([elements.captureArea]);
+    const cards = renderer.getCaptureCards();
+    const canSaveEach = state.threadLayout !== "merged" && cards.length > 1;
+    const splitPages = getSplitPages();
+    const canSplit = splitPages.length > 1;
+
+    if (!canSaveEach && !canSplit) {
+      return runCapture([elements.captureArea]);
+    }
+
+    elements.saveEachBtn.textContent = `글마다 따로 저장 (${cards.length}장)`;
+    elements.saveEachBtn.classList.toggle("hidden", !canSaveEach);
+    elements.saveSplitBtn.textContent = `길이에 맞춰 나눠 저장 (${splitPages.length}장)`;
+    elements.saveSplitBtn.classList.toggle("hidden", !canSplit);
+    elements.saveChoiceHint.classList.toggle("hidden", !canSplit);
+    elements.saveChoice.classList.remove("hidden");
+    elements.saveOneBtn.focus();
   }
 
   function saveSingleCard(target) {
@@ -668,6 +698,10 @@ import { createRenderer } from "./src/render.js?v=media20-20261114";
     elements.saveEachBtn.addEventListener("click", () => {
       closeSaveChoice();
       runCapture(renderer.getCaptureCards());
+    });
+    elements.saveSplitBtn.addEventListener("click", () => {
+      closeSaveChoice();
+      runCapture(getSplitPages());
     });
     elements.saveCancelBtn.addEventListener("click", closeSaveChoice);
     elements.saveChoice.addEventListener("click", (event) => {

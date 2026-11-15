@@ -2359,3 +2359,15 @@ body.is-capturing-card .capture-reply-list .tweet-original-url {
 .platform-mark {
   flex: 0 0 auto;
 }
+
+.save-choice-hint {
+  margin: -2px 0 4px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.save-choice-hint.hidden,
+.save-choice-card .btn.hidden {
+  display: none;
+}
