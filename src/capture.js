@@ -1,8 +1,8 @@
 import {
   resolveCaptureScale,
   resolveExportFormat,
-} from "./domain/capture-settings.js?v=media20-20261114";
-import { createCaptureFilename } from "./capture/filename.js?v=media20-20261114";
+} from "./domain/capture-settings.js?v=split-save-20261115";
+import { createCaptureFilename } from "./capture/filename.js?v=split-save-20261115";
 
 let activeDownloadHref = "";
 
@@ -209,7 +209,7 @@ function prepareCaptureImages(captureArea) {
   });
 }
 
-async function waitForCaptureImages(captureArea) {
+export async function waitForCaptureImages(captureArea) {
   if (!captureArea) {
     return;
   }
@@ -284,10 +284,19 @@ export function describeCaptureError(error) {
   return "이미지 저장에 실패했습니다.";
 }
 
+// targets 의 항목은 요소 하나이거나, 요소의 일부 구간 { element, y, height } 이다.
+function toSlice(entry) {
+  if (entry && entry.element) {
+    return entry;
+  }
+  return { element: entry };
+}
+
 async function renderElementToBlob(
-  target,
+  slice,
   { exportFormat, exportScale, html2canvasImpl },
 ) {
+  const target = slice.element;
   await waitForCaptureImages(target);
   const viewport = getCaptureViewport(target);
   const exportConfig = resolveExportFormat(exportFormat);
@@ -300,7 +309,14 @@ async function renderElementToBlob(
     elementWidth,
   });
 
+  // y · height 를 주면 그 구간만 그린다. 캔버스가 작아져 메모리 한도와
+  // 파일 크기 문제를 피할 수 있다. (html2canvas 는 y 를 요소 위쪽 끝에 더한다.)
+  const cropOptions = Number.isFinite(slice.height)
+    ? { y: slice.y || 0, height: Math.ceil(slice.height) }
+    : {};
+
   const canvas = await html2canvasImpl(target, {
+    ...cropOptions,
     useCORS: true,
     allowTaint: false,
     scale,
@@ -366,7 +382,9 @@ export async function captureElementsAsImages({
     return;
   }
 
-  const list = (Array.isArray(targets) ? targets : []).filter(Boolean);
+  const list = (Array.isArray(targets) ? targets : [])
+    .filter(Boolean)
+    .map(toSlice);
   if (!list.length) {
     setStatus("저장할 글이 없습니다.", "error");
     return;
@@ -448,6 +466,7 @@ export async function captureElementsAsImages({
 }
 
 export async function captureElementAsImage({ captureArea, ...rest }) {
+  // 예전 호출부 호환용: 요소 하나를 통째로 저장한다.
   return captureElementsAsImages({ targets: [captureArea], ...rest });
 }
 

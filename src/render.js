@@ -3,7 +3,7 @@ import {
   normalizeHandle,
   stripLeadingReplyMentions,
   toDisplayText,
-} from "./utils.js?v=media20-20261114";
+} from "./utils.js?v=split-save-20261115";
 import {
   isGameCaptureFontFamily,
   normalizeCaptureGameFontScope,
@@ -14,21 +14,21 @@ import {
   normalizeExportFormat,
   normalizeExportScale,
   normalizeStylePreset,
-} from "./domain/capture-settings.js?v=media20-20261114";
+} from "./domain/capture-settings.js?v=split-save-20261115";
 import {
   MAX_MEDIA_ITEMS,
   getVisibleMediaSrcs,
   normalizeMediaItems,
-} from "./media.js?v=media20-20261114";
+} from "./media.js?v=split-save-20261115";
 import {
   formatQuoteText,
   normalizeQuoteTextMode,
-} from "./domain/tweet-model.js?v=media20-20261114";
-import { createMediaSelector } from "./render/media-selector.js?v=media20-20261114";
-import { populateTweetMedia } from "./render/media.js?v=media20-20261114";
-import { createReplyTweetCard } from "./render/reply-card.js?v=media20-20261114";
-import { resolveSourceMeta } from "./render/source-meta.js?v=media20-20261114";
-import { renderTextWithLinks } from "./render/text.js?v=media20-20261114";
+} from "./domain/tweet-model.js?v=split-save-20261115";
+import { createMediaSelector } from "./render/media-selector.js?v=split-save-20261115";
+import { populateTweetMedia } from "./render/media.js?v=split-save-20261115";
+import { createReplyTweetCard } from "./render/reply-card.js?v=split-save-20261115";
+import { resolveSourceMeta } from "./render/source-meta.js?v=split-save-20261115";
+import { renderTextWithLinks } from "./render/text.js?v=split-save-20261115";
 
 export function createRenderer(elements, state, options = {}) {
   // 편집 시트가 가리키는 글: "main", 이전 글의 stateIndex, 또는 null.
@@ -701,6 +701,7 @@ export function createRenderer(elements, state, options = {}) {
 
     const merged = normalizeThreadLayout(state.threadLayout) === "merged";
     let previousHandle = null;
+    let firstRenderedItem = null;
 
     elements.previewReplyList.innerHTML = "";
     if (showReply && replyItems.length) {
@@ -734,6 +735,9 @@ export function createRenderer(elements, state, options = {}) {
           merged && previousHandle !== null && previousHandle === currentHandle,
         );
         previousHandle = currentHandle;
+        if (!firstRenderedItem) {
+          firstRenderedItem = item;
+        }
         elements.previewReplyList.appendChild(card);
       });
     }
@@ -752,6 +756,26 @@ export function createRenderer(elements, state, options = {}) {
       merged && elements.previewReplyList.childElementCount
         ? "merged"
         : "separate";
+
+    // 합친 카드는 스레드 전체를 대표하므로, 맨 아래(마지막) 글이 아니라
+    // 스레드 첫 글의 반응 수와 날짜를 보여 준다.
+    if (merged && firstRenderedItem) {
+      const pick = (value) => String(value || "").trim() || "0";
+      elements.previewReplyCount.textContent = pick(
+        firstRenderedItem.replyCount,
+      );
+      elements.previewRetweetCount.textContent = pick(
+        firstRenderedItem.retweetCount,
+      );
+      elements.previewLikeCount.textContent = pick(firstRenderedItem.likeCount);
+      elements.previewBookmarkCount.textContent = pick(
+        firstRenderedItem.bookmarkCount,
+      );
+      const firstDate = String(firstRenderedItem.tweetDate || "").trim();
+      if (firstDate) {
+        elements.previewDate.textContent = firstDate;
+      }
+    }
 
     elements.previewReplyList.classList.toggle(
       "hidden",

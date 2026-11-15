@@ -25,6 +25,8 @@ export function getElements() {
     saveChoice: document.getElementById("saveChoice"),
     saveOneBtn: document.getElementById("saveOneBtn"),
     saveEachBtn: document.getElementById("saveEachBtn"),
+    saveSplitBtn: document.getElementById("saveSplitBtn"),
+    saveChoiceHint: document.getElementById("saveChoiceHint"),
     saveCancelBtn: document.getElementById("saveCancelBtn"),
     toast: document.getElementById("toast"),
     toastActionBtn: document.getElementById("toastActionBtn"),

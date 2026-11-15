@@ -31,7 +31,7 @@
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@main/packages/wanted-sans/fonts/webfonts/variable/complete/WantedSansVariable.css"
     />
-    <link rel="stylesheet" href="./styles.css?v=media20-20261114" />
+    <link rel="stylesheet" href="./styles.css?v=split-save-20261115" />
   </head>
   <body>
     <main class="app-shell">
@@ -391,6 +391,9 @@
                   <option value="separate" selected>글마다 카드</option>
                   <option value="merged">하나로 합치기</option>
                 </select>
+                <small class="reply-media-hint">
+                  합치면 반응 수와 날짜는 스레드 첫 글 기준으로 표시됩니다.
+                </small>
               </div>
               <div class="option-row option-row-inline">
                 <label class="check-option" for="showReplyToggle">
@@ -734,8 +737,15 @@
       >
         <div class="save-choice-card">
           <h2 id="saveChoiceTitle">어떻게 저장할까요?</h2>
+          <p id="saveChoiceHint" class="save-choice-hint hidden">
+            길게 한 장으로 저장하면 파일이 커지고, 휴대폰에서는 저장이 실패할 수
+            있습니다.
+          </p>
           <button id="saveOneBtn" class="btn btn-accent" type="button">
             한 장으로 저장
+          </button>
+          <button id="saveSplitBtn" class="btn btn-ghost" type="button">
+            길이에 맞춰 나눠 저장
           </button>
           <button id="saveEachBtn" class="btn btn-ghost" type="button">
             글마다 따로 저장
@@ -757,6 +767,6 @@
     </main>
 
     <script src="./vendor/html2canvas.min.js"></script>
-    <script type="module" src="./app.js?v=media20-20261114"></script>
+    <script type="module" src="./app.js?v=split-save-20261115"></script>
   </body>
 </html>
